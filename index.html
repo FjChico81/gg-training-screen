@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111b25"><title>GG Training Screen</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#f7f8fa;background:#111b25}*{box-sizing:border-box}body{margin:0;padding:clamp(12px,3vw,30px)}header,.line,.actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}header{margin-bottom:20px}.gold{color:#dbc396}.muted{color:#aebcc8}.panel{background:#24333f;border-radius:14px;padding:clamp(14px,3vw,26px)}h1{font-size:clamp(22px,3vw,38px);margin:0}h2{font-size:clamp(20px,3vw,36px);margin:4px 0 12px}h3{margin:0 0 8px;color:#dbc396;font-size:16px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.item{background:#30414f;padding:14px;border-radius:10px}.item p{margin:5px 0;font-size:clamp(15px,2vw,22px)}button{background:#dbc396;color:#15212c;border:0;border-radius:10px;padding:13px 18px;font-size:17px;font-weight:700;cursor:pointer;min-height:48px}button.secondary{background:#405363;color:white}button:disabled{opacity:.35}.actions{justify-content:flex-start;margin-top:16px}.stat{font-size:clamp(28px,5vw,60px);font-weight:800}.focus{font-size:clamp(30px,6vw,76px);font-weight:800;line-height:1.1}.metrics{display:grid;grid-template-columns:2fr 1fr;gap:12px}.heart{color:#ff7777}.small{font-size:13px}#status{margin-top:12px;color:#dbc396}#guided{display:none}@media(max-width:600px){.grid{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}.focus{font-size:32px}}@media(min-width:850px){.grid{grid-template-columns:repeat(3,1fr)}}
+</style></head><body>
+<header><h1 class="gold">GG | TRAINING SCREEN</h1><span class="muted">BUHARDILLA FIT · v1.1</span></header>
+<section id="board"><div class="panel"><div class="line"><div><div class="gold">ENTRENAMIENTO DE PRUEBA</div><h2>HYBRID POWER</h2></div><div class="muted">5 bloques · Ejemplo</div></div><div id="blocks" class="grid"></div><div class="actions"><button id="start">▶ Iniciar entrenamiento</button></div></div></section>
+<section id="guided"><div class="metrics"><div class="panel"><div id="position" class="gold">EJERCICIO</div><div id="current" class="focus"></div><p id="next" class="muted"></p></div><div class="panel"><div class="muted">PULSACIONES</div><div class="stat heart">-- <span style="font-size:16px">PPM</span></div><div class="small muted">Polar no conectado</div><hr style="border-color:#405363"><div class="muted">TIEMPO</div><div id="clock" class="stat">00:00</div></div></div><div class="actions"><button id="prev" class="secondary">◀ Anterior</button><button id="pause" class="secondary">Pausar</button><button id="advance">Siguiente ▶</button><button id="boardButton" class="secondary">Ver pizarra</button><button id="finish" class="secondary">Finalizar</button></div><div id="status" aria-live="polite"></div></section>
+<script>
+'use strict';
+const blocks=[{name:'Calentamiento',items:['5 min bicicleta','Movilidad dinámica']},{name:'Fuerza',items:['3 × 10 sentadillas','3 × 12 press']},{name:'Híbrido',items:['15 burpees','20 wall balls']},{name:'Cardio',items:['400 m carrera','20 zancadas']},{name:'Vuelta a la calma',items:['3 min bicicleta','Movilidad suave']}];
+const steps=blocks.flatMap(b=>b.items.map(x=>({label:x,block:b.name})));
+const el=id=>document.getElementById(id);
+el('blocks').innerHTML=blocks.map((b,i)=>'<div class="item"><h3>'+String(i+1).padStart(2,'0')+' · '+b.name+'</h3>'+b.items.map(x=>'<p>'+x+'</p>').join('')+'</div>').join('');
+let index=0,started=false,paused=false,elapsed=0,last=0;
+function draw(){el('board').style.display=started?'none':'block';el('guided').style.display=started?'block':'none';if(!started)return;el('position').textContent='EJERCICIO '+(index+1)+' DE '+steps.length+' · '+steps[index].block.toUpperCase();el('current').textContent=steps[index].label;el('next').textContent='Siguiente: '+(steps[index+1]?.label||'Fin del entrenamiento');el('prev').disabled=index===0;el('advance').textContent=index===steps.length-1?'Terminar sesión':'Siguiente ▶';el('pause').textContent=paused?'Reanudar':'Pausar';el('status').textContent=paused?'Sesión pausada':'Sesión en curso';}
+function tick(t){if(last&&started&&!paused)elapsed+=(t-last)/1000;last=t;const s=Math.floor(elapsed);el('clock').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');requestAnimationFrame(tick)}requestAnimationFrame(tick);
+el('start').onclick=()=>{started=true;paused=false;index=0;elapsed=0;draw()};
+el('prev').onclick=()=>{index=Math.max(0,index-1);draw()};
+el('advance').onclick=()=>{if(index===steps.length-1){started=false;paused=false}else index++;draw()};
+el('pause').onclick=()=>{paused=!paused;draw()};
+el('finish').onclick=()=>{if(confirm('¿Finalizar la sesión?')){started=false;paused=false;draw()}};
+el('boardButton').onclick=()=>{paused=true;started=false;draw();el('start').textContent='▶ Reiniciar entrenamiento'};
+draw();
+</script></body></html>
