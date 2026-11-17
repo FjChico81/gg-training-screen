@@ -35,6 +35,24 @@ export function patchNativeHtml(source,uiFragment,bundledJs){
   html=one(html,"actualResults=saved.actualResults||{};session=true","actualResults=saved.actualResults||{};session=true;if(saved.hrRecording){try{window.GGNativeHeart.restoreRecording(saved.hrRecording)}catch(err){console.warn('FC previa no recuperada',err)}}");
   html=one(html,"$('summaryDuration').textContent=formatSeconds(Math.floor(elapsed));","$('summaryDuration').textContent=formatSeconds(Math.floor(elapsed));$('nativeHrSummary').textContent=formatHeartSummary(window.GGNativeHeart.summary(elapsed));");
   html=one(html,"document.addEventListener('visibilitychange',()=>{clockAnchor=Date.now();saveSession();","document.addEventListener('visibilitychange',()=>{clockAnchor=Date.now();if(document.visibilityState!=='visible')window.GGNativeHeart.pauseRecording();saveSession();");
+  // Sustituye el Wake Lock web por el método nativo de iOS.
+  const wakeStart='async function releaseWakeLock(){';
+  const wakeEnd="$('wakeToggle').onclick=()=>{";
+  const wi=html.indexOf(wakeStart),wj=html.indexOf(wakeEnd,wi);
+  if(wi<0||wj<0)throw Error('No se encuentra el control de pantalla activa');
+  const nativeWake=`let nativeWakeQueue=Promise.resolve();
+async function releaseWakeLock(){
+  nativeWakeQueue=nativeWakeQueue.catch(()=>{}).then(()=>window.GGNativeScreen.release());
+  try{await nativeWakeQueue}catch(e){}
+}
+async function syncWakeLock(){
+  const want=wakeWanted&&session&&!paused&&document.visibilityState==='visible';
+  nativeWakeQueue=nativeWakeQueue.catch(()=>{}).then(()=>want?window.GGNativeScreen.keep():window.GGNativeScreen.release());
+  try{await nativeWakeQueue;$('wakeStatus').textContent=want?'Pantalla activa durante el entrenamiento':'Pantalla con bloqueo normal'}
+  catch(error){$('wakeStatus').textContent='No se ha podido cambiar el bloqueo: '+error.message}
+}
+`;
+  html=html.slice(0,wi)+nativeWake+html.slice(wj);
   // Una compilación instalada por Xcode no tiene actualizaciones automáticas de Pages.
   const updateStart=html.indexOf("const GG_APP_VERSION='2.7';");
   const loadStart=html.indexOf('load();try{const saved=',updateStart);
