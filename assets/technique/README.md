@@ -18,7 +18,8 @@ Esta carpeta contiene **copias independientes** de cinco GIFs seleccionados para
 - Para añadir o corregir un recurso, trabajar exclusivamente sobre **copias** en este repositorio o en otra carpeta de trabajo.
 - Los nombres normalizados actúan como identificadores estables en el catálogo del HTML.
 - Los GIFs se sirven bajo demanda desde el mismo dominio de GG Mobile; la web no utiliza Google Drive embebido ni requiere importación por usuario.
-- La biblioteca pública de GG Mobile es visible para cualquier visitante. **Comprobar los derechos de reproducción y redistribución de cada recurso antes de una difusión pública más amplia.**
+- El propietario ha confirmado expresamente que estos GIFs son suyos y autoriza su utilización en GG Mobile. Las copias alojadas en GitHub Pages son accesibles públicamente para los usuarios de la aplicación.
+- Antes de añadir otros recursos, comprobar que también pertenecen al propietario o que existe autorización para publicarlos.
 - El historial de entrenamientos permanece local en cada dispositivo y no se comparte junto a estos recursos.
 
 ## Alcance
