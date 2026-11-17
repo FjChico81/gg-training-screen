@@ -1,0 +1,23 @@
+name: QA GG Mobile biblioteca técnica
+on:
+  push:
+    branches:
+      - feature/gg-technique-media
+    paths:
+      - 'index.html'
+      - 'tests/technique-media-smoke.mjs'
+      - '.github/workflows/gg-technique-qa.yml'
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar dependencias de prueba
+        run: npm install --no-save --no-audit --no-fund jsdom@26 fake-indexeddb@6
+      - name: Comprobar GIF y biblioteca local
+        run: node tests/technique-media-smoke.mjs
