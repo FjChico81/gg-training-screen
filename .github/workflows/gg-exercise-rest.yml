@@ -1,0 +1,23 @@
+name: QA GG Mobile descanso entre ejercicios
+on:
+  push:
+    branches:
+      - feature/gg-rest-between-exercises
+    paths:
+      - 'index.html'
+      - 'tests/exercise-transition-smoke.mjs'
+      - '.github/workflows/gg-exercise-rest.yml'
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar jsdom
+        run: npm install --no-save --no-audit --no-fund jsdom@26
+      - name: Probar descansos y transición automática
+        run: node tests/exercise-transition-smoke.mjs
