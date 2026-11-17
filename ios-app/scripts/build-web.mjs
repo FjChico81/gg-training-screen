@@ -28,7 +28,7 @@ $('connectHr').onclick=async()=>{
       hrConnected=false;hrValue=null;status.textContent='Sensor desconectado';refreshHeart();
     });
     hrConnected=true;hrSensorName=result.name;
-    status.textContent='Conectado: '+hrSensorName+' · esperando pulsaciones';refreshHeart();
+    status.textContent=hrValue===null?'Conectado: '+hrSensorName+' · esperando pulsaciones':'Conectado: '+hrSensorName+' · '+hrValue+' ppm';refreshHeart();
   }catch(error){hrConnected=false;status.textContent='Bluetooth: '+(error?.message||String(error));refreshHeart()}
 };
 $('disconnectHr').onclick=async()=>{
@@ -41,7 +41,12 @@ setInterval(refreshHeart,3000);
 html=html.slice(0,start)+nativeUI+html.slice(end);
 const bundled=await build({entryPoints:[resolve(app,'src/native-entry.js')],bundle:true,platform:'browser',format:'iife',write:false,target:'safari16',logLevel:'warning'});
 const js=bundled.outputFiles[0].text;
-html=html.replace('<script>\n\'use strict\';',`<script>${js.replaceAll('</script','<\\/script')}</script><script>\n'use strict';`);
+const scriptMarker="<script>\\n'use strict';";
+if(!html.includes(scriptMarker))throw new Error('No se encuentra el inicio del JavaScript de GG Mobile; se cancela la compilación.');
+html=html.replace(scriptMarker,`<script>${js.replaceAll('</script','<\\\\/script')}</script>${scriptMarker}`);
+// Una app instalada por Xcode no se actualiza automáticamente desde GitHub Pages.
+html=html.replace('id="checkUpdates" class="alt"','id="checkUpdates" class="alt hidden"');
+html=html.replace('BUHARDILLA FIT · v2.7','GG MOBILE iOS · prototipo BLE');
 const destination=resolve(app,'www');
 await mkdir(destination,{recursive:true});
 await writeFile(resolve(destination,'index.html'),html,'utf8');
