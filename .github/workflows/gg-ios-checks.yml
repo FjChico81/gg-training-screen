@@ -1,0 +1,39 @@
+name: GG Mobile iOS - pruebas sin Mac
+on:
+  push:
+    branches:
+      - feature/gg-mobile-ios
+    paths:
+      - 'ios-app/**'
+      - 'index.html'
+      - '.github/workflows/gg-ios-checks.yml'
+  pull_request:
+    paths:
+      - 'ios-app/**'
+      - 'index.html'
+      - '.github/workflows/gg-ios-checks.yml'
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: ios-app
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar dependencias
+        run: npm install --no-audit --no-fund
+      - name: Pruebas de pulsaciones y compilación
+        run: npm test
+      - name: Generar interfaz iOS con Bluetooth
+        run: npm run build:web
+      - name: Comprobar marcadores nativos
+        run: |
+          grep -q 'GG MOBILE iOS · prototipo Bluetooth' www/index.html
+          grep -q 'heartRate:window.GGNativeHeart.summary(elapsed)' www/index.html
