@@ -15,11 +15,22 @@
 - Confirmar que las ppm cambian con el esfuerzo y quedan en «--» cuando deja de llegar señal.
 - No dar por válida la conexión por el mero mensaje «Conectado»: deben llegar lecturas.
 
+## 2B. Perfil cardíaco y registro
+- Antes de iniciar, entrar en ⚙ → Configurar FC máxima y zonas.
+- Introducir la **FC máxima real del deportista**; en el caso del primer probador es 199 ppm, pero no se aplica a otras instalaciones.
+- Comprobar que el porcentaje y la zona cambian conforme cambia la FC.
+- Entrenar al menos diez minutos con el Polar conectado y finalizar normalmente.
+- Revisar FC media, máxima, cobertura de señal y tiempo por zonas en el historial.
+- Comprobar que el gráfico refleja las lecturas disponibles, sin atribuir puntos durante huecos.
+- Repetir un tramo con la sesión pausada: esos segundos no deben sumarse a zonas.
+- Hacer otra sesión sin sensor: debe guardarse sin FC y sin errores.
+
 ## 3. Robustez
 - Desconectar manualmente; volver a conectar.
 - Apagar el sensor durante una sesión: comprobar el aviso de pérdida de conexión.
 - Volver a encender y reconectar.
 - Probar en sesiones de fuerza y de circuito.
+- Comprobar que la pantalla permanece activa durante el entrenamiento si la opción está habilitada; al pausar/terminar debe recuperar el bloqueo normal.
 - Probar al bloquear/desbloquear la pantalla; no se garantiza lectura continua en segundo plano.
 
 ## 4. Datos
@@ -31,7 +42,8 @@
 ## Criterio de aceptación mínimo
 - Pulso real visible en entrenamiento al menos durante 10 minutos sin fallos.
 - Desconexión y reconexión controladas; ningún fallo grave.
-- Rutinas e historial intactos tras cerrar y abrir.
+- Rutinas, historial y configuración cardíaca intactos tras cerrar y abrir.
+- La copia JSON exportada después de registrar FC debe contener el resumen cardíaco del historial.
 - No afecta a HPS/Coach ni a GitHub Pages.
 
 **Todavía no se acredita:** lectura en segundo plano, métricas cardíacas históricas ni publicación en App Store.
