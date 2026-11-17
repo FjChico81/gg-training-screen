@@ -45,5 +45,7 @@ doc.getElementById('moreSession').click();
 assert.equal(doc.getElementById('sessionExtras').classList.contains('hidden'),false);
 assert.ok(doc.getElementById('strengthExtras').contains(doc.getElementById('seriesList')));
 assert.equal(errors.length,0,'Sin errores inesperados: '+errors.join(', '));
+await new Promise(resolve=>setTimeout(resolve,100));
+assert.equal(errors.length,0,'Errores asíncronos inesperados: '+errors.join(', '));
 console.log('PASS: vista compacta, series, descanso automático, señalización y correcciones');
 w.close();
