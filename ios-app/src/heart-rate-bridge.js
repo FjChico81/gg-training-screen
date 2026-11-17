@@ -1,17 +1,10 @@
-// Preparación para integración nativa; NO está conectada todavía al index.html.
+import {decodeHeartRate} from './heart-rate-codec.js';
+// Puente Bluetooth nativo, incorporado únicamente en la compilación iOS.
 // Se incorporará al bundle de la app iOS, nunca a la versión pública sin validar.
 import {BleClient} from '@capacitor-community/bluetooth-le';
 const HR_SERVICE='0000180d-0000-1000-8000-00805f9b34fb';
 const HR_MEASUREMENT='00002a37-0000-1000-8000-00805f9b34fb';
 let connectedId=null;
-export function decodeHeartRate(data){
-  if(!(data instanceof DataView)||data.byteLength<2)throw Error('Notificación de FC inválida');
-  const wide=!!(data.getUint8(0)&1);
-  if(wide&&data.byteLength<3)throw Error('Notificación de FC incompleta');
-  const bpm=wide?data.getUint16(1,true):data.getUint8(1);
-  if(bpm<25||bpm>240)throw Error('Valor de FC fuera de rango');
-  return bpm;
-}
 export async function connectHeartRate(onReading,onDisconnected=()=>{}){
   if(typeof onReading!=='function')throw Error('Falta callback de pulsaciones');
   await BleClient.initialize();
