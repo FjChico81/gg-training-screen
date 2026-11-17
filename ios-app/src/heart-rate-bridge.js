@@ -12,11 +12,11 @@ export function decodeHeartRate(data){
   if(bpm<25||bpm>240)throw Error('Valor de FC fuera de rango');
   return bpm;
 }
-export async function connectHeartRate(onReading){
+export async function connectHeartRate(onReading,onDisconnected=()=>{}){
   if(typeof onReading!=='function')throw Error('Falta callback de pulsaciones');
   await BleClient.initialize();
   const device=await BleClient.requestDevice({services:[HR_SERVICE]});
-  await BleClient.connect(device.deviceId,()=>{connectedId=null});
+  await BleClient.connect(device.deviceId,()=>{connectedId=null;onDisconnected()});
   try{
     await BleClient.startNotifications(device.deviceId,HR_SERVICE,HR_MEASUREMENT,(data)=>{
       try{onReading({bpm:decodeHeartRate(data),at:Date.now(),deviceName:device.name||'Pulsómetro'});}catch(error){console.warn('Lectura FC descartada',error);}
