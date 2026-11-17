@@ -1,0 +1,23 @@
+name: QA GG Mobile técnica en calentamiento
+on:
+  push:
+    branches:
+      - fix/gg-technique-warmup-aliases
+    paths:
+      - 'index.html'
+      - 'tests/technique-warmup-smoke.mjs'
+      - '.github/workflows/gg-technique-warmup-qa.yml'
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar jsdom
+        run: npm install --no-save --no-audit --no-fund jsdom@26
+      - name: Comprobar que el calentamiento encuentra los GIFs
+        run: node tests/technique-warmup-smoke.mjs
