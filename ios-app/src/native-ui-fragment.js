@@ -35,8 +35,9 @@ function renderHistoricalHeart(record,card,details){
 let hrLastReading=0,hrValue=null,hrConnected=false,hrSensorName='',hrLastSave=0;
 function formatHeartZone(profile,bpm){
   if(profile.maxHr===null)return 'Configura tu FC máxima en ⚙ para ver zonas';
-  const percent=Math.round(bpm/profile.maxHr*100);
-  const zone=1+profile.bounds.filter(x=>percent>=x).length;
+  const ratio=bpm/profile.maxHr*100;
+  const percent=Math.round(ratio);
+  const zone=1+profile.bounds.filter(x=>ratio>=x).length;
   return 'Zona '+zone+' · '+percent+' % de FC máxima';
 }
 function refreshHeart(){
