@@ -61,6 +61,7 @@ async function syncWakeLock(){
   html=one(html,"show('library');void checkForUpdates();","show('library');");
   html=one(html,'id="checkUpdates" class="alt"','id="checkUpdates" class="alt hidden"');
   html=one(html,'BUHARDILLA FIT · v2.7','GG MOBILE iOS · prototipo Bluetooth');
+  html=one(html,'</head>',`<style>#settingsPanel{max-height:calc(100dvh - 85px);overflow-y:auto;overscroll-behavior:contain}#hrProfilePanel .setgrid{grid-template-columns:repeat(2,minmax(0,1fr))}#hrProfilePanel label{font-size:12px}#nativeHrSummary{line-height:1.5}</style></head>`);
   const scriptMarker="<script>\n'use strict';";
   if(!html.includes(scriptMarker))throw Error('No se ha encontrado el script principal');
   // Se inserta delante del script principal para inicializar el puente de Capacitor.
