@@ -1,8 +1,48 @@
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
-const root=resolve(import.meta.dirname,'../..');
-const source=await readFile(resolve(root,'index.html'),'utf8');
-const destination=resolve(import.meta.dirname,'../www');
+import {build} from 'esbuild';
+const app=resolve(import.meta.dirname,'..');
+const root=resolve(app,'..');
+let html=await readFile(resolve(root,'index.html'),'utf8');
+const start=html.indexOf('let hrDevice=null,hrCharacteristic=null,hrLastReading=0,hrValue=null;');
+const end=html.indexOf('const GG_APP_VERSION=',start);
+if(start<0||end<0)throw Error('No se encuentra el bloque Bluetooth esperado en la web; revisar cambios antes de compilar.');
+const nativeUI=`let hrLastReading=0,hrValue=null,hrConnected=false,hrSensorName='';
+function refreshHeart(){
+  const max=Number(localStorage.getItem('gg-hr-max')||199);
+  const live=hrConnected&&hrValue!==null&&Date.now()-hrLastReading<12000;
+  $('hrBpm').textContent=live?String(hrValue):'--';
+  $('hrZone').textContent=live?'FC '+Math.round(hrValue/max*100)+'% de máxima':'Sin lectura Bluetooth';
+  $('disconnectHr').classList.toggle('hidden',!hrConnected);
+  $('connectHr').textContent=hrConnected?'♥ Pulsómetro conectado':'♥ Conectar pulsómetro Bluetooth';
+}
+$('connectHr').onclick=async()=>{
+  const status=$('hrConnectionStatus');
+  if(hrConnected)return;
+  try{
+    status.textContent='Buscando pulsómetro…';
+    const result=await window.GGNativeHeart.connect(({bpm,deviceName})=>{
+      hrValue=bpm;hrLastReading=Date.now();hrConnected=true;hrSensorName=deviceName;
+      status.textContent='Conectado: '+deviceName+' · '+bpm+' ppm';refreshHeart();
+    },()=>{
+      hrConnected=false;hrValue=null;status.textContent='Sensor desconectado';refreshHeart();
+    });
+    hrConnected=true;hrSensorName=result.name;
+    status.textContent='Conectado: '+hrSensorName+' · esperando pulsaciones';refreshHeart();
+  }catch(error){hrConnected=false;status.textContent='Bluetooth: '+(error?.message||String(error));refreshHeart()}
+};
+$('disconnectHr').onclick=async()=>{
+  try{await window.GGNativeHeart.disconnect();$('hrConnectionStatus').textContent='Sensor desconectado'}
+  catch(error){$('hrConnectionStatus').textContent='Error al desconectar: '+error.message}
+  finally{hrConnected=false;hrValue=null;refreshHeart()}
+};
+setInterval(refreshHeart,3000);
+`;
+html=html.slice(0,start)+nativeUI+html.slice(end);
+const bundled=await build({entryPoints:[resolve(app,'src/native-entry.js')],bundle:true,platform:'browser',format:'iife',write:false,target:'safari16',logLevel:'warning'});
+const js=bundled.outputFiles[0].text;
+html=html.replace('<script>\n\'use strict\';',`<script>${js.replaceAll('</script','<\\/script')}</script><script>\n'use strict';`);
+const destination=resolve(app,'www');
 await mkdir(destination,{recursive:true});
-await writeFile(resolve(destination,'index.html'),source,'utf8');
-console.log('GG Mobile web copiada para compilación iOS.');
+await writeFile(resolve(destination,'index.html'),html,'utf8');
+console.log('GG Mobile iOS generada con puente Bluetooth nativo (sin alterar la web pública).');
