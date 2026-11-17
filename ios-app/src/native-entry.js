@@ -1,6 +1,7 @@
 // Interfaz única entre la app web embebida, Core Bluetooth y el registro local.
 import {connectHeartRate,disconnectHeartRate} from './heart-rate-bridge.js';
 import {HeartSession,validateHeartProfile} from './heart-session.js';
+import {KeepAwake} from '@capacitor-community/keep-awake';
 
 const PROFILE_KEY='gg-ios-heart-profile-v1';
 const DEFAULT_PROFILE={maxHr:null,bounds:[60,70,80,90]};
@@ -51,4 +52,10 @@ window.GGNativeHeart={
     recording.pause();
     try{await disconnectHeartRate()}finally{connected=false;name=''}
   }
+};
+
+window.GGNativeScreen={
+  async keep(){await KeepAwake.keepAwake()},
+  async release(){await KeepAwake.allowSleep()},
+  async isSupported(){return (await KeepAwake.isSupported()).isSupported}
 };
