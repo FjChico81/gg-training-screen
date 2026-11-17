@@ -1,6 +1,6 @@
 # GG Mobile iOS · preparación (rama aislada)
 
-**Estado:** estructura inicial preparada; NO es todavía una aplicación compilada ni probada con el Polar.
+**Estado:** puente Bluetooth conectado a la interfaz en la compilación iOS; todavía NO se ha compilado en Xcode ni probado con el Polar real.
 
 ## Principios
 - La versión web de GitHub Pages en `main` no se modifica.
@@ -16,8 +16,8 @@
 4. `cd ios-app && npm install && npm run build:web`.
 5. `npx cap add ios` (primera vez); `npm run ios:sync`; `npm run ios:open`.
 6. Configurar en Xcode el equipo de firma y la descripción de uso de Bluetooth (`NSBluetoothAlwaysUsageDescription`: «GG Mobile utiliza Bluetooth para mostrar las pulsaciones de tu sensor durante el entrenamiento»).
-7. **Pendiente antes de la prueba real:** conectar `src/heart-rate-bridge.js` con la UI web mediante un bundle y una interfaz común de FC, añadir permisos nativos y probar la compilación. No asumir que el módulo está activo simplemente por existir.
-8. Probar primero conexión, desconexión, pérdida de señal, reanudación y segundo sensor; después registro de FC y zonas configurables.
+7. El comando `npm run build:web` empaqueta `src/native-entry.js` y reemplaza el Web Bluetooth por el puente nativo **solo en `www/index.html`**. Pendiente: comprobar compilación, permisos de iOS y conexión real.
+8. Probar primero conexión, desconexión, pérdida de señal, reanudación y segundo sensor; después registro de FC y zonas configurables. La versión actual muestra FC en vivo, pero no guarda muestras en historial.
 
 ## Notas
 - Se usa Capacitor 7 como base inicial; comprobar compatibilidad de versiones de Node, Xcode y plugin antes de instalar.
