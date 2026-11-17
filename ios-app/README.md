@@ -10,14 +10,21 @@
 - Los datos locales de Safari no se transfieren automáticamente al contenedor iOS: usar copia/restauración JSON.
 
 ## Cuando esté disponible el Mac
-1. Instalar Xcode desde App Store, abrirlo una vez y aceptar sus componentes/licencia.
-2. Instalar Node.js LTS (y herramientas de línea de comandos si las pide Xcode).
+1. Instalar **Xcode**, abrirlo y aceptar la licencia/componentes.
+2. Instalar **Node.js 22 LTS** o versión compatible y comprobar `node --version`.
 3. Clonar el repositorio y cambiar a `feature/gg-mobile-ios`.
-4. `cd ios-app && npm install && npm run build:web`.
-5. `npx cap add ios` (primera vez); `npm run ios:sync`; `npm run ios:open`.
-6. Configurar en Xcode el equipo de firma y la descripción de uso de Bluetooth (`NSBluetoothAlwaysUsageDescription`: «GG Mobile utiliza Bluetooth para mostrar las pulsaciones de tu sensor durante el entrenamiento»).
-7. El comando `npm run build:web` empaqueta `src/native-entry.js` y reemplaza el Web Bluetooth por el puente nativo **solo en `www/index.html`**. Pendiente: comprobar compilación, permisos de iOS y conexión real.
-8. Probar primero conexión, desconexión, pérdida de señal, reanudación y segundo sensor; después registro de FC y zonas configurables. La versión actual muestra FC en vivo, pero no guarda muestras en historial.
+4. Ejecutar en `ios-app`: `npm install` y después `npm test`.
+5. Para crear el proyecto iOS por primera vez: `npm run ios:init` (genera `www`, añade iOS, configura el permiso Bluetooth en Info.plist y sincroniza).
+6. Abrir con `npm run ios:open`, elegir el equipo de firma en Xcode y compilar primero en el iPhone propio.
+7. Tras editar el código, usar `npm run ios:sync` antes de abrir o compilar de nuevo.
+8. Seguir `docs/PRUEBAS_IPHONE.md` para validar Bluetooth, cambios de pantalla, desconexión y restauración de datos.
+
+El script `ios:configure` añade `NSBluetoothAlwaysUsageDescription` de forma idempotente. **No está previsto registrar pulsaciones en segundo plano**: la prioridad de esta fase es la lectura con la app abierta.
+
+## Pruebas realizadas sin Mac
+- Decodificador BLE separado y pruebas automatizadas sin hardware.
+- Inyección del módulo nativo al HTML de compilación verificada a nivel de código.
+- **Pendiente:** instalar dependencias, generar proyecto de Xcode, compilar y comprobar con el Polar.
 
 ## Notas
 - Se usa Capacitor 7 como base inicial; comprobar compatibilidad de versiones de Node, Xcode y plugin antes de instalar.
