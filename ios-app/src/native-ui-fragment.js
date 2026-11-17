@@ -1,4 +1,36 @@
 // Solo se inserta dentro de la compilación nativa. No debe cargarse en Safari.
+function formatHeartSummary(info){
+  if(!info||!info.samples)return 'Sin pulsaciones registradas durante esta sesión';
+  return 'FC media '+info.meanBpm+' ppm · máxima '+info.maxBpm+' ppm · medidos '+formatSeconds(info.coveredSeconds)+' ('+info.coveragePct+' % del entrenamiento)';
+}
+function renderHistoricalHeart(record,card,details){
+  const info=record.heartRate;
+  if(!info||!info.samples)return;
+  card.append(node('p',formatHeartSummary(info),'gold small'));
+  if(info.zonesConfigured&&Array.isArray(info.zoneSeconds)){
+    details.append(node('p',info.zoneSeconds.map((s,i)=>'Z'+(i+1)+' '+formatSeconds(Math.round(s))).join(' · '),'muted small'));
+  }else details.append(node('p','Zonas no calculadas: FC máxima sin configurar en esta sesión','muted small'));
+  const raw=Array.isArray(info.points)?info.points:[];
+  const points=raw.filter(p=>Array.isArray(p)&&p.length===2&&Number.isFinite(p[0])&&Number.isFinite(p[1])&&p[1]>=25&&p[1]<=240);
+  if(points.length<2)return;
+  const visible=points.filter((p,i)=>i%Math.max(1,Math.ceil(points.length/400))===0||i===points.length-1);
+  const xs=Math.max(1,info.durationSeconds||0,visible.at(-1)[0]);
+  const min=Math.max(0,Math.min(...visible.map(p=>p[1]))-10);
+  const max=Math.min(250,Math.max(...visible.map(p=>p[1]))+10);
+  const height=Math.max(1,max-min);
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox','0 0 300 95');
+  svg.setAttribute('aria-label','Gráfico de pulsaciones en la sesión');
+  svg.setAttribute('role','img');
+  svg.style.cssText='width:100%;max-width:500px;display:block;margin:10px 0';
+  const line=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+  line.setAttribute('points',visible.map(p=>(8+(p[0]/xs)*284).toFixed(1)+','+(87-(p[1]-min)/height*79).toFixed(1)).join(' '));
+  line.setAttribute('fill','none');
+  line.setAttribute('stroke','#ff7777');
+  line.setAttribute('stroke-width','2');
+  svg.append(line);
+  details.append(svg);
+}
 // Dependencias globales del HTML de GG: $, session, paused, elapsed, saveSession.
 let hrLastReading=0,hrValue=null,hrConnected=false,hrSensorName='',hrLastSave=0;
 function formatHeartZone(profile,bpm){
