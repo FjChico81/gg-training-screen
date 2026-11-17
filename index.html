@@ -82,13 +82,13 @@ function decode(line){const m=line.match(/^(.*?)\s+@(\d+)$/);if(m)return{label:m
 // Catálogo inicial vinculado a archivos existentes en el Drive indicado por el usuario.
 // No copiamos los GIFs al repositorio público; se cargan bajo los permisos de Google Drive.
 const GG_TECHNIQUE_CATALOG=[
- {key:'dominadas-neutras',title:'Dominada con agarre neutro abierto',id:'1lpeEbNGeo1FVM6Bi4yte58rrF9TpU6vV',pattern:/^dominadas? neutras?\\b/},
- {key:'remo-unilateral',title:'Remo unilateral con mancuerna apoyado en banco',id:'1EbAsXMy4EF-v68RIncw0jqp0ftmai_7S',pattern:/^remo unilateral(?: con)? mancuerna\\b/},
- {key:'elevaciones-laterales',title:'Elevación lateral de pie con mancuernas',id:'1p6SvuL6axhvExSxEVWCA3dPrfP2LdgZt',pattern:/^elevaciones? laterales?\\b/},
- {key:'curl-alterno',title:'Curl alterno con mancuernas de pie',id:'1cypJiuJknLTQVB898EG2n8R6jF71wIUU',pattern:/^curl alterno\\b/},
- {key:'triceps-cuerda',title:'Extensión de tríceps en polea alta con cuerda',id:'1Uok__M0YB8yEUxmOeW389rQbLjBpIYhr',pattern:/^(?:triceps con cuerda|extension de triceps en polea alta con cuerda)\\b/}
+ {key:'dominadas-neutras',title:'Dominada con agarre neutro abierto',id:'1lpeEbNGeo1FVM6Bi4yte58rrF9TpU6vV',pattern:/^dominadas? neutras?\b/},
+ {key:'remo-unilateral',title:'Remo unilateral con mancuerna apoyado en banco',id:'1EbAsXMy4EF-v68RIncw0jqp0ftmai_7S',pattern:/^remo unilateral(?: con)? mancuerna\b/},
+ {key:'elevaciones-laterales',title:'Elevación lateral de pie con mancuernas',id:'1p6SvuL6axhvExSxEVWCA3dPrfP2LdgZt',pattern:/^elevaciones? laterales?\b/},
+ {key:'curl-alterno',title:'Curl alterno con mancuernas de pie',id:'1cypJiuJknLTQVB898EG2n8R6jF71wIUU',pattern:/^curl alterno\b/},
+ {key:'triceps-cuerda',title:'Extensión de tríceps en polea alta con cuerda',id:'1Uok__M0YB8yEUxmOeW389rQbLjBpIYhr',pattern:/^(?:triceps con cuerda|extension de triceps en polea alta con cuerda)\b/}
 ];
-function normalizedTechniqueName(value){return String(value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim().replace(/\\s+/g,' ')}
+function normalizedTechniqueName(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/\s+/g,' ')}
 function findTechniqueForCurrent(){const current=steps()[step];if(!current)return null;const normalized=normalizedTechniqueName(current.label);return GG_TECHNIQUE_CATALOG.find(item=>item.pattern.test(normalized))||null}
 function closeTechnique(){const overlay=$('techniqueOverlay');if(overlay.classList.contains('hidden'))return;overlay.classList.add('hidden');$('techniqueFrame').src='about:blank';document.body.style.overflow=''}
 function renderTechniqueButton(){const available=!!findTechniqueForCurrent();$('techniqueButton').classList.toggle('hidden',!available);if(!available)closeTechnique()}
