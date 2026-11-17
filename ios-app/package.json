@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "build:web": "node scripts/build-web.mjs",
-    "ios:sync": "npm run build:web && npx cap sync ios",
-    "ios:open": "npx cap open ios"
+    "ios:sync": "npm run build:web && npx cap sync ios && npm run ios:configure",
+    "ios:open": "npx cap open ios",
+    "test": "node --test tests/*.test.mjs",
+    "ios:init": "npm run build:web && npx cap add ios && npm run ios:configure && npx cap sync ios",
+    "ios:configure": "node scripts/configure-ios.mjs"
   },
   "dependencies": {
     "@capacitor/core": "^7.0.0",
