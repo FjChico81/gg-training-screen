@@ -37,3 +37,41 @@ jobs:
         run: |
           grep -q 'GG MOBILE iOS · prototipo Bluetooth' www/index.html
           grep -q 'heartRate:window.GGNativeHeart.summary(elapsed)' www/index.html
+  compile-ios-simulator:
+    needs: test-and-build
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: ios-app
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar dependencias
+        run: npm install --no-audit --no-fund
+      - name: Versiones de Xcode y CocoaPods
+        run: |
+          xcodebuild -version
+          pod --version
+      - name: Generar proyecto iOS y permisos Bluetooth
+        run: npm run ios:init
+      - name: Comprobar permiso de Bluetooth
+        run: grep -q 'NSBluetoothAlwaysUsageDescription' ios/App/App/Info.plist
+      - name: Compilar aplicación iOS sin firma (simulador)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -sdk iphonesimulator \
+            -derivedDataPath /tmp/gg-ios-derived \
+            CODE_SIGNING_ALLOWED=NO \
+            build -quiet
