@@ -41,9 +41,9 @@ setInterval(refreshHeart,3000);
 html=html.slice(0,start)+nativeUI+html.slice(end);
 const bundled=await build({entryPoints:[resolve(app,'src/native-entry.js')],bundle:true,platform:'browser',format:'iife',write:false,target:'safari16',logLevel:'warning'});
 const js=bundled.outputFiles[0].text;
-const scriptMarker="<script>\\n'use strict';";
+const scriptMarker="<script>\n'use strict';";
 if(!html.includes(scriptMarker))throw new Error('No se encuentra el inicio del JavaScript de GG Mobile; se cancela la compilación.');
-html=html.replace(scriptMarker,`<script>${js.replaceAll('</script','<\\\\/script')}</script>${scriptMarker}`);
+html=html.replace(scriptMarker,`<script>${js.replaceAll('</script',"<\\/script")}</script>${scriptMarker}`);
 // Una app instalada por Xcode no se actualiza automáticamente desde GitHub Pages.
 html=html.replace('id="checkUpdates" class="alt"','id="checkUpdates" class="alt hidden"');
 html=html.replace('BUHARDILLA FIT · v2.7','GG MOBILE iOS · prototipo BLE');
