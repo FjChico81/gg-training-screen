@@ -1,0 +1,9 @@
+{
+  "appId": "es.ggtraining.mobile",
+  "appName": "GG Mobile",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "ios": {
+    "contentInset": "automatic"
+  }
+}
