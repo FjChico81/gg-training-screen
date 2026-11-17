@@ -1,0 +1,23 @@
+name: QA GG Mobile GIFs de técnica
+on:
+  push:
+    branches:
+      - feature/gg-technique-gifs
+    paths:
+      - 'index.html'
+      - 'tests/technique-gif-smoke.mjs'
+      - '.github/workflows/gg-technique-gifs.yml'
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar DOM de pruebas
+        run: npm install --no-save --no-audit --no-fund jsdom@26
+      - name: Probar cinco GIFs y visor
+        run: node tests/technique-gif-smoke.mjs
