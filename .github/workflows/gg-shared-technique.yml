@@ -1,0 +1,24 @@
+name: QA GG GIFs compartidos
+on:
+  push:
+    branches:
+      - feature/gg-shared-technique-assets
+    paths:
+      - 'index.html'
+      - 'assets/technique/**'
+      - 'tests/shared-technique-smoke.mjs'
+      - '.github/workflows/gg-shared-technique.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar dependencias de pruebas
+        run: npm install --no-save --no-audit --no-fund jsdom@26 fake-indexeddb@6
+      - name: Verificar 5 GIFs y el modo guiado
+        run: node tests/shared-technique-smoke.mjs
