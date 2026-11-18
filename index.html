@@ -299,7 +299,7 @@ function currentStrength(){return steps()[step]?.strength||null}
 function getDraft(){return{reps:numeric('reps',0,500),weight:numeric('weight',0,1000),rir:numeric('rir',0,15),rest:numeric('rest',0,1800)}}
 function fillDraft(){const a=currentStrength();if(!a||editingSet>=0)return;const prev=draftSets[step]||seriesLog[step]?.at(-1)||{};$('reps').value=prev.reps??a.reps;$('weight').value=prev.weight??a.weight??0;$('rir').value=prev.rir??a.rir??2;$('rest').value=prev.rest??a.rest}
 function isTvTimedRest(exercise){
- return document.body.classList.contains('tv-mode')&&!!exercise?.duration&&/^(?:descanso|recuperaci[oó]n)(?:\s|$)/i.test(exercise.label);
+ return document.body.classList.contains('tv-mode')&&!!exercise?.duration&&/^(?:descanso|recuperaci[oó]n|rest|pausa)(?:\s|$|[·:—-])/i.test(exercise.label);
 }
 function renderRestUI(exercise){
  const a=currentStrength(),entries=seriesLog[step]||[];
