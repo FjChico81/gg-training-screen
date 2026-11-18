@@ -325,7 +325,7 @@ function renderRestUI(exercise){
  }
  if(label.textContent!==labelText)label.textContent=labelText;
  if(counter.textContent!==countText)counter.textContent=countText;
- $('restCard').dataset.restUrgent=String((timed||waiting)&&!paused&&((timed?Math.ceil(current.duration-stepElapsed):Math.ceil(restRemaining))<=10));
+ $('restCard').dataset.restUrgent=String((timed||waiting)&&!paused&&((timed?Math.ceil(current.duration-stepElapsed):Math.ceil(restRemaining))>0)&&((timed?Math.ceil(current.duration-stepElapsed):Math.ceil(restRemaining))<=10));
  $('restCard').dataset.restComplete=String(!timed&&!waiting&&!changing);
  if(next.textContent!==nextText)next.textContent=nextText;
  next.classList.toggle('hidden',!nextText);
