@@ -309,7 +309,7 @@ function renderRestUI(exercise){
  const timed=!between&&tv&&isTvTimedRest(exercise??steps()[step]);
  $('guided').classList.toggle('tv-rest',tv&&(waiting&&between||timed));
  $('restCard').classList.toggle('hidden',!between&&!timed);
- if(!between&&!timed)return;
+ if(!between&&!timed){$('restCard').dataset.restUrgent='false';$('restCard').dataset.restComplete='false';return;}
  const label=$('restLabel'),counter=$('restCountdown'),next=$('restNext');
  const labelText=timed?(paused?'DESCANSO PAUSADO':'DESCANSO PROGRAMADO'):
    changing?(paused?'CAMBIO DE EJERCICIO · PAUSADO':'DESCANSO ENTRE EJERCICIOS'):
