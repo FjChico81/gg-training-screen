@@ -95,6 +95,8 @@ if(new URLSearchParams(location.search).get('app')==='hf') document.documentElem
 .tv-mode #guided #restCard[data-rest-urgent="true"]{border-color:#ffad60;background:#533b2c}
 .tv-mode #guided #restCard[data-rest-urgent="true"] #restCountdown{color:#ffce95}
 .tv-mode #guided #restCard[data-rest-complete="true"]{border-color:#67db90;background:#244538}
+.tv-mode #guided #restCard[data-rest-paused="true"]{border-color:#a5b4c5;background:#303b49}
+.tv-mode #guided #restCard[data-rest-paused="true"] #restCountdown{color:#e2e8f0}
 @media(min-width:600px) and (min-aspect-ratio:4/3){.tv-mode #guided.tv-rest #restCard{min-height:38vh}}
 html[data-edition="hf"]{--menu:#252528;--panel:#29292d;--history:#303034;--editor:#333337;--tile:#35353a;--line:#515157;--button-alt:#414146;--outline:#626269;--bg:#1c1c1e;--input:#222225;--accent:#ff671d;--accent-soft:#ff9a66;--muted:#c8c3be;--ink:#161311;--ink-tv:#161311;--text:#f6f1e9;--history-body:#27272b;--surface:#303034}
 html[data-edition="hf"] #brandTitle{font-size:clamp(42px,8vw,80px);font-weight:950;font-style:italic;letter-spacing:-.08em;line-height:.93;padding-right:.12em}
@@ -309,7 +311,7 @@ function renderRestUI(exercise){
  const timed=!between&&tv&&isTvTimedRest(exercise??steps()[step]);
  $('guided').classList.toggle('tv-rest',tv&&(waiting&&between||timed));
  $('restCard').classList.toggle('hidden',!between&&!timed);
- if(!between&&!timed){$('restCard').dataset.restUrgent='false';$('restCard').dataset.restComplete='false';return;}
+ if(!between&&!timed){$('restCard').dataset.restUrgent='false';$('restCard').dataset.restComplete='false';$('restCard').dataset.restPaused='false';return;}
  const label=$('restLabel'),counter=$('restCountdown'),next=$('restNext');
  const labelText=timed?(paused?'DESCANSO PAUSADO':'DESCANSO PROGRAMADO'):
    changing?(paused?'CAMBIO DE EJERCICIO · PAUSADO':'DESCANSO ENTRE EJERCICIOS'):
@@ -327,6 +329,7 @@ function renderRestUI(exercise){
  if(counter.textContent!==countText)counter.textContent=countText;
  $('restCard').dataset.restUrgent=String((timed||waiting)&&!paused&&((timed?Math.ceil(current.duration-stepElapsed):Math.ceil(restRemaining))>0)&&((timed?Math.ceil(current.duration-stepElapsed):Math.ceil(restRemaining))<=10));
  $('restCard').dataset.restComplete=String(!timed&&!waiting&&!changing);
+ $('restCard').dataset.restPaused=String(paused&&(timed||waiting));
  if(next.textContent!==nextText)next.textContent=nextText;
  next.classList.toggle('hidden',!nextText);
  const skip=$('skipRest');
