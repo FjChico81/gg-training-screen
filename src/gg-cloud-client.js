@@ -5,7 +5,7 @@ import { GG_SUPABASE_CONFIG as cfg } from "../config/gg-supabase.js";
 const headers = () => ({ apikey: cfg.publishableKey, "Content-Type": "application/json" });
 async function request(path, { method = "GET", token, body, extraHeaders = {} } = {}) {
   const res = await fetch(cfg.url + path, {
-    method,
+    method, signal: AbortSignal.timeout(15000),
     headers: { ...headers(), ...(token ? { Authorization: "Bearer " + token } : {}), ...extraHeaders },
     ...(body === undefined ? {} : { body: JSON.stringify(body) })
   });
@@ -20,7 +20,7 @@ async function request(path, { method = "GET", token, body, extraHeaders = {} } 
       const hint = retry && /^\\d+$/.test(retry) ? " Espera al menos " + retry + " segundos antes de volver a intentarlo." : " No pulses repetidamente; revisa si has recibido el correo de confirmación.";
       throw new Error("Límite temporal de Supabase (" + (code || "429") + ")." + hint);
     }
-    throw new Error(serverMessage || ("GG Supabase HTTP " + res.status));
+    throw Object.assign(new Error(serverMessage || ("GG Supabase HTTP " + res.status)), { status: res.status, code });
   }
   return data;
 }
@@ -28,7 +28,7 @@ function assertSession(session) {
   if (!session?.access_token || !session?.user?.id) throw new Error("Inicia sesión en GG antes de sincronizar");
 }
 function assertWorkout(workout) {
-  if (!workout || typeof workout.name !== "string" || !workout.name.trim() || workout.name.length > 120 ||
+  if (!workout || typeof workout.name !== "string" || !workout.name.trim() || workout.name.length > 200 ||
       !Array.isArray(workout.blocks)) throw new Error("Rutina GG inválida");
 }
 // Supabase Auth (email/password). Signup may require email confirmation.
@@ -41,26 +41,37 @@ export async function loginGG(email, password) {
 export async function refreshGG(refreshToken) {
   return request("/auth/v1/token?grant_type=refresh_token", { method: "POST", body: { refresh_token: refreshToken } });
 }
+const table = "/rest/v1/" + cfg.workoutsTable;
+const fields = "id,name,blocks,hr_limit,revision,updated_at";
+
 export async function listGGWorkouts(session) {
   assertSession(session);
-  const rows = await request("/rest/v1/workouts?select=id,user_id,name,blocks,created_at,updated_at&order=updated_at.desc", {
-    token: session.access_token
-  });
-  return rows.map(row => ({
-    id: row.id, name: row.name, blocks: row.blocks,
-    updated_at: row.updated_at, created_at: row.created_at
-  }));
+  const results = [];
+  let lastId;
+  while (true) {
+    const rows = await request(table + "?select=" + fields + "&order=id.asc&limit=100" +
+      (lastId ? "&id=gt." + encodeURIComponent(lastId) : ""), { token: session.access_token });
+    if (!rows.length) return results;
+    results.push(...rows);
+    lastId = rows.at(-1).id;
+  }
 }
-export async function createGGWorkout(session, workout) {
+
+export async function saveGGWorkout(session, id, revision, payload) {
   assertSession(session);
-  assertWorkout(workout);
-  const id = workout.id && /^[0-9a-f-]{36}$/i.test(workout.id) ? workout.id : crypto.randomUUID();
-  const rows = await request("/rest/v1/workouts?select=id,name,blocks,updated_at", {
-    method: "POST", token: session.access_token,
+  assertWorkout(payload);
+  const isNew = revision === null;
+  const filter = isNew ? "" : "&id=eq." + encodeURIComponent(id) + "&revision=eq." + encodeURIComponent(revision);
+  const rows = await request(table + "?select=" + fields + filter, {
+    method: isNew ? "POST" : "PATCH",
+    token: session.access_token,
     extraHeaders: { Prefer: "return=representation" },
-    body: { id, user_id: session.user.id, name: workout.name.trim(), blocks: workout.blocks }
+    body: isNew ? { id, user_id: session.user.id, ...payload } : payload
   });
   return rows[0];
 }
-// Deliberately no automatic import, delete or edit: localStorage remains authoritative
-// until a user-confirmed backup and verified conflict-handling workflow.
+
+export async function logoutGG(session) {
+  if (session?.access_token) await request("/auth/v1/logout?scope=local",
+    { method: "POST", token: session.access_token });
+}

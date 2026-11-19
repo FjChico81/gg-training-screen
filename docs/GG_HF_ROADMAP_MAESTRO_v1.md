@@ -1,6 +1,6 @@
 # GG + HF · ROADMAP MAESTRO v1.0
-Fecha: 2026-11-18
-Estado: planificación y fase 0 iniciada; sin despliegue ni migración.
+Fecha: 2026-11-19
+Estado: sincronización manual verificada en GG. Sincronización automática implementada en desarrollo, con pruebas simuladas.
 Base: GG_HF_SYNC_ARCHITECTURE_v0.1.md
 
 ## Regla inviolable
@@ -20,7 +20,7 @@ GG familiar: administrador adulto, perfiles familiares (incluidos menores gestio
    - Evitar insertar descansos no programados.
    - Aceptación: pruebas funcionales GG y HF en navegador y Samsung.
 2. INFRAESTRUCTURA
-   - Crear dos proyectos Supabase NUEVOS con autorización de costes y titularidad.
+   - GG FAMILY y HF TRAINING creados en la organización exclusiva GG/HF TRAINING.
    - Diseñar y revisar esquema, RLS y pruebas negativas; claves secretas solo servidor.
    - Aceptación: usuarios cruzados no pueden leer/escribir datos ajenos.
 3. IDENTIDAD
@@ -60,3 +60,11 @@ A. Auditar claves y formatos de exportación/restauración y alcance de perfiles
 B. Preparar matriz de pruebas para modo TV y descansos.
 C. Pedir al usuario exportación de respaldo desde Samsung antes de cualquier migración.
 D. No tocar HPS, Supabase existente, Drive original de GIFs ni main sin validación.
+
+## Continuidad · sincronización automática GG
+- Base `preview/gg-family-cloud` (v2.9.12). Candidato v2.9.13 en `dev/gg-family-auto-sync`.
+- La biblioteca local conserva sus IDs. Las escrituras usan UUID remotos estables y la última revisión observada. Ante un conflicto se pueden conservar las dos versiones.
+- La sincronización se pospone durante la edición y las sesiones en curso. Al fallar la red se conserva el guardado local y se reintenta cuando el navegador recupera conexión o vuelve a estar activo.
+- La sesión de GG se recuerda en el navegador y se vincula a una única cuenta. Las rutinas locales siguen visibles en ese perfil del navegador tras cerrar la sesión. Para otra cuenta se usa otro perfil del navegador.
+- La primera entrega cubre rutinas. El borrado de rutinas vinculadas, la apertura inicial sin red y la sincronización de historial quedan pendientes. Las rutinas antiguas se incorporan al guardarlas de nuevo con la sesión de GG iniciada. Las importaciones de copias de seguridad siguen siendo locales.
+- Próxima puerta: verificar en GG FAMILY el esquema y las políticas vigentes, aplicar `db/gg-family/automatic-workout-sync.sql` exclusivamente a GG FAMILY (`xnvnlmmwfpdlkolukhyh`), comprobar acceso como propietario y como otro usuario, desplegar una preview GG y verificar iPhone y Samsung en ambos sentidos. El conector actual ha denegado el acceso al proyecto.
