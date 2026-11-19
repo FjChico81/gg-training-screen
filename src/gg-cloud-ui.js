@@ -6,6 +6,16 @@ const status = msg => { el("ggCloudStatus").textContent = msg; };
 let session = null;
 let cloudRows = [];
 const localKey = "gg-training-screen-workouts-v1";
+const demoForFirstSync = {
+  name: "HYBRID POWER · Ejemplo",
+  blocks: [
+    { name: "Calentamiento", items: ["5 min bicicleta", "Movilidad dinámica"] },
+    { name: "Fuerza", items: ["3 × 10 sentadillas", "3 × 12 press"] },
+    { name: "Híbrido", items: ["15 burpees", "20 wall balls"] },
+    { name: "Cardio", items: ["400 m carrera", "20 zancadas"] },
+    { name: "Vuelta a la calma", items: ["3 min bicicleta", "Movilidad suave"] }
+  ]
+};
 function localWorkouts() {
   const value = JSON.parse(localStorage.getItem(localKey) || "[]");
   if (!Array.isArray(value)) throw new Error("La biblioteca local no tiene formato válido");
@@ -112,6 +122,14 @@ el("ggCloudUpload").addEventListener("click", () => perform(async () => {
   status("Copia subida: " + created.name + ". Original local conservado.");
   cloudRows = await listGGWorkouts(session);
   renderRemote();
+}));
+el("ggCloudDemoUpload").addEventListener("click", () => perform(async () => {
+  if (!session) throw new Error("Inicia sesión primero");
+  if (!confirm("¿Subir a GG FAMILY una copia de la rutina de EJEMPLO para probar la sincronización? No se modificará ningún entrenamiento local.")) return;
+  const created = await createGGWorkout(session, demoForFirstSync);
+  cloudRows = await listGGWorkouts(session);
+  renderRemote();
+  status("Rutina de ejemplo subida correctamente: " + created.name + ". Ya puedes abrir esta URL en la Samsung e iniciar sesión.");
 }));
 el("ggCloudLogout").addEventListener("click", () => {
   session = null; cloudRows = []; renderRemote();
