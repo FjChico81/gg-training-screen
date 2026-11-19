@@ -48,9 +48,17 @@ export async function listGGWorkouts(session) {
   assertSession(session);
   const results = [];
   let lastId;
+  let selected = fields + ",deleted_at";
   while (true) {
-    const rows = await request(table + "?select=" + fields + "&order=id.asc&limit=100" +
-      (lastId ? "&id=gt." + encodeURIComponent(lastId) : ""), { token: session.access_token });
+    const query = "&order=id.asc&limit=100" + (lastId ? "&id=gt." + encodeURIComponent(lastId) : "");
+    let rows;
+    try {
+      rows = await request(table + "?select=" + selected + query, { token: session.access_token });
+    } catch (error) {
+      if (lastId || error.code !== "42703" || !error.message.includes("deleted_at")) throw error;
+      selected = fields;
+      rows = await request(table + "?select=" + selected + query, { token: session.access_token });
+    }
     if (!rows.length) return results;
     results.push(...rows);
     lastId = rows.at(-1).id;
@@ -74,4 +82,23 @@ export async function saveGGWorkout(session, id, revision, payload) {
 export async function logoutGG(session) {
   if (session?.access_token) await request("/auth/v1/logout?scope=local",
     { method: "POST", token: session.access_token });
+}
+
+export async function archiveGGWorkout(session, id, revision) {
+  assertSession(session);
+  const filter = "&id=eq." + encodeURIComponent(id) + "&revision=eq." + encodeURIComponent(revision);
+  try {
+    const rows = await request(table + "?select=id,revision,deleted_at&deleted_at=is.null" + filter, {
+      method: "PATCH",
+      token: session.access_token,
+      extraHeaders: { Prefer: "return=representation" },
+      body: { deleted_at: new Date().toISOString() }
+    });
+    return rows[0];
+  } catch (error) {
+    if ((error.code === "42703" || error.code === "PGRST204") && error.message.includes("deleted_at")) {
+      throw Error("El borrado sincronizado está pendiente de activación en GG FAMILY.");
+    }
+    throw error;
+  }
 }

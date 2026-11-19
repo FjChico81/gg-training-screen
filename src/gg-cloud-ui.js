@@ -1,4 +1,4 @@
-import { registerGG, loginGG, refreshGG, logoutGG, listGGWorkouts, saveGGWorkout } from "./gg-cloud-client.js";
+import { registerGG, loginGG, refreshGG, logoutGG, listGGWorkouts, saveGGWorkout, archiveGGWorkout } from "./gg-cloud-client.js?v=2.9.15";
 import { workoutPayload, sameWorkout, linkWorkout, markWorkout, planWorkout } from "./gg-cloud-sync.js";
 
 const authKey = "gg-family-auth-v1";
@@ -42,16 +42,23 @@ export function startGGCloud(library) {
     const rows = await listGGWorkouts(auth);
     if (!isCurrent() || library.busy()) return;
 
+    const rowsById = new Map(rows.map(row => [row.id, row]));
     const before = library.read();
-    const next = before.slice();
-    const remoteById = new Map(rows.map(row => [row.id, row]));
+    const next = before.filter(local => {
+      const meta = local.ggCloud;
+      const remote = rowsById.get(meta?.id ?? local.id);
+      if (!remote?.deleted_at) return true;
+      // Preserve an unsent edit or an unrelated local routine with an identical ID.
+      const base = meta?.base ?? remote;
+      return !sameWorkout(local, base);
+    });
     const linkedIds = new Set(next.map(w => w.ggCloud?.id));
     const localById = new Map(next.map(w => [w.id, w]));
     const conflicts = [];
     const pending = [];
 
     for (const remote of rows) {
-      if (linkedIds.has(remote.id)) continue;
+      if (remote.deleted_at || linkedIds.has(remote.id)) continue;
       const exact = next.findIndex(w => !w.ggCloud && (w.id === remote.id || w.id === "demo") &&
         sameWorkout(w, remote));
       if (exact >= 0) {
@@ -66,7 +73,11 @@ export function startGGCloud(library) {
     next.forEach((local, index) => {
       const meta = local.ggCloud;
       if (meta?.owner !== owner) return;
-      const remote = remoteById.get(meta.id);
+      const remote = rowsById.get(meta.id);
+      if (remote?.deleted_at) {
+        conflicts.push({ name: local.name, local, remote });
+        return;
+      }
       switch (planWorkout(local, remote)) {
         case "accept": next[index] = linkWorkout(local, remote, owner); break;
         case "conflict": conflicts.push({ name: local.name, local, remote }); break;
@@ -115,11 +126,11 @@ export function startGGCloud(library) {
     list.replaceChildren();
     for (const { name, local, remote } of conflicts) {
       const item = document.createElement("li");
-      item.textContent = name;
+      item.textContent = remote?.deleted_at ? name + " · eliminada en otro dispositivo" : name;
       if (local && remote) {
         const button = document.createElement("button");
         button.type = "button";
-        button.textContent = "Conservar ambas versiones";
+        button.textContent = remote.deleted_at ? "Recuperar mi edición como copia" : "Conservar ambas versiones";
         button.onclick = () => perform(async () => {
           if (library.busy() || readAuth()?.user.id !== owner) return;
           const before = library.read();
@@ -127,7 +138,9 @@ export function startGGCloud(library) {
           if (found !== local) return schedule(true);
           const id = crypto.randomUUID();
           const copy = markWorkout({ ...local, id, ggCloud: undefined }, null, owner);
-          if (replace(before, [...before.map(w => w === local ? linkWorkout(w, remote, owner) : w), copy])) {
+          const updated = remote.deleted_at ? before.filter(w => w !== local)
+            : before.map(w => w === local ? linkWorkout(w, remote, owner) : w);
+          if (replace(before, [...updated, copy])) {
             schedule(true);
           }
         });
@@ -229,6 +242,28 @@ export function startGGCloud(library) {
 
   return {
     schedule,
+    async archive(workout) {
+      if (!navigator.onLine) throw Error("Conéctate a internet para eliminar esta rutina de tus dispositivos.");
+      await lock(async () => {
+        let auth = readAuth();
+        const meta = workout.ggCloud;
+        if (!auth || auth.user.id !== meta.owner) throw Error("Inicia sesión en la cuenta propietaria de la rutina.");
+        if (library.busy() || !library.read().includes(workout)) {
+          throw Error("La rutina ha cambiado o hay un entrenamiento activo. Vuelve a intentarlo desde la biblioteca.");
+        }
+        if (meta.revision === null) throw Error("Espera a que se guarde la rutina en la nube y vuelve a intentarlo.");
+        if (auth.expiresAt <= Date.now() + 60_000) {
+          const token = auth.refresh_token;
+          const refreshed = await refreshGG(token);
+          if (readAuth()?.refresh_token !== token) throw Error("La sesión ha cambiado. Vuelve a iniciar sesión.");
+          auth = remember(refreshed);
+        }
+        const archived = await archiveGGWorkout(auth, meta.id, meta.revision);
+        if (!archived) throw Error("La rutina ha cambiado en otro dispositivo. Revisa la versión actual antes de eliminarla.");
+        const current = library.read();
+        replace(current, current.filter(item => item !== workout));
+      }).finally(() => schedule(true));
+    },
     mark(workout, previous) {
       return markWorkout(workout, previous, readAuth()?.user.id);
     }
