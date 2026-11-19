@@ -59,8 +59,8 @@ function importCloudWorkout(w) {
     else localStorage.setItem(localKey, original);
     throw e;
   }
-  status("Rutina descargada. Recarga GG WEB para verla en Mis entrenamientos.");
-  renderLocal();
+  status("Rutina descargada y guardada. Actualizando la biblioteca para poder entrenar.");
+  location.reload();
 }
 function renderRemote() {
   const list = el("ggCloudRemote");
@@ -117,5 +117,6 @@ el("ggCloudLogout").addEventListener("click", () => {
   session = null; cloudRows = []; renderRemote();
   status("Sesión de este panel cerrada. La biblioteca local no cambia.");
 });
+document.getElementById("ggCloudPanel")?.addEventListener("toggle", event => { if (event.target.open) { try { renderLocal(); } catch (e) { status("Error local: " + e.message); } } });
 try { renderLocal(); } catch (e) { status("Error local: " + e.message); }
 renderRemote();
