@@ -1,6 +1,6 @@
 # Inventario de GIFs de GG y HF
 
-Versión de pruebas 2.9.39 · 138 fichas, 127 con GIF, 3 con vídeo de referencia y 8 sin demostración.
+Versión de pruebas 2.9.40 · 138 fichas, 127 con GIF y 11 pendientes.
 
 ## Catálogo
 
@@ -143,21 +143,18 @@ Los nombres son los que aparecen en el selector de la aplicación. Puedes abrir 
 
 The appearance of U.S. Department of War (DoW) visual information does not imply or constitute DoW endorsement.
 
-## Vídeos de referencia mientras se incorpora un GIF
+## Fichas con GIF pendiente
 
-- Arrancada con mancuerna. [CrossFit](https://www.crossfit.com/sport/cfg21-foundations-dbs).
-- Devil press con dos mancuernas. [WODwell](https://wodwell.com/movement/devil-press/).
-- Tirón de trineo con cuerda. [Velites](https://www.youtube.com/watch?v=BV1mJ00UV1g).
-
-## Fichas sin demostración
-
+- Arrancada con mancuerna
 - Bicicleta
 - Carrera
 - Carrera en cinta
+- Devil press con dos mancuernas
 - Dominadas
 - Remo
 - Sentadilla goblet
 - SkiErg
+- Tirón de trineo con cuerda
 - Wall ball
 
 [Registro de pendientes y variantes revisadas](GIFS-PENDIENTES.md).
