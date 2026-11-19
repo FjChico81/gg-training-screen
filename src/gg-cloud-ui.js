@@ -3,6 +3,7 @@ import { workoutPayload, sameWorkout, linkWorkout, markWorkout, planWorkout } fr
 
 const authKey = "gg-family-auth-v1";
 const ownerKey = "gg-family-browser-owner-v1";
+const emailKey = "gg-family-remembered-email-v1";
 const el = id => document.getElementById(id);
 const status = message => { el("ggCloudStatus").textContent = message; };
 const readAuth = () => JSON.parse(localStorage.getItem(authKey) || "null");
@@ -190,10 +191,28 @@ export function startGGCloud(library) {
     });
   }
 
+  const emailInput = el("ggCloudEmail");
+  const passwordInput = el("ggCloudPassword");
+  const showPassword = el("ggCloudShowPassword");
+  const rememberEmail = el("ggCloudRemember");
+  const savedEmail = localStorage.getItem(emailKey);
+  rememberEmail.checked = savedEmail !== "";
+  if (savedEmail && !emailInput.value) emailInput.value = savedEmail;
+
+  function setPasswordVisible(visible) {
+    passwordInput.type = visible ? "text" : "password";
+    showPassword.textContent = visible ? "Ocultar contraseña" : "Ver contraseña";
+  }
+
+  showPassword.onclick = () => setPasswordVisible(passwordInput.type === "password");
+  rememberEmail.onchange = () => {
+    if (!rememberEmail.checked) localStorage.setItem(emailKey, "");
+  };
+
   const loginButton = el("ggCloudLogin");
   loginButton.onclick = () => perform(async () => {
-    const email = el("ggCloudEmail").value.trim();
-    const password = el("ggCloudPassword").value;
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
     if (!email || !password) throw Error("Introduce el correo y la contraseña de GG WEB.");
     if (!navigator.onLine) throw Error("La tablet no tiene conexión. Conéctala a internet y vuelve a pulsar Entrar.");
     loginButton.disabled = true;
@@ -201,7 +220,11 @@ export function startGGCloud(library) {
     try {
       await lock(async () => {
         remember(await loginGG(email, password));
-        el("ggCloudPassword").value = "";
+        passwordInput.value = "";
+        setPasswordVisible(false);
+        if (rememberEmail.checked) {
+          try { localStorage.setItem(emailKey, email); } catch { /* Optional preference. */ }
+        }
       });
       status("Sesión iniciada. Comprobando rutinas…");
       schedule(true);
@@ -219,12 +242,15 @@ export function startGGCloud(library) {
   loginButton.disabled = false;
   el("ggCloudRegister").onclick = () => perform(async () => {
     await registerGG(el("ggCloudEmail").value.trim(), el("ggCloudPassword").value);
-    el("ggCloudPassword").value = "";
+    passwordInput.value = "";
+    setPasswordVisible(false);
     status("Registro solicitado. Revisa el correo de confirmación.");
   });
   el("ggCloudLogout").onclick = () => perform(async () => {
     const auth = readAuth();
     localStorage.removeItem(authKey);
+    passwordInput.value = "";
+    setPasswordVisible(false);
     el("ggCloudRemote").replaceChildren();
     status("Sesión cerrada en este navegador.");
     await lock(async () => {
