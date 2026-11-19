@@ -1,5 +1,5 @@
 // Experimental GG-only cloud panel. Does not change the existing workout engine.
-// No automatic imports, no localStorage mutations, no HF cloud access.
+// Cloud imports are explicit, backed up, and GG-only; never auto-overwrite.
 import { registerGG, loginGG, listGGWorkouts, createGGWorkout } from "./gg-cloud-client.js";
 const el = id => document.getElementById(id);
 const status = msg => { el("ggCloudStatus").textContent = msg; };
@@ -23,12 +23,57 @@ function renderLocal() {
     select.append(option);
   }
 }
+function validRemote(w) {
+  return w && typeof w.id === "string" && typeof w.name === "string" &&
+    w.name.trim().length > 0 && Array.isArray(w.blocks) &&
+    w.blocks.every(b => b && typeof b.name === "string" && Array.isArray(b.items) &&
+      b.items.every(x => typeof x === "string"));
+}
+function downloadBackup(data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "GG-local-backup-before-cloud-" + new Date().toISOString().replace(/[:.]/g, "-") + ".json";
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+function importCloudWorkout(w) {
+  if (!validRemote(w)) throw new Error("La rutina en la nube no tiene el formato esperado");
+  const existing = localWorkouts();
+  if (existing.some(x => x.id === w.id)) {
+    throw new Error("Ya existe una rutina con este identificador. No se ha sobrescrito");
+  }
+  const copy = { id: w.id, name: w.name, blocks: w.blocks };
+  if (!confirm("¿Descargar «" + w.name + "» a este dispositivo? Se conservarán las rutinas existentes y se descargará una copia de seguridad.")) return;
+  downloadBackup(existing);
+  const original = localStorage.getItem(localKey);
+  try {
+    const current = localWorkouts();
+    if (current.some(x => x.id === w.id)) throw new Error("Rutina ya existente");
+    localStorage.setItem(localKey, JSON.stringify([...current, copy]));
+  } catch (e) {
+    if (original === null) localStorage.removeItem(localKey);
+    else localStorage.setItem(localKey, original);
+    throw e;
+  }
+  status("Rutina descargada. Recarga GG WEB para verla en Mis entrenamientos.");
+  renderLocal();
+}
 function renderRemote() {
   const list = el("ggCloudRemote");
   list.replaceChildren();
   for (const w of cloudRows) {
     const item = document.createElement("li");
     item.textContent = w.name + " · " + new Date(w.updated_at).toLocaleString("es-ES");
+    const download = document.createElement("button");
+    download.type = "button";
+    download.className = "alt";
+    download.textContent = "Descargar a este dispositivo";
+    download.addEventListener("click", () => perform(async () => importCloudWorkout(w)));
+    item.append(" ", download);
     list.append(item);
   }
   if (!cloudRows.length) {
