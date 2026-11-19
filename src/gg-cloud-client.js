@@ -12,7 +12,16 @@ async function request(path, { method = "GET", token, body, extraHeaders = {} } 
   const raw = await res.text();
   let data;
   try { data = raw ? JSON.parse(raw) : null; } catch { data = raw; }
-  if (!res.ok) throw new Error(typeof data === "object" && data?.message ? data.message : typeof data === "object" && data?.error_description ? data.error_description : "GG Supabase HTTP " + res.status);
+  if (!res.ok) {
+    const code = typeof data === "object" && data ? data.code || data.error_code : null;
+    const serverMessage = typeof data === "object" && data ? data.msg || data.message || data.error_description || data.error : null;
+    if (res.status === 429) {
+      const retry = res.headers.get("retry-after");
+      const hint = retry && /^\\d+$/.test(retry) ? " Espera al menos " + retry + " segundos antes de volver a intentarlo." : " No pulses repetidamente; revisa si has recibido el correo de confirmación.";
+      throw new Error("Límite temporal de Supabase (" + (code || "429") + ")." + hint);
+    }
+    throw new Error(serverMessage || ("GG Supabase HTTP " + res.status));
+  }
   return data;
 }
 function assertSession(session) {
