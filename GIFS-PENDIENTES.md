@@ -4,8 +4,5 @@
 | --- | --- |
 | Wall ball | Incorporar una demostración con lanzamiento ascendente a la diana. El archivo revisado muestra un pase de pecho horizontal. |
 | Sentadilla goblet sin banda | Incorporar una demostración de esta variante. El catálogo ya incluye la variante con kettlebell y banda. |
-| Dominada pronada asistida con banda elástica y apoyo del pie | Archivo localizado en la copia de GG Mobile. Falta revisar la animación e incorporarla. |
-| Flexión inclinada con manos sobre step | Archivo localizado en la copia de GG Mobile. Falta revisar la animación e incorporarla. |
-| Crunch en banco declinado | Archivo localizado en la copia de GG Mobile. Falta revisar la animación e incorporarla. |
 
 Añadir aquí los ejercicios sin una demostración adecuada según se revise el catálogo. Revisar la lista completa al terminar la incorporación de GIFs.
