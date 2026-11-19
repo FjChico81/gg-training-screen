@@ -1,15 +1,23 @@
-import { registerGG, loginGG, refreshGG, logoutGG, listGGWorkouts, saveGGWorkout, archiveGGWorkout } from "./gg-cloud-client.js?v=2.9.15";
+import { ggWorkoutCloud } from "./gg-cloud-client.js?v=2.9.17";
 import { workoutPayload, sameWorkout, linkWorkout, markWorkout, planWorkout } from "./gg-cloud-sync.js";
 
-const authKey = "gg-family-auth-v1";
-const ownerKey = "gg-family-browser-owner-v1";
-const emailKey = "gg-family-remembered-email-v1";
 const el = id => document.getElementById(id);
 const status = message => { el("ggCloudStatus").textContent = message; };
-const readAuth = () => JSON.parse(localStorage.getItem(authKey) || "null");
-const lock = action => navigator.locks ? navigator.locks.request(authKey, action) : action();
 
-export function startGGCloud(library) {
+export function startGGCloud(library, { edition = "gg", client } = {}) {
+  const isHF = edition === "hf";
+  const label = isHF ? "HF TRAINING" : "GG FAMILY";
+  const app = isHF ? "HF" : "GG WEB";
+  const prefix = isHF ? "hf-training" : "gg-family";
+  const api = client ?? (isHF ? null : ggWorkoutCloud);
+  if (!api) throw Error("Falta la conexión propia de HF.");
+  const { registerGG, loginGG, refreshGG, logoutGG, listGGWorkouts, saveGGWorkout, archiveGGWorkout } = api;
+  const authKey = prefix + "-auth-v1";
+  const ownerKey = prefix + "-browser-owner-v1";
+  const emailKey = prefix + "-remembered-email-v1";
+  const readAuth = () => JSON.parse(localStorage.getItem(authKey) || "null");
+  const lock = action => navigator.locks ? navigator.locks.request(authKey, action) : action();
+
   let running = false;
   let requested = false;
   let retryAt = 0;
@@ -27,7 +35,7 @@ export function startGGCloud(library) {
       status("Inicia sesión para sincronizar. Las rutinas guardadas siguen disponibles en este navegador.");
       return;
     }
-    if (auth.user.id !== localStorage.getItem(ownerKey)) throw Error("Cuenta GG no vinculada a este navegador.");
+    if (auth.user.id !== localStorage.getItem(ownerKey)) throw Error("Cuenta de " + app + " no vinculada a este navegador.");
     if (library.busy()) {
       status("Sesión iniciada. La sincronización se reanudará al terminar el entrenamiento o salir del editor.");
       return;
@@ -156,7 +164,7 @@ export function startGGCloud(library) {
         !Number.isFinite(session.expires_in)) throw Error("Respuesta de inicio de sesión incompleta.");
     const owner = localStorage.getItem(ownerKey);
     if (owner && owner !== session.user.id) {
-      throw Error("Usa otro perfil del navegador para una cuenta GG diferente.");
+      throw Error("Usa otro perfil del navegador para una cuenta de " + app + " diferente.");
     }
     const auth = {
       user: { id: session.user.id },
@@ -214,10 +222,10 @@ export function startGGCloud(library) {
   loginButton.onclick = () => perform(async () => {
     const email = emailInput.value.trim();
     const password = passwordInput.value;
-    if (!email || !password) throw Error("Introduce el correo y la contraseña de GG WEB.");
+    if (!email || !password) throw Error("Introduce el correo y la contraseña de " + app + ".");
     if (!navigator.onLine) throw Error("La tablet no tiene conexión. Conéctala a internet y vuelve a pulsar Entrar.");
     loginButton.disabled = true;
-    status("Conectando con GG FAMILY…");
+    status("Conectando con " + label + "…");
     try {
       await lock(async () => {
         remember(await loginGG(email, password));
@@ -230,10 +238,10 @@ export function startGGCloud(library) {
       status("Sesión iniciada. Comprobando rutinas…");
       schedule(true);
     } catch (error) {
-      if (error.code === "invalid_credentials") throw Error("El correo o la contraseña de GG WEB no son correctos.");
+      if (error.code === "invalid_credentials") throw Error("El correo o la contraseña de " + app + " no son correctos.");
       if (error.code === "email_not_confirmed") throw Error("Confirma tu correo antes de iniciar sesión.");
       if (error.name === "TimeoutError" || error instanceof TypeError) {
-        throw Error("No se ha podido conectar con GG FAMILY. Comprueba tu conexión y vuelve a intentarlo.");
+        throw Error("No se ha podido conectar con " + label + ". Comprueba tu conexión y vuelve a intentarlo.");
       }
       throw error;
     } finally {
