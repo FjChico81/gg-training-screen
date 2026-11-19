@@ -201,7 +201,8 @@ export function startGGCloud(library) {
 
   function setPasswordVisible(visible) {
     passwordInput.type = visible ? "text" : "password";
-    showPassword.textContent = visible ? "Ocultar contraseña" : "Ver contraseña";
+    showPassword.setAttribute("aria-label", visible ? "Ocultar contraseña" : "Ver contraseña");
+    showPassword.dataset.visible = String(visible);
   }
 
   showPassword.onclick = () => setPasswordVisible(passwordInput.type === "password");
