@@ -20,13 +20,17 @@ export function startGGCloud(library) {
   }
 
   async function sync() {
-    if (!navigator.onLine || library.busy()) return;
+    if (!navigator.onLine) return;
     let auth = readAuth();
     if (!auth) {
       status("Inicia sesión para sincronizar. Las rutinas guardadas siguen disponibles en este navegador.");
       return;
     }
     if (auth.user.id !== localStorage.getItem(ownerKey)) throw Error("Cuenta GG no vinculada a este navegador.");
+    if (library.busy()) {
+      status("Sesión iniciada. La sincronización se reanudará al terminar el entrenamiento o salir del editor.");
+      return;
+    }
     if (auth.expiresAt <= Date.now() + 60_000) {
       const oldToken = auth.refresh_token;
       const refreshed = await refreshGG(oldToken);
@@ -173,13 +177,33 @@ export function startGGCloud(library) {
     });
   }
 
-  el("ggCloudLogin").onclick = () => perform(async () => {
-    await lock(async () => {
-      remember(await loginGG(el("ggCloudEmail").value.trim(), el("ggCloudPassword").value));
-      el("ggCloudPassword").value = "";
-    });
-    schedule(true);
+  const loginButton = el("ggCloudLogin");
+  loginButton.onclick = () => perform(async () => {
+    const email = el("ggCloudEmail").value.trim();
+    const password = el("ggCloudPassword").value;
+    if (!email || !password) throw Error("Introduce el correo y la contraseña de GG WEB.");
+    if (!navigator.onLine) throw Error("La tablet no tiene conexión. Conéctala a internet y vuelve a pulsar Entrar.");
+    loginButton.disabled = true;
+    status("Conectando con GG FAMILY…");
+    try {
+      await lock(async () => {
+        remember(await loginGG(email, password));
+        el("ggCloudPassword").value = "";
+      });
+      status("Sesión iniciada. Comprobando rutinas…");
+      schedule(true);
+    } catch (error) {
+      if (error.code === "invalid_credentials") throw Error("El correo o la contraseña de GG WEB no son correctos.");
+      if (error.code === "email_not_confirmed") throw Error("Confirma tu correo antes de iniciar sesión.");
+      if (error.name === "TimeoutError" || error instanceof TypeError) {
+        throw Error("No se ha podido conectar con GG FAMILY. Comprueba tu conexión y vuelve a intentarlo.");
+      }
+      throw error;
+    } finally {
+      loginButton.disabled = false;
+    }
   });
+  loginButton.disabled = false;
   el("ggCloudRegister").onclick = () => perform(async () => {
     await registerGG(el("ggCloudEmail").value.trim(), el("ggCloudPassword").value);
     el("ggCloudPassword").value = "";
@@ -200,6 +224,7 @@ export function startGGCloud(library) {
   window.addEventListener("focus", () => schedule());
   document.addEventListener("visibilitychange", () => schedule());
   setInterval(schedule, 30_000);
+  if (!navigator.onLine) status("Sin conexión. Conéctate a internet para sincronizar.");
   schedule();
 
   return {
