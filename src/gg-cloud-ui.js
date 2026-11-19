@@ -2,7 +2,11 @@ import { ggWorkoutCloud } from "./gg-cloud-client.js?v=2.9.17";
 import { workoutPayload, sameWorkout, linkWorkout, markWorkout, planWorkout } from "./gg-cloud-sync.js";
 
 const el = id => document.getElementById(id);
-const status = message => { el("ggCloudStatus").textContent = message; };
+const status = (message, state) => {
+  el("ggCloudStatus").textContent = message;
+  const summary = el("cloudSummaryState");
+  if (summary && state !== undefined) summary.textContent = state ? "· " + state : "";
+};
 
 export function startGGCloud(library, { edition = "gg", client } = {}) {
   const isHF = edition === "hf";
@@ -32,12 +36,12 @@ export function startGGCloud(library, { edition = "gg", client } = {}) {
     if (!navigator.onLine) return;
     let auth = readAuth();
     if (!auth) {
-      status("Inicia sesión para sincronizar. Las rutinas guardadas siguen disponibles en este navegador.");
+      status("Inicia sesión para sincronizar. Las rutinas guardadas siguen disponibles en este navegador.", "Sin sesión");
       return;
     }
     if (auth.user.id !== localStorage.getItem(ownerKey)) throw Error("Cuenta de " + app + " no vinculada a este navegador.");
     if (library.busy()) {
-      status("Sesión iniciada. La sincronización se reanudará al terminar el entrenamiento o salir del editor.");
+      status("Sesión iniciada. La sincronización se reanudará al terminar el entrenamiento o salir del editor.", "En pausa");
       return;
     }
     if (auth.expiresAt <= Date.now() + 60_000) {
@@ -127,7 +131,7 @@ export function startGGCloud(library, { edition = "gg", client } = {}) {
     }
 
     showConflicts(conflicts, owner);
-    status(conflicts.length ? "Hay cambios en conflicto. Se han conservado las versiones." : "Rutinas sincronizadas.");
+    status(conflicts.length ? "Hay cambios en conflicto. Se han conservado las versiones." : "Rutinas sincronizadas.", conflicts.length ? "Revisar cambios" : "Al día");
   }
 
   function showConflicts(conflicts, owner) {
@@ -178,7 +182,7 @@ export function startGGCloud(library, { edition = "gg", client } = {}) {
   }
 
   async function perform(action) {
-    try { await action(); } catch (error) { status(error.message); }
+    try { await action(); } catch (error) { status(error.message, "Revisar"); }
   }
 
   function schedule(force = false) {
@@ -192,7 +196,7 @@ export function startGGCloud(library, { edition = "gg", client } = {}) {
       retryAt = Date.now() + Math.min(300_000, 5_000 * 2 ** Math.min(failures, 6));
       status(error.status === 401 || error.code === "refresh_token_not_found"
         ? "Vuelve a iniciar sesión para enviar los cambios pendientes."
-        : "Sincronización pendiente. Los cambios siguen guardados en el dispositivo. " + error.message);
+        : "Sincronización pendiente. Los cambios siguen guardados en el dispositivo. " + error.message, "Revisar");
     }).finally(() => {
       running = false;
       if (requested && Date.now() >= retryAt) setTimeout(schedule, 2000);
@@ -225,7 +229,7 @@ export function startGGCloud(library, { edition = "gg", client } = {}) {
     if (!email || !password) throw Error("Introduce el correo y la contraseña de " + app + ".");
     if (!navigator.onLine) throw Error("La tablet no tiene conexión. Conéctala a internet y vuelve a pulsar Entrar.");
     loginButton.disabled = true;
-    status("Conectando con " + label + "…");
+    status("Conectando con " + label + "…", "Conectando");
     try {
       await lock(async () => {
         remember(await loginGG(email, password));
@@ -235,7 +239,7 @@ export function startGGCloud(library, { edition = "gg", client } = {}) {
           try { localStorage.setItem(emailKey, email); } catch { /* Optional preference. */ }
         }
       });
-      status("Sesión iniciada. Comprobando rutinas…");
+      status("Sesión iniciada. Comprobando rutinas…", "Conectando");
       schedule(true);
     } catch (error) {
       if (error.code === "invalid_credentials") throw Error("El correo o la contraseña de " + app + " no son correctos.");
@@ -261,18 +265,18 @@ export function startGGCloud(library, { edition = "gg", client } = {}) {
     passwordInput.value = "";
     setPasswordVisible(false);
     el("ggCloudRemote").replaceChildren();
-    status("Sesión cerrada en este navegador.");
+    status("Sesión cerrada en este navegador.", "Sin sesión");
     await lock(async () => {
       if (navigator.onLine && auth) await logoutGG(auth);
     });
   });
   el("ggCloudList").onclick = () => schedule(true);
   window.addEventListener("online", () => schedule(true));
-  window.addEventListener("offline", () => status("Sin conexión. Los cambios quedan guardados en este dispositivo."));
+  window.addEventListener("offline", () => status("Sin conexión. Los cambios quedan guardados en este dispositivo.", "Sin conexión"));
   window.addEventListener("focus", () => schedule());
   document.addEventListener("visibilitychange", () => schedule());
   setInterval(schedule, 30_000);
-  if (!navigator.onLine) status("Sin conexión. Conéctate a internet para sincronizar.");
+  if (!navigator.onLine) status("Sin conexión. Conéctate a internet para sincronizar.", "Sin conexión");
   schedule();
 
   return {
