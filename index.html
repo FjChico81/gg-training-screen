@@ -1,10 +1,13 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v2.9.64</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v2.9.65</title>
+<meta name="apple-mobile-web-app-title" content="VECTOR">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
 if(new URLSearchParams(location.search).get('app')==='hf'){
   document.documentElement.dataset.edition='hf';
+  document.querySelector('meta[name="apple-mobile-web-app-title"]').remove();
   document.getElementById('homeScreenIcon').href='assets/icons/hf-180.png';
 }else{
+  document.title='VECTOR';
   const favicon=document.createElement('link');
   favicon.rel='icon';
   favicon.type='image/png';
@@ -474,7 +477,7 @@ html:not([data-edition="hf"]) :is(button,select,input,summary):focus-visible{
 'use strict';
 const KEY='gg-training-screen-workouts-v1', $=id=>document.getElementById(id);
 const isHF=document.documentElement.dataset.edition==='hf';
-const editionName=isHF?'HF':'GG Mobile';
+const editionName=isHF?'HF':'VECTOR';
 const backupFormat=isHF?'HF-backup':'GG-Mobile-backup';
 const LOCAL_PROFILES_KEY=isHF?'hf-profiles-v1':'gg-profiles-v1';
 function loadLocalProfiles(){
@@ -978,7 +981,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='2.9.61', GG_APP_VERSION=isHF?HF_APP_VERSION:'2.9.64';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='2.9.61', GG_APP_VERSION=isHF?HF_APP_VERSION:'2.9.65';let lastUpdateCheck=0,remoteVersion=null;
 function versionIsNewer(remote,local){const a=remote.split('.').map(Number),b=local.split('.').map(Number);return a.some((v,i)=>v>(b[i]||0)&&a.slice(0,i).every((n,j)=>n===(b[j]||0)))}
 async function checkForUpdates(force=false){if(!navigator.onLine)return;if(!force&&Date.now()-lastUpdateCheck<120000)return;lastUpdateCheck=Date.now();const status=$('updateStatus');if(force)status.textContent='Comprobando…';try{const url=new URL(location.pathname,location.origin);url.searchParams.set('_gg_check',String(Date.now()));const response=await fetch(url.toString(),{cache:'no-store',redirect:'follow'});if(!response.ok)throw Error('No se ha podido consultar la web');const html=await response.text(),match=isHF?html.match(/HF_APP_VERSION='([0-9.]+)'/):html.match(/<title>GG Mobile v([0-9.]+)<\/title>/);if(!match)throw Error('Versión no identificada');remoteVersion=match[1];const newer=versionIsNewer(remoteVersion,GG_APP_VERSION);$('updateBanner').classList.toggle('hidden',!newer);if(newer){$('updateBannerText').textContent='Disponible '+editionName+' v'+remoteVersion+(session?' · termina la sesión antes de actualizar':'');$('applyUpdate').disabled=!!session;status.textContent='Nueva versión: '+remoteVersion}else if(force)status.textContent='Ya tienes la versión más reciente ('+GG_APP_VERSION+')'}catch(e){if(force)status.textContent='No se pudo comprobar: '+e.message}}
 $('checkUpdates').onclick=()=>void checkForUpdates(true);
@@ -1476,7 +1479,6 @@ $('tvExerciseGif').onerror=clearTvExerciseGif;
 setupHF();
 setupLocalProfiles();
 $('appVersion').textContent='Versión '+GG_APP_VERSION;
-if(!isHF)document.title='GG / BUHARDILLA FIT';
 for(const id of ['v2Name','ftLines','circuitLines','amrapLines','emomExercises','visualName','timerName'])setupExercisePicker(id);
 setupExerciseLibrary();setupCompactGuided();load();try{const saved=JSON.parse(appStorage.getItem('gg-active-session-v1'));if(saved&&saved.session&&workouts.some(w=>w.id===saved.active)){active=saved.active;sessionWorkout=saved.active;step=Math.max(0,Math.min(saved.step,workouts.find(w=>w.id===active).blocks.reduce((n,b)=>n+b.items.length,0)-1));paused=true;elapsed=saved.elapsed||0;stepElapsed=saved.stepElapsed||0;seriesLog=saved.seriesLog||{};restRemaining=saved.restRemaining||0;restRunning=!!saved.restRunning;transitionTo=Number.isInteger(saved.transitionTo)&&saved.transitionTo===step+1? saved.transitionTo:null;draftSets=saved.draftSets||{};amrapElapsed=saved.amrapElapsed||0;amrapRounds=saved.amrapRounds||0;amrapResults=saved.amrapResults||[];ftElapsed=saved.ftElapsed||0;ftResults=saved.ftResults||[];actualResults=saved.actualResults||{};session=true}}catch(e){}show('library');void checkForUpdates();
 </script><script type="module">
