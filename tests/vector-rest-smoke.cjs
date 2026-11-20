@@ -127,8 +127,51 @@ async function verifyRangesAndResume() {
   }
 }
 
+async function verifyVectorNavigation() {
+  const window = page('', { [workoutKey]: custom });
+  const { document } = window;
+  const element = id => document.getElementById(id);
+  try {
+    assert.equal(element('library').querySelector('.library-title'), null);
+    assert.equal(element('vectorLogin').parentElement, element('localProfilePanel').parentElement);
+    element('vectorLogin').click();
+    assert.equal(element('ggCloudPanel').open, true);
+    assert.equal(element('vectorLogin').getAttribute('aria-expanded'), 'true');
+    element('vectorLogin').click();
+    assert.equal(element('ggCloudPanel').open, false);
+
+    assert.equal(element('vectorRoutineSection').open, false);
+    element('vectorRoutineSection').querySelector('summary').click();
+    assert.equal(element('vectorRoutineSection').open, true);
+    assert.deepEqual([...element('vectorRoutines').children].map(level => level.firstChild.textContent),
+      ['Principiante', 'Intermedio', 'Avanzado']);
+
+    assert.equal(element('vectorMyWorkouts').open, false);
+    assert.match(element('vectorMyWorkouts').querySelector('#saved').textContent, /Sesión de prueba/);
+    element('new').click();
+    element('workoutName').value = 'Entrenamiento nuevo';
+    element('workoutBlocks').value = 'Fuerza:\nPress | 2x8 | descanso 4s';
+    const drawer = element('vectorEditorLibrary');
+    assert.ok(element('editor').contains(element('exerciseLibrary')));
+    drawer.querySelector('summary').click();
+    await new Promise(resolve => window.setTimeout(resolve, 20));
+    assert.ok(element('exerciseLibraryResults').childElementCount > 0);
+    drawer.querySelector('summary').click();
+    assert.equal(element('workoutName').value, 'Entrenamiento nuevo');
+    element('save').click();
+    element('back').click();
+    assert.equal(element('vectorMyWorkouts').open, true);
+    assert.match(element('saved').textContent, /Entrenamiento nuevo/);
+    assert.equal(JSON.parse(window.localStorage.getItem(workoutKey)).length, 2);
+  } finally {
+    await new Promise(resolve => setImmediate(resolve));
+    window.close();
+  }
+}
+
 (async () => {
   await verifyPilot(false);
+  await verifyVectorNavigation();
   await verifyPilot(true);
   await verifyRangesAndResume();
   
@@ -159,6 +202,11 @@ async function verifyRangesAndResume() {
         if (exercise.side) assert.match(exercise.dose, / por (brazo|pierna|lado)$/);
       }
       assert.equal(document.getElementById('vectorRoutines').classList.contains('hidden'), !!app);
+      if (app) {
+        assert.ok(document.querySelector('.library-title'));
+        assert.ok(document.getElementById('library').contains(document.getElementById('exerciseLibraryOpen')));
+        assert.equal(document.getElementById('vectorMyWorkouts'), null);
+      }
     } finally {
       await new Promise(resolve => setImmediate(resolve));
       window.close();
