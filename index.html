@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v2.9.66</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v2.9.67</title>
 <meta name="apple-mobile-web-app-title" content="VECTOR">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -380,6 +380,18 @@ html:not([data-edition="hf"]) :is(button,select,input,summary):focus-visible{
  outline:2px solid var(--accent-soft);
  outline-offset:2px;
 }
+.vector-illustration{
+ width:min(100%, 240px);aspect-ratio:176 / 140;margin:8px auto;
+ background-color:#fff;background-repeat:no-repeat;border-radius:8px;
+}
+#blocks .vector-illustration{width:min(100%, 176px)}
+.tv-mode #guided.tv-rest #vectorCurrentIllustration{display:none}
+@media (orientation:landscape) {
+ .tv-mode.guided-active #guided:not(.tv-rest) .tv-current.has-vector-illustration{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:8px;
+ }
+ .tv-mode #vectorCurrentIllustration{width:min(100%, 34vh)}
+}
 </style></head><body>
 <header class="row" style="margin-bottom:18px"><div><h1 id="brandTitle" class="gold"><img class="gg-brand-mark" src="assets/icons/gg-vector-wordmark.png" width="969" height="168" alt="Vector Fitness"></h1><span id="brandSubtitle" class="muted small hidden">GO ALL OUT</span></div><div class="header-settings"><button id="settingsToggle" type="button" aria-label="Abrir ajustes" aria-expanded="false" aria-controls="settingsPanel" class="settings-gear">⚙</button><div id="settingsPanel" class="tools-inner hidden"><button id="closeSettings" class="alt" type="button" style="grid-column:1/-1">✕ Cerrar ajustes</button><button id="soundToggle" class="alt">🔊 Avisos activados</button><button id="soundTest" class="alt">♪ Probar sonido</button><button id="wakeToggle" class="alt" type="button" style="grid-column:1/-1">☀ Mantener pantalla activa: activado</button><span id="wakeStatus" class="muted small" style="grid-column:1/-1" aria-live="polite">Pendiente de iniciar sesión</span><button id="connectHr" class="alt" type="button" style="grid-column:1/-1">♥ Conectar pulsómetro Bluetooth</button><button id="disconnectHr" class="alt hidden" type="button" style="grid-column:1/-1">Desconectar pulsómetro</button><span id="hrConnectionStatus" class="muted small" style="grid-column:1/-1" aria-live="polite">Sensor no conectado</span><button id="checkUpdates" class="alt" type="button" style="grid-column:1/-1">↻ Buscar actualizaciones</button><span id="updateStatus" class="muted small" style="grid-column:1/-1" aria-live="polite"></span><span id="audioStatus" class="muted small" aria-live="polite">Audio sin comprobar</span><details class="settings-data"><summary>Datos</summary><div class="settings-data-actions"><button id="backupButton" class="alt">↓ Copia de seguridad</button><button id="restoreButton" class="alt" type="button">↑ Restaurar copia</button><input id="restoreFile" class="hidden" type="file" accept=".json,application/json" aria-label="Seleccionar copia de seguridad GG Mobile"></div></details><button id="addLocalProfile" type="button" class="alt settings-wide">Añadir perfil</button><p id="appVersion" class="muted small settings-wide"></p></div></div></header><div id="updateBanner" class="panel hidden" style="border:1px solid var(--accent,#dbc396)"><div class="row"><span id="updateBannerText">Hay una versión nueva de GG Mobile</span><button id="applyUpdate" type="button">Actualizar ahora</button></div></div>
 <section id="library"><div class="panel"><h2 class="library-title">Mis entrenamientos</h2><div id="localProfilePanel">
@@ -438,7 +450,7 @@ html:not([data-edition="hf"]) :is(button,select,input,summary):focus-visible{
 <div class="tv-only tv-caption">AHORA</div>
 <div id="position" class="gold"></div><div id="current" class="focus"></div>
 <button id="techniqueToggle" type="button" class="alt technique-button">▶ Ver técnica</button>
-</div><img id="tvExerciseGif" class="tv-only hidden" alt="" decoding="async"></div>
+</div><div id="vectorCurrentIllustration" class="vector-illustration hidden" role="img"></div><img id="tvExerciseGif" class="tv-only hidden" alt="" decoding="async"></div>
 <p id="next" class="muted"></p>
 <div class="tv-only tv-card tv-upcoming">
 <div class="tv-caption">SIGUIENTE</div>
@@ -474,6 +486,7 @@ html:not([data-edition="hf"]) :is(button,select,input,summary):focus-visible{
 </div>
 <script src="src/exercise-library.js?v=2.9.61"></script>
 <script src="src/vector-routines.js"></script>
+<script src="src/vector-illustrations.js?v=2.9.67"></script>
 <script>
 'use strict';
 const KEY='gg-training-screen-workouts-v1', $=id=>document.getElementById(id);
@@ -500,6 +513,22 @@ function openWorkout(id){
 }
 function vectorDose(exercise){
  return [exercise.dose,exercise.marks?.length?'Marca '+exercise.marks.join(' / '):''].filter(Boolean).join(' · ');
+}
+function renderVectorIllustration(target, dayId, index, label){
+ const tile=globalThis.vectorIllustrations?.[dayId]?.[index];
+ target.classList.toggle('hidden',tile===undefined);
+ if(tile===undefined)return false;
+ const {columns,rows,tiles}=globalThis.vectorIllustrationGrid;
+ const perSheet=columns*rows;
+ const sheet=Math.floor(tile/perSheet);
+ const rowCount=Math.min(rows,Math.ceil((tiles-sheet*perSheet)/columns));
+ const column=tile%columns;
+ const row=Math.floor((tile%perSheet)/columns);
+ target.style.backgroundImage='url("assets/vector/fichas-'+String(sheet+1).padStart(2,'0')+'.webp")';
+ target.style.backgroundSize=(columns*100)+'% '+(rowCount*100)+'%';
+ target.style.backgroundPosition=(100*column/(columns-1))+'% '+(rowCount>1?100*row/(rowCount-1):0)+'%';
+ target.setAttribute('aria-label','Ilustración de '+label);
+ return true;
 }
 function renderVectorRoutines(){
  const target=$('vectorRoutines');
@@ -717,7 +746,10 @@ function renderLibrary(){
 function renderBoard(){ $('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':'▶ Iniciar entrenamiento';const w=findWorkout(active);if(!w){show('library');return}$('edit').classList.toggle('hidden',vectorDays.has(active));$('boardName').textContent=w.name;$('count').textContent=w.blocks.length+' bloques · '+w.blocks.reduce((n,b)=>n+b.items.length,0)+' ejercicios';$('blocks').replaceChildren();if(w.exercises){
  w.exercises.forEach((exercise,index)=>{
    const tile=node('div','','tile');
-   tile.append(node('h3',exercise.name),node('p',vectorDose(exercise)));
+   const drawing=node('div','','vector-illustration hidden');
+   drawing.setAttribute('role','img');
+   renderVectorIllustration(drawing,w.id,index,exercise.name);
+   tile.append(node('h3',exercise.name),drawing,node('p',vectorDose(exercise)));
    const rests=[exercise.sets>1?exercise.setRest+' s entre series':'',
      index<w.exercises.length-1&&exercise.transitionRest?exercise.transitionRest+' s antes del siguiente':''];
    if(rests.some(Boolean))tile.append(node('p',rests.filter(Boolean).join(' · '),'muted small'));
@@ -790,7 +822,7 @@ function plannedTransition(current,next){
  if(current.vector)return current.vector.transitionRest;
  return next.strength&&!getForTimeAt(step)&&!getAmrapAt(step)?exerciseRestSeconds:null;
 }
-function renderGuided(){const a=steps();if(!a.length){show('library');return}const info=getAmrapAt(step),ft=getForTimeAt(step);updateAmrapDisplay();$('ftStatus').classList.toggle('hidden',!ft);if(ft)$('ftStatus').textContent='FOR TIME · '+formatSeconds(Math.floor(ftElapsed))+(ft.limit?' / '+formatSeconds(ft.limit):'');$('position').textContent=info?'AMRAP · RONDA '+(amrapRounds+1)+' · EJERCICIO '+(step-info.start+1)+' DE '+info.count:'EJERCICIO '+(step+1)+' DE '+a.length+' · '+a[step].block.toUpperCase();$('current').textContent=a[step].strength?a[step].label.split(/\s+[·•]\s+/)[0]:a[step].label;$('targetSummary').textContent=a[step].vector?vectorDose(a[step].vector):a[step].strength?(a[step].strength.sets+' series × '+a[step].strength.reps+' rep · '+(a[step].strength.weight===null?'Peso libre':a[step].strength.weight+' kg')+' · RIR '+(a[step].strength.rir??'—')):'';const d=a[step].duration;$('stepTimer').classList.toggle('hidden',!d);$('stepTimeValue').textContent=d?formatSeconds(Math.max(0,Math.ceil(d-stepElapsed))):'';$('next').textContent='Siguiente: '+(info?(step===info.end?a[info.start].label+' · siguiente ronda':a[step+1].label):(a[step+1]?.label||'Fin del entrenamiento'));$('prev').disabled=step===0;$('pause').textContent=paused?'Reanudar':'Pausar';$('advance').textContent=info?'✓ Ejercicio completado':step===a.length-1?'Terminar sesión':'Siguiente ▶';$('status').textContent=paused?'Sesión pausada':'Sesión en curso';renderSeries();renderActual();$('quickAdvance').textContent=$('advance').textContent;$('quickAdvance').disabled=$('advance').disabled;$('quickPause').textContent=$('pause').textContent;renderTvExercises(a,info,ft)}
+function renderGuided(){const a=steps();if(!a.length){show('library');return}const info=getAmrapAt(step),ft=getForTimeAt(step);updateAmrapDisplay();$('ftStatus').classList.toggle('hidden',!ft);if(ft)$('ftStatus').textContent='FOR TIME · '+formatSeconds(Math.floor(ftElapsed))+(ft.limit?' / '+formatSeconds(ft.limit):'');$('position').textContent=info?'AMRAP · RONDA '+(amrapRounds+1)+' · EJERCICIO '+(step-info.start+1)+' DE '+info.count:'EJERCICIO '+(step+1)+' DE '+a.length+' · '+a[step].block.toUpperCase();$('current').textContent=a[step].strength?a[step].label.split(/\s+[·•]\s+/)[0]:a[step].label;const drawing=$('vectorCurrentIllustration');drawing.parentElement.classList.toggle('has-vector-illustration',renderVectorIllustration(drawing,active,step,a[step].label));$('targetSummary').textContent=a[step].vector?vectorDose(a[step].vector):a[step].strength?(a[step].strength.sets+' series × '+a[step].strength.reps+' rep · '+(a[step].strength.weight===null?'Peso libre':a[step].strength.weight+' kg')+' · RIR '+(a[step].strength.rir??'—')):'';const d=a[step].duration;$('stepTimer').classList.toggle('hidden',!d);$('stepTimeValue').textContent=d?formatSeconds(Math.max(0,Math.ceil(d-stepElapsed))):'';$('next').textContent='Siguiente: '+(info?(step===info.end?a[info.start].label+' · siguiente ronda':a[step+1].label):(a[step+1]?.label||'Fin del entrenamiento'));$('prev').disabled=step===0;$('pause').textContent=paused?'Reanudar':'Pausar';$('advance').textContent=info?'✓ Ejercicio completado':step===a.length-1?'Terminar sesión':'Siguiente ▶';$('status').textContent=paused?'Sesión pausada':'Sesión en curso';renderSeries();renderActual();$('quickAdvance').textContent=$('advance').textContent;$('quickAdvance').disabled=$('advance').disabled;$('quickPause').textContent=$('pause').textContent;renderTvExercises(a,info,ft)}
 let visualEditing=null;function visualParse(){const text=$('workoutBlocks').value;const blocks=[];let current=null;for(const raw of text.split(/\r?\n/)){const line=raw.trim();if(!line)continue;if(line.endsWith(':')){current={name:line.slice(0,-1).trim(),items:[]};blocks.push(current)}else if(current)current.items.push(line)}return blocks}
 function visualSync(blocks){$('workoutBlocks').value=blocks.map(b=>b.name+':\n'+b.items.join('\n')).join('\n\n');renderVisual()}
 function renderVisual(){const blocks=visualParse(),list=$('visualList'),select=$('visualBlock'),v2select=$('v2Block');const prev=Number(select.value)||0,prevV2=Number(v2select.value)||0;select.replaceChildren();v2select.replaceChildren();list.replaceChildren();let count=0;blocks.forEach((block,bi)=>{for(const target of [select,v2select]){const option=document.createElement('option');option.value=bi;option.textContent=block.name;target.append(option)}const card=node('div','','v2-block');const head=node('div','','row');head.append(node('h3',block.name));const blockTools=node('div','','v2-block-actions');const rename=node('button','Renombrar','alt');rename.type='button';rename.onclick=()=>{const value=prompt('Nombre del bloque',block.name);if(value===null)return;const name=value.trim().replace(/:/g,'');if(!name)return;const arr=visualParse();arr[bi].name=name;visualSync(arr)};const remove=node('button','Eliminar bloque','danger');remove.type='button';remove.onclick=()=>{if(!confirm('¿Eliminar este bloque y todos sus ejercicios?'))return;const arr=visualParse();arr.splice(bi,1);visualSync(arr)};blockTools.append(rename,remove);head.append(blockTools);card.append(head);block.items.forEach((line,ei)=>{if(line==='Ejercicio pendiente')return;count++;const d=decode(FOR_TIME_BLOCK.test(block.name)?forTimeLine(line):line),row=node('div','','v2-exercise'),body=node('div','','v2-exercise-body');body.append(node('strong',d.label),node('div',d.strength?d.strength.sets+' × '+d.strength.reps+' · '+(d.strength.weight??0)+' kg · RIR '+(d.strength.rir??2):d.duration?d.duration+' segundos':'Avance manual','muted small'));const actions=node('div','','v2-exercise-actions');const editBtn=node('button','Editar','alt');editBtn.type='button';editBtn.onclick=()=>openV2Editor(bi,ei,line);actions.append(editBtn);const match=block.name.match(/^(.*) · Ronda (\d+)\/(\d+)$/);if(match){const all=node('button','Todas','alt');all.type='button';all.title='Modificar este ejercicio en todas las rondas';all.onclick=()=>{const replacement=prompt('Editar este ejercicio en todas las rondas del circuito',line);if(replacement===null)return;const clean=replacement.trim();if(!clean||clean.endsWith(':')||/\n/.test(clean)){alert('Introduce un ejercicio válido');return}const duration=clean.match(/@(\d+)$/);if(duration&&(Number(duration[1])<1||Number(duration[1])>7200)){alert('Duración fuera de rango');return}const arr=visualParse();let changed=0;for(const b of arr){const m=b.name.match(/^(.*) · Ronda (\d+)\/(\d+)$/);if(m&&m[1]===match[1]&&m[3]===match[3]&&b.items[ei]!==undefined){b.items[ei]=clean;changed++}}if(changed!==Number(match[3])){alert('No se han encontrado todas las rondas. No se ha modificado nada.');return}visualSync(arr);$('editorMessage').textContent='Ejercicio actualizado en '+changed+' rondas'};actions.append(all)}for(const [label,delta] of [['↑',-1],['↓',1]]){const button=node('button',label,'alt');button.type='button';button.disabled=ei+delta<0||ei+delta>=block.items.length;button.onclick=()=>{const arr=visualParse();[arr[bi].items[ei],arr[bi].items[ei+delta]]=[arr[bi].items[ei+delta],arr[bi].items[ei]];visualSync(arr)};actions.append(button)}const del=node('button','×','danger');del.type='button';del.onclick=()=>{if(!confirm('¿Eliminar este ejercicio?'))return;const arr=visualParse();arr[bi].items.splice(ei,1);visualSync(arr)};actions.append(del);row.append(body,actions);card.append(row)});list.append(card)});select.value=String(Math.min(prev,blocks.length-1));v2select.value=String(Math.min(prevV2,blocks.length-1));$('v2Count').textContent=count+' ejercicios';if(!blocks.length)list.append(node('p','Empieza añadiendo tu primer ejercicio. No necesitas crear un bloque.','muted'))}
@@ -920,7 +952,7 @@ function renderTvExercises(exercises=steps(),amrap=getAmrapAt(step),ft=getForTim
    next?.duration?formatSeconds(next.duration):'';
  const image=$('tvExerciseGif');
  const label=current.label.replace(/\s+·\s+(?:(?:ronda|minuto)\s+\d+.*|\d+(?:[.,]\d+)?\s*kg.*)$/i,'');
- const path=resting?null:techniqueCatalogPath(current.techniqueId)||sharedTechniquePath(techniqueKey(label));
+ const path=resting||current.vector&&!$('vectorCurrentIllustration').classList.contains('hidden')?null:techniqueCatalogPath(current.techniqueId)||sharedTechniquePath(techniqueKey(label));
  if(!path){clearTvExerciseGif();return}
  image.alt='Demostración de '+label;
  if(image.getAttribute('src')!==path){
@@ -1079,7 +1111,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='2.9.61', GG_APP_VERSION=isHF?HF_APP_VERSION:'2.9.66';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='2.9.61', GG_APP_VERSION=isHF?HF_APP_VERSION:'2.9.67';let lastUpdateCheck=0,remoteVersion=null;
 function versionIsNewer(remote,local){const a=remote.split('.').map(Number),b=local.split('.').map(Number);return a.some((v,i)=>v>(b[i]||0)&&a.slice(0,i).every((n,j)=>n===(b[j]||0)))}
 async function checkForUpdates(force=false){if(!navigator.onLine)return;if(!force&&Date.now()-lastUpdateCheck<120000)return;lastUpdateCheck=Date.now();const status=$('updateStatus');if(force)status.textContent='Comprobando…';try{const url=new URL(location.pathname,location.origin);url.searchParams.set('_gg_check',String(Date.now()));const response=await fetch(url.toString(),{cache:'no-store',redirect:'follow'});if(!response.ok)throw Error('No se ha podido consultar la web');const html=await response.text(),match=isHF?html.match(/HF_APP_VERSION='([0-9.]+)'/):html.match(/<title>GG Mobile v([0-9.]+)<\/title>/);if(!match)throw Error('Versión no identificada');remoteVersion=match[1];const newer=versionIsNewer(remoteVersion,GG_APP_VERSION);$('updateBanner').classList.toggle('hidden',!newer);if(newer){$('updateBannerText').textContent='Disponible '+editionName+' v'+remoteVersion+(session?' · termina la sesión antes de actualizar':'');$('applyUpdate').disabled=!!session;status.textContent='Nueva versión: '+remoteVersion}else if(force)status.textContent='Ya tienes la versión más reciente ('+GG_APP_VERSION+')'}catch(e){if(force)status.textContent='No se pudo comprobar: '+e.message}}
 $('checkUpdates').onclick=()=>void checkForUpdates(true);

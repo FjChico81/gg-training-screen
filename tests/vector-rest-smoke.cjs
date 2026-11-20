@@ -47,6 +47,7 @@ async function verifyPilot(tv) {
     assert.equal(document.querySelectorAll('#vectorRoutines > details').length, 3);
     assert.equal(document.querySelectorAll('#vectorRoutines button').length, 116);
     document.querySelector('button[aria-label="Abrir General 02 · Cuerpo completo · Día 3 · Cuerpo Completo"]').click();
+    assert.equal(document.querySelectorAll('#blocks .vector-illustration:not(.hidden)').length, 7);
     assert.match(element('blocks').textContent, /Press nautilus.*120 s entre series.*90 s antes del siguiente/);
     if (tv) document.querySelector('#board [data-tv-toggle]').click();
     element('start').click();
@@ -60,6 +61,10 @@ async function verifyPilot(tv) {
 
     for (const [name, setRest, transitionRest] of expected) {
       assert.equal(element('current').textContent, name);
+      const drawing = element('vectorCurrentIllustration');
+      assert.ok(!drawing.classList.contains('hidden'));
+      assert.equal(drawing.getAttribute('aria-label'), 'Ilustración de ' + name);
+      assert.match(drawing.style.backgroundImage, /fichas-\d+\.webp/);
       for (let set = 0; set < 2; set++) {
         clickLog();
         assert.match(element('restLabel').textContent, /ENTRE SERIES/);
@@ -133,7 +138,19 @@ async function verifyRangesAndResume() {
       const { document } = window;
       const catalog = window.vectorRoutineCatalog;
       assert.equal(catalog.length, 36);
-      const exercises = catalog.flatMap(routine => routine.days).flatMap(day => day.exercises);
+      const days = catalog.flatMap(routine => routine.days);
+      const exercises = days.flatMap(day => day.exercises);
+      const {columns, rows, tiles} = window.vectorIllustrationGrid;
+      for (const day of days) {
+        const positions = window.vectorIllustrations[day.id];
+        assert.equal(positions.length, day.exercises.length);
+        assert.ok(positions.every(value => Number.isInteger(value) && value >= 0 && value < tiles));
+      }
+      for (let index = 0; index < Math.ceil(tiles / (columns * rows)); index++) {
+        const file = 'fichas-' + String(index + 1).padStart(2, '0') + '.webp';
+        const asset = readFileSync(join(__dirname, '..', 'assets', 'vector', file));
+        assert.equal(asset.toString('ascii', 8, 12), 'WEBP');
+      }
       assert.equal(exercises.length, 833);
       for (const exercise of exercises) {
         if (exercise.duration) assert.equal(exercise.setRest, undefined);
