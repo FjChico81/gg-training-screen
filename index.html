@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v2.9.70</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v2.9.71</title>
 <meta name="apple-mobile-web-app-title" content="VECTOR">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -408,10 +408,57 @@ html:not([data-edition="hf"]) :is(button,select,input,summary):focus-visible{
  }
  .tv-mode #vectorCurrentIllustration{width:min(100%, 34vh)}
 }
-.vector-profile-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.vector-profile-row #localProfilePanel{flex:1 1 10rem;min-width:0;margin:0}
-.vector-profile-row #vectorLogin{flex:0 0 auto;padding-inline:12px;min-height:44px}
-.vector-home-section>summary{font-size:17px}
+#library.vector-home{border-top:0}
+.vector-home>.panel{background:transparent;padding:0}
+.vector-profile-row{
+ display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
+ background:#f5f5f5;border-radius:14px;padding:6px 10px;
+}
+.vector-profile-row #localProfilePanel{flex:1 1 9rem;min-width:0;margin:0}
+.vector-profile-row #localProfilePanel label{font-size:14px;gap:6px;color:#525252}
+.vector-profile-row #localProfilePanel select{
+ min-width:0;max-width:72%;font-size:16px;font-weight:700;
+ border-color:transparent;background-color:transparent;padding:6px 8px;
+}
+.vector-profile-row #vectorLogin{
+ flex:0 0 auto;background:#fff;color:var(--ink);border:1px solid #d4d4d4;
+ padding:6px 10px;min-height:44px;font-size:14px;
+}
+.vector-home .home-actions{margin:14px 0;gap:10px}
+.vector-home .home-actions #new{
+ min-height:52px;border-radius:12px;text-align:center;font-size:16px;line-height:1.25;
+}
+.vector-home .home-actions #historyButton{
+ background:#fff;color:var(--ink);border:1px solid #d4d4d4;border-radius:12px;font-size:14px;
+}
+.vector-home-section{
+ background:#fff;margin:0 0 10px;border:1px solid #d4d4d4;border-radius:15px;padding:0;
+}
+.vector-home-section>summary{
+ display:grid;grid-template-columns:42px minmax(0,1fr) 14px;align-items:center;
+ gap:12px;padding:13px 16px;min-height:70px;
+}
+.vector-home-section>summary::-webkit-details-marker{display:none}
+.vector-home-section>summary::after{
+ content:"";display:block;width:8px;height:8px;border:solid #525252;border-width:0 2px 2px 0;
+ transform:rotate(45deg);justify-self:center;
+}
+.vector-home-section[open]>summary::after{transform:rotate(225deg)}
+.vector-home-section[open]>summary{border-bottom:1px solid #dedede}
+.vector-home-icon{
+ display:grid;place-items:center;width:42px;height:42px;border-radius:11px;
+ background:#fff0e9;color:#9b3d00;font-size:22px;line-height:1;
+}
+#vectorRoutineSection .vector-home-icon{background:#fff3cd;color:#755000}
+.vector-home-caption{display:flex;flex-direction:column;gap:3px}
+.vector-home-caption strong{font-size:17px;line-height:1.22}
+.vector-home-caption small{font-size:13px;font-weight:500;line-height:1.25;color:#525252}
+.vector-home-section>:not(summary){margin-inline:14px}
+.vector-home-section #vectorRoutines{padding-bottom:1px}
+.vector-home .library-empty-card{margin:12px 0;border:0;background:#f5f5f5}
+html:not([data-edition="hf"]) body:has(.vector-home:not(.hidden)) .header-settings .settings-gear{
+ background:#fff;color:#343434;border:1px solid #d4d4d4;border-radius:12px;font-size:21px;
+}
 #vectorEditorLibrary{margin:12px 0}
 #vectorEditorLibrary #exerciseLibrary{margin:8px 0 0}
 </style></head><body>
@@ -611,9 +658,20 @@ function openLocalProfile(id){
  else url.searchParams.set('perfil',id);
  location.assign(url.href);
 }
+function vectorHomeSummary(label, symbol, description){
+ const summary=node('summary','');
+ const icon=node('span',symbol,'vector-home-icon');
+ icon.setAttribute('aria-hidden','true');
+ const caption=node('span','','vector-home-caption');
+ caption.append(node('strong',label),description);
+ summary.append(icon,caption);
+ return summary;
+}
 function setupVectorHome(){
  if(isHF)return;
  const home=$('library');
+ home.classList.add('vector-home');
+ $('settingsToggle').textContent='⚙︎';
  home.querySelector('.library-title').remove();
 
  const profile=$('localProfilePanel');
@@ -638,13 +696,15 @@ function setupVectorHome(){
 
  const saved=node('details','','tools-details vector-home-section');
  saved.id='vectorMyWorkouts';
- saved.append(node('summary','MIS ENTRENAMIENTOS'));
+ const savedCount=node('small','');
+ savedCount.id='vectorSavedCount';
+ saved.append(vectorHomeSummary('MIS ENTRENAMIENTOS','▤',savedCount));
  $('libraryFilters').before(saved);
  saved.append($('libraryFilters'),$('saved'));
 
  const routines=node('details','','tools-details vector-home-section');
  routines.id='vectorRoutineSection';
- routines.append(node('summary','Rutinas VECTOR'));
+ routines.append(vectorHomeSummary('Rutinas VECTOR','▦',node('small',vectorRoutines.length+' rutinas · 3 niveles')));
  $('vectorRoutines').before(routines);
  routines.append($('vectorRoutines'));
 
@@ -793,6 +853,11 @@ document.addEventListener('keydown',event=>{
 function workoutCategory(w){const names=w.blocks.map(b=>b.name.toLowerCase()).join(' '),lines=w.blocks.flatMap(b=>b.items).join(' ').toLowerCase(),title=w.name.toLowerCase();if(/amrap/.test(names))return 'AMRAP';if(/emom/.test(names))return 'EMOM';if(/intervalos/.test(names))return 'Intervalos';if(/ronda|circuito|h[ií]brid/.test(names+' '+title))return 'Híbrido';if(/fuerza|torso|pierna|full body/.test(names+' '+title)||w.blocks.some(b=>b.items.some(line=>!!decode(line).strength)))return 'Fuerza';return 'Otros'}
 function renderLibrary(){
  renderVectorRoutines();
+ if(!isHF){
+   const count=workouts.length;
+   $('vectorSavedCount').textContent=count===0?'Aún no tienes entrenamientos guardados':
+     count===1?'1 entrenamiento guardado':count+' entrenamientos guardados';
+ }
  const target=$('saved'),search=$('librarySearch'),category=$('libraryCategory');
  target.replaceChildren();
  $('libraryFilters').classList.toggle('hidden',workouts.length===0);
@@ -803,7 +868,15 @@ function renderLibrary(){
    const illustration=node('span','','library-empty-icon');
    illustration.setAttribute('aria-hidden','true');
    illustration.append(node('i'),node('i'),node('i'));
-   empty.append(illustration,node('h3','Aún no tienes entrenamientos'),node('p','Al crear una rutina, puedes combinar fuerza, cardio e intervalos en la misma sesión.','muted'));
+   empty.append(illustration,node('h3','Aún no tienes entrenamientos'));
+   if(isHF){
+     empty.append(node('p','Al crear una rutina, puedes combinar fuerza, cardio e intervalos en la misma sesión.','muted'));
+   }else{
+     const create=node('button','Crear mi primer entrenamiento');
+     create.type='button';
+     create.onclick=()=>$('new').click();
+     empty.append(create);
+   }
    target.append(empty);
    return;
  }
@@ -1180,7 +1253,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='2.9.62', GG_APP_VERSION=isHF?HF_APP_VERSION:'2.9.70';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='2.9.62', GG_APP_VERSION=isHF?HF_APP_VERSION:'2.9.71';let lastUpdateCheck=0,remoteVersion=null;
 function versionIsNewer(remote,local){const a=remote.split('.').map(Number),b=local.split('.').map(Number);return a.some((v,i)=>v>(b[i]||0)&&a.slice(0,i).every((n,j)=>n===(b[j]||0)))}
 async function checkForUpdates(force=false){if(!navigator.onLine)return;if(!force&&Date.now()-lastUpdateCheck<120000)return;lastUpdateCheck=Date.now();const status=$('updateStatus');if(force)status.textContent='Comprobando…';try{const url=new URL(location.pathname,location.origin);url.searchParams.set('_gg_check',String(Date.now()));const response=await fetch(url.toString(),{cache:'no-store',redirect:'follow'});if(!response.ok)throw Error('No se ha podido consultar la web');const html=await response.text(),match=isHF?html.match(/HF_APP_VERSION='([0-9.]+)'/):html.match(/<title>GG Mobile v([0-9.]+)<\/title>/);if(!match)throw Error('Versión no identificada');remoteVersion=match[1];const newer=versionIsNewer(remoteVersion,GG_APP_VERSION);$('updateBanner').classList.toggle('hidden',!newer);if(newer){$('updateBannerText').textContent='Disponible '+editionName+' v'+remoteVersion+(session?' · termina la sesión antes de actualizar':'');$('applyUpdate').disabled=!!session;status.textContent='Nueva versión: '+remoteVersion}else if(force)status.textContent='Ya tienes la versión más reciente ('+GG_APP_VERSION+')'}catch(e){if(force)status.textContent='No se pudo comprobar: '+e.message}}
 $('checkUpdates').onclick=()=>void checkForUpdates(true);
