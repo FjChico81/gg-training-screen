@@ -74,7 +74,7 @@ const GG_EXERCISE_LIBRARY = [
   {"id":"dominada-prona-asistida-banda","nombre":"Dominada pronada asistida con banda elástica y apoyo del pie","alias":[],"grupo":"Espalda","movimiento":"Tracción vertical","gif":"assets/technique/dominada-prona-asistida-banda.gif"},
   {"id":"dominada-prona-cerrada","nombre":"Dominada pronada con agarre cerrado","alias":["pull-up agarre estrecho"],"grupo":"Espalda","movimiento":"Tracción vertical","gif":"assets/technique/dominada-prona-cerrada.gif"},
   {"id":"dominada-prona-lastrada","nombre":"Dominada pronada con lastre","alias":["dominadas lastradas","dominada con peso","weighted pull-up"],"grupo":"Espalda","movimiento":"Tracción vertical","gif":"assets/technique/dominada-prona-lastrada.gif"},
-  {"id":"dominadas","nombre":"Dominadas","alias":["pull-up","pull ups","pullups"],"grupo":"Espalda","movimiento":"Tracción vertical","gif":null},
+  {"id":"dominadas","nombre":"Dominadas","alias":["pull-up","pull ups","pullups"],"grupo":"Espalda","movimiento":"Tracción vertical","gif":"assets/technique/dominada-prona-abierta.gif"},
   {"id":"dominada-neutra","nombre":"Dominadas con agarre neutro","alias":["pull-up neutro","dominada neutra"],"grupo":"Espalda","movimiento":"Tracción vertical","gif":"assets/technique/dominada-neutra.gif"},
   {"id":"dominada-prona-abierta","nombre":"Dominadas con agarre prono abierto","alias":["pull-up agarre ancho","dominada pronada abierta"],"grupo":"Espalda","movimiento":"Tracción vertical","gif":"assets/technique/dominada-prona-abierta.gif"},
   {"id":"dominada-supina","nombre":"Dominadas con agarre supino","alias":["chin-up","chin ups","dominada supina"],"grupo":"Espalda","movimiento":"Tracción vertical","gif":"assets/technique/dominada-supina.gif"},
