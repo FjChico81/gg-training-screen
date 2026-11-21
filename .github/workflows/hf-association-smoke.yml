@@ -46,4 +46,5 @@ jobs:
             tests/hf-rls-draft-static-guard.cjs \
             tests/hf-screen-consent-smoke.cjs \
             tests/hf-class-runtime-smoke.mjs \
-            tests/hf-screen-watcher-smoke.mjs
+            tests/hf-screen-watcher-smoke.mjs \
+            tests/hf-two-device-contract-smoke.mjs
