@@ -77,3 +77,45 @@ Solo después de test SQL en un proyecto HF aislado, autorización de infraestru
 - [Supabase · Securing the Data API](https://supabase.com/docs/guides/api/securing-your-api)
 - [Supabase · Realtime Authorization](https://supabase.com/docs/guides/realtime/authorization)
 - [PostgreSQL · CREATE POLICY](https://www.postgresql.org/docs/current/sql-createpolicy.html)
+
+
+## Actualización 21/11/2026 · Interfaz de primera sincronización preparada y BLOQUEADA
+
+Se han preparado módulos adicionales en la rama HF:
+
+- \`src/hf-memory-auth.mjs\`: autenticación HF con sesión volátil, sin contraseñas ni tokens guardados en localStorage/sessionStorage; todavía no integrada con la versión publicada.
+- \`src/hf-coach-controller.mjs\`: comprueba enlace aceptado y no revocado antes de crear la clase, transforma las órdenes al nuevo estado y aplica revisión CAS. Ante fallo incierto, lee el último UUID de comando y **no reenvía órdenes automáticamente**.
+- \`hf-live-beta.html\`: dos modos visuales (entrenador iPhone y pantalla Samsung), vinculación, creación de clases, avance, estado, rechazo y visualización de estaciones. Incluye detección de una sola clase activa autorizada.
+- \`src/hf-live-rollout.mjs\`: **HF_LIVE_ROLLOUT_APPROVED = false**. Impide inicializar clientes y contactar la API hasta verificar la propiedad y aprobar los pasos de seguridad. No existe bypass por parámetro URL.
+- \`tests/hf-memory-auth-smoke.mjs\`, \`tests/hf-coach-controller-smoke.mjs\` y \`tests/hf-live-rollout-smoke.mjs\`: pruebas sin red del inicio de sesión, protección contra repetición y bloqueo de la interfaz.
+
+**El enlace de esta beta NO autoriza la conexión real.** La pantalla muestra el motivo y mantiene deshabilitados los controles. La simulación independiente en dos pestañas sigue disponible.
+
+### Evidencia de titularidad: BLOQUEANTE NO RESUELTO
+
+El repositorio identifica el endpoint \`ydaqsmrfuwhqwqojrxyr.supabase.co\` como \`HF TRAINING\`, pero ese dato **no acredita la titularidad de la cuenta/organización**. En cumplimiento de la norma absoluta HPS:
+
+- **No se ha utilizado ninguna herramienta Supabase ni se han listado proyectos de cuentas compartidas.**
+- **No se ha consultado el contenido de ninguna base de datos.**
+- No se ha realizado ningún cambio de Auth, RLS, esquema, Realtime, tablas, backups ni despliegue de producción.
+- La conexión solo podrá habilitarse cuando se certifique que el proyecto HF pertenece a una cuenta u organización exclusiva GG/HF, **sin participación de la cuenta de Dionisio ni recursos HPS**.
+- Para acreditar la titularidad basta un registro autorizado de la organización/propietario y la referencia exacta del proyecto HF, excluyendo claves, contraseñas o tokens. No se pedirán secretos.
+
+### Criterios mínimos adicionales antes de activar
+
+1. Cuenta organizativa inequívocamente separada de HPS, proyecto de pruebas HF exclusivo.
+2. RLS de emparejamiento y sesiones probado con PostgreSQL real, no solo tests estáticos o servidor falso.
+3. Privilegios de rol provisionados por administrador de HF; una cuenta ordinaria no debe elevarse a entrenador.
+4. Decidir y validar token refresh durante sesiones de larga duración; la implementación actual usa tokens en memoria.
+5. Sincronizar el reloj contra tiempo del servidor y acotar su desviación.
+6. Resolver idempotencia durable de órdenes con servidor de referencia.
+7. Validar permisos de revocación y lectura posterior a cierre, timeout, dos entrenadores y reconexión.
+8. Probar iPhone y Samsung con una clase de prueba creada y controlada desde HF; pruebas de TV, audio y GIFs.
+9. Mantener inactiva la bandera de conexión hasta completar pruebas y obtener autorización para cambios en infraestructura/producción.
+
+### Referencias actuales
+
+Supabase (noviembre 2026): se deben considerar **GRANT + RLS** como controles independientes; los canales Realtime requieren permisos específicos y la autorización privada se comprueba al establecer la conexión. En la primera prueba propuesta se mantiene polling REST autenticado para reducir complejidad.
+
+- https://supabase.com/docs/guides/api/securing-your-api
+- https://supabase.com/docs/guides/realtime/authorization
