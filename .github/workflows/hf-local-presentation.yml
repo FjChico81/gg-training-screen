@@ -6,18 +6,22 @@ on:
       - feature/hf-local-presentation-v1
     paths:
       - 'hf-class-display.html'
+      - 'src/hf-workout-presenter.mjs'
       - 'index.html'
       - 'assets/hf-association.css'
       - 'tests/hf-class-display-smoke.cjs'
       - 'tests/hf-device-modes-smoke.cjs'
+      - 'tests/hf-saved-workout-presenter-smoke.mjs'
       - '.github/workflows/hf-local-presentation.yml'
   pull_request:
     paths:
       - 'hf-class-display.html'
+      - 'src/hf-workout-presenter.mjs'
       - 'index.html'
       - 'assets/hf-association.css'
       - 'tests/hf-class-display-smoke.cjs'
       - 'tests/hf-device-modes-smoke.cjs'
+      - 'tests/hf-saved-workout-presenter-smoke.mjs'
       - '.github/workflows/hf-local-presentation.yml'
 
 permissions:
@@ -38,4 +42,5 @@ jobs:
         run: |
           node --test \
             tests/hf-class-display-smoke.cjs \
-            tests/hf-device-modes-smoke.cjs
+            tests/hf-device-modes-smoke.cjs \
+            tests/hf-saved-workout-presenter-smoke.mjs
