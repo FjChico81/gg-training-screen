@@ -2,9 +2,9 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1c1c1e">
-<title>HF · Prototipo de clases híbridas</title>
+<title>HF · Clases en pantalla</title>
 <style>
 :root{--bg:#171719;--panel:#28282c;--panel2:#323237;--ink:#f8f6f4;--muted:#bbb7b6;--hot:#ff671d;--hot2:#ffad78;--line:#55545a;--work:#ff671d;--rest:#55c1c4}
 *{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:var(--bg);color:var(--ink);font:16px system-ui,-apple-system,"Segoe UI",sans-serif}button,input,textarea{font:inherit}button{min-height:44px;padding:11px 17px;border:1px solid transparent;border-radius:12px;background:var(--hot);color:#1e1714;font-weight:800;cursor:pointer}button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid #ffb188;outline-offset:2px}button:hover:not(:disabled){filter:brightness(1.1)}button:disabled{opacity:.45;cursor:not-allowed}.secondary{background:#424248;color:var(--ink);border-color:#646369}.outline{background:transparent;color:var(--ink);border-color:#66646a}.danger{background:#633b40;color:#fff}.top{max-width:1700px;margin:0 auto;padding:18px 20px 12px}.topline{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}.identity{display:flex;align-items:center;gap:16px}.brand{font-size:clamp(40px,5vw,70px);line-height:1;font-weight:1000;font-style:italic;letter-spacing:-.1em;color:var(--hot);padding-right:10px}.brandname{font-size:clamp(14px,2vw,19px);font-weight:800;line-height:1.2}.eyebrow{font-size:12px;color:var(--hot2);font-weight:850;letter-spacing:.12em}.sub{color:var(--muted);font-size:13px}.prototype{border:1px solid #84644c;border-radius:100px;padding:7px 11px;color:var(--hot2);font-weight:800;font-size:12px}.switcher{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.switcher button[aria-pressed="true"]{background:var(--hot);color:#191513}.switcher button[aria-pressed="false"]{background:#34343a;color:#f4f0ee}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}.config{max-width:1700px;margin:8px auto 0;padding:12px 20px}.config form{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:16px}.config h2{margin:0 0 8px;font-size:22px}.config label{display:block;margin:12px 0 6px;font-weight:800;color:#ffb38e}.config textarea{width:100%;height:150px;background:#1b1b1e;color:#fff;border:1px solid #73737a;border-radius:10px;padding:11px;resize:vertical}.config input{width:100%;background:#1b1b1e;color:#fff;border:1px solid #73737a;border-radius:9px;padding:10px}.config .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.config .hint{font-size:13px;color:#c1bcba;margin:5px 0 0}.config .error{color:#ffab9c;min-height:20px}.config-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.screen{max-width:1700px;margin:12px auto 0;padding:14px 20px 22px;min-height:65vh}.screen-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.screen h1{margin:0;font-size:clamp(21px,3vw,39px);letter-spacing:-.035em}.screen .status{display:inline-block;border:1px solid #82654e;border-radius:100px;padding:8px 13px;font-size:13px;font-weight:850;color:var(--hot2)}.display{min-height:390px}.card{border-radius:17px;border:1px solid var(--line);background:var(--panel);padding:clamp(14px,2vw,26px)}.guided-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:12px;min-height:min(61vh,610px)}.main-card{display:flex;flex-direction:column;border-color:#8c533c;background:linear-gradient(145deg,#312523,#242329)}.main-card .exercise-name{font-size:clamp(36px,5.8vw,86px);font-weight:1000;line-height:1.04;letter-spacing:-.048em;margin:12px 0}.main-card .exercise-target{font-size:clamp(25px,3.8vw,57px);color:var(--hot2);font-weight:900}.main-card .media{flex:1;display:flex;align-items:center;justify-content:center;min-height:150px;margin-top:10px}.media img{display:block;max-width:100%;max-height:min(26vh,265px);object-fit:contain;border-radius:10px}.media .placeholder{display:grid;place-items:center;font-size:clamp(54px,9vw,115px);opacity:.74}.side-stack{display:grid;grid-template-rows:minmax(0,1.15fr) minmax(0,1fr);gap:12px}.time-card{border-color:#994e2c;background:#35271f;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}.clock{font-variant-numeric:tabular-nums;letter-spacing:-.055em;font-size:clamp(56px,10vw,148px);line-height:1.05;font-weight:1000}.next-card{display:flex;flex-direction:column;justify-content:center;gap:8px}.next-card .exercise-name{font-size:clamp(27px,3.4vw,54px);line-height:1.1;font-weight:900}.next-card .exercise-target{font-size:clamp(18px,2.3vw,32px);font-weight:850;color:var(--hot2)}.stations-layout{display:flex;flex-direction:column;gap:12px}.station-clock{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#35271f;border-color:#9b5934}.station-clock .clock{font-size:clamp(55px,7.2vw,114px)}.station-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}.station{min-height:270px;display:flex;flex-direction:column;gap:7px;background:#27272b}.station .number{font-size:12px;color:var(--hot2);font-weight:850;letter-spacing:.1em}.station .group{background:#4a3a30;color:#ffdbbf;border-radius:100px;padding:5px 11px;font-size:14px;font-weight:850;align-self:start}.station .exercise-name{font-size:clamp(21px,2.7vw,38px);font-weight:950;line-height:1.06;margin:5px 0}.station .exercise-target{font-size:clamp(19px,2.3vw,30px);font-weight:850;color:var(--hot2)}.station .media{flex:1;display:grid;place-items:center;min-height:70px}.station .media img{max-height:min(12vh,138px)}.station .placeholder{font-size:62px;opacity:.6}.progress{color:var(--muted);font-size:clamp(13px,1.5vw,18px);font-weight:800}.coach{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px;padding:13px;border-radius:14px;background:#242428;border:1px solid #4a4a50}.coach button{flex:1;min-width:130px} .nav-back{min-height:44px;display:inline-flex;align-items:center;text-decoration:none;color:#fff;padding:10px 12px;border-radius:12px;border:1px solid #66646a;background:#424248;font-weight:800}.nav-back:focus-visible{outline:3px solid #ffb188;outline-offset:2px}.coach-label{margin:15px 2px 0;color:#ffb38e;font-weight:900;font-size:12px;letter-spacing:.11em}.notice{color:#bbb8b6;font-size:13px;margin:10px 4px 0;line-height:1.45}.session-total{font-variant-numeric:tabular-nums;color:var(--hot2)}#exitPresentation{display:none}.presentation .top,.presentation .config,.presentation .coach,.presentation .coach-label,.presentation .notice{display:none}.presentation .screen{margin:0;max-width:none;min-height:100vh;padding:clamp(10px,1.6vw,25px)}.presentation .display{min-height:calc(100vh - 105px)}.presentation .guided-layout{min-height:calc(100vh - 120px)}.presentation #exitPresentation{display:block;position:fixed;right:18px;bottom:16px;z-index:2;background:#3f3f43ed;color:#fff;opacity:.78;font-size:13px;min-height:38px}.presentation .screen-head{padding-right:90px}.presentation .station{min-height:clamp(170px,27vh,360px)}.presentation .station-grid{flex:1}.presentation .stations-layout{min-height:calc(100vh - 125px)}.presentation .station .media img{max-height:min(15vh,160px)}.presentation .main-card .media img{max-height:36vh}.presentation .main-card .exercise-name{font-size:clamp(42px,6vw,98px)}.presentation .next-card .exercise-name{font-size:clamp(30px,3.6vw,65px)}.work-phase .status{color:#ffb38e;border-color:#a45b39}.change-phase .status{color:#7cf0e1;border-color:#509d98}.change-phase .station-clock{background:#20383a;border-color:#4c9d9b}.change-phase .station .group{background:#244243;color:#9bf3e8}.rest-phase .time-card{background:#20383a;border-color:#4c9d9b}.rest-phase .main-card{border-color:#4c9d9b}.rest-phase .main-card .exercise-target{color:#98ece5}
@@ -23,6 +23,114 @@
 .preview-consent .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
 .preview-consent .actions button{flex:1;min-width:175px}
 #revokePreview{position:fixed;right:14px;bottom:14px;z-index:5;font-size:12px;padding:7px 11px;min-height:35px;background:#623d39;color:#fff}
+
+/* Presentación HF desde móvil por HDMI o uso directo en tablet.
+   El espejo por cable siempre muestra la misma imagen en ambas pantallas. */
+.device-choice{max-width:1700px;margin:10px auto 0;padding:0 20px}
+.device-choice-inner{border:1px solid #765044;border-radius:14px;padding:15px;background:linear-gradient(145deg,#302623,#28282c)}
+.device-choice h2{margin:0 0 7px;font-size:clamp(18px,2vw,24px)}
+.device-choice p{margin:8px 0 0;color:#d1c8c2;font-size:14px;line-height:1.4}
+.device-options{display:flex;flex-wrap:wrap;gap:8px}
+.device-options button{flex:1;min-width:185px;border:2px solid #6b5751;background:#3a3535;color:#f7f0eb}
+.device-options button[aria-pressed="true"]{background:#ff671d;color:#211611;border-color:#ff671d}
+.coach-toggle{display:none}
+.presentation-info{font-size:12px;color:#ffe1c9;background:#352922;border:1px solid #84563c;border-radius:10px;padding:8px 10px;max-width:58ch}
+.presentation.session-mode-mirror .coach,
+.presentation.session-mode-tablet .coach{
+  display:flex;position:fixed;z-index:20;
+  left:calc(10px + env(safe-area-inset-left));right:calc(10px + env(safe-area-inset-right));
+  bottom:calc(9px + env(safe-area-inset-bottom));
+  gap:8px;margin:0;padding:8px;
+  border-radius:13px;background:rgba(20,20,23,.94);
+  border:1px solid #76635a;box-shadow:0 9px 36px #0008;
+}
+.presentation.session-mode-mirror .coach{max-width:530px;right:auto}
+.presentation.session-mode-mirror .coach button{
+  min-width:0;min-height:40px;padding:8px 10px;font-size:12px;border-radius:8px
+}
+.presentation.session-mode-tablet .coach{max-width:790px;margin-inline:auto}
+.presentation.session-mode-tablet .coach button{min-width:0;min-height:58px;font-size:16px}
+.presentation.session-mode-mirror .coach #reset,
+.presentation.session-mode-tablet .coach #reset{display:none}
+.presentation .coach-toggle{
+  display:block;position:fixed;z-index:24;left:12px;
+  bottom:calc(12px + env(safe-area-inset-bottom));
+  background:#37383de8;color:#fff;padding:6px 10px;
+  min-height:37px;font-size:12px;border:1px solid #766a64
+}
+.presentation.session-mode-mirror .coach-toggle,
+.presentation.session-mode-tablet .coach-toggle{
+  bottom:calc(82px + env(safe-area-inset-bottom))
+}
+.presentation.session-mode-mirror.controls-collapsed .coach,
+.presentation.session-mode-tablet.controls-collapsed .coach{display:none}
+.presentation.session-mode-mirror.controls-collapsed .coach-toggle,
+.presentation.session-mode-tablet.controls-collapsed .coach-toggle{
+  bottom:calc(12px + env(safe-area-inset-bottom))
+}
+.presentation.session-mode-mirror .screen,
+.presentation.session-mode-tablet .screen{
+  height:100dvh;min-height:100dvh;overflow-y:auto;
+  padding-bottom:calc(112px + env(safe-area-inset-bottom))
+}
+.presentation.session-mode-mirror.controls-collapsed .screen,
+.presentation.session-mode-tablet.controls-collapsed .screen{
+  padding-bottom:calc(60px + env(safe-area-inset-bottom))
+}
+.presentation.session-mode-mirror .screen-head,
+.presentation.session-mode-tablet .screen-head{padding-right:90px}
+.presentation.session-mode-mirror .station-grid{
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,185px),1fr))
+}
+.presentation.session-mode-tablet .station-grid{
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,225px),1fr))
+}
+.presentation.session-mode-tablet .main-card .media img{max-height:30vh}
+.presentation.session-mode-tablet .main-card{min-height:350px}
+@media (max-width:780px){
+ .device-choice{padding-inline:12px}
+ .presentation.session-mode-tablet .guided-layout{min-height:auto}
+ .presentation.session-mode-tablet .main-card{min-height:350px}
+}
+@media (orientation:landscape) and (max-height:560px){
+ .presentation.session-mode-mirror .screen{padding-top:8px}
+ .presentation.session-mode-mirror .screen-head{margin-bottom:6px}
+ .presentation.session-mode-mirror .screen h1{font-size:clamp(16px,3vw,26px)}
+ .presentation.session-mode-mirror .screen-head .eyebrow,
+ .presentation.session-mode-mirror .screen-head .progress{font-size:11px}
+ .presentation.session-mode-mirror .guided-layout{
+   display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);
+   min-height:max(185px,calc(100dvh - 144px));gap:7px
+ }
+ .presentation.session-mode-mirror .main-card{min-height:0;padding:11px}
+ .presentation.session-mode-mirror .main-card .exercise-name{
+   font-size:clamp(22px,4.6vw,42px);margin:7px 0
+ }
+ .presentation.session-mode-mirror .main-card .exercise-target{font-size:clamp(16px,2.6vw,24px)}
+ .presentation.session-mode-mirror .main-card .media{min-height:28px;margin-top:4px}
+ .presentation.session-mode-mirror .main-card .media img{max-height:23dvh}
+ .presentation.session-mode-mirror .side-stack{
+   display:grid;grid-template-columns:1fr;grid-template-rows:1.1fr 1fr;gap:7px
+ }
+ .presentation.session-mode-mirror .side-stack .card{padding:9px}
+ .presentation.session-mode-mirror .clock{font-size:clamp(42px,6.5vw,80px)}
+ .presentation.session-mode-mirror .next-card .exercise-name{font-size:clamp(16px,2.5vw,24px)}
+ .presentation.session-mode-mirror .next-card .exercise-target{font-size:clamp(13px,2vw,18px)}
+ .presentation.session-mode-mirror .station-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+ .presentation.session-mode-mirror .station{min-height:0;padding:9px;gap:3px}
+ .presentation.session-mode-mirror .station .exercise-name{font-size:clamp(14px,2.1vw,23px)}
+ .presentation.session-mode-mirror .station .exercise-target{font-size:clamp(13px,1.7vw,20px)}
+ .presentation.session-mode-mirror .station .media{min-height:12px}
+ .presentation.session-mode-mirror .station .media img{max-height:12dvh}
+ .presentation.session-mode-mirror .station-clock{padding:7px 14px}
+ .presentation.session-mode-mirror .station-clock .clock{font-size:clamp(40px,7vw,67px)}
+ .presentation.session-mode-mirror .station .placeholder{font-size:33px}
+ .presentation.session-mode-mirror .coach{max-width:440px}
+}
+@media (max-width:390px) and (orientation:portrait){
+ .presentation.session-mode-tablet .coach{flex-wrap:wrap}
+ .presentation.session-mode-tablet .coach button{min-height:46px;font-size:14px}
+}
 </style>
 </head>
 <body>
@@ -38,10 +146,20 @@
   <div class="toolbar">
     <a href="index.html?app=hf" class="nav-back" aria-label="Volver al inicio de HF">← Volver a HF</a>
     <button id="toggleConfig" type="button" class="secondary" aria-expanded="false">⚙ Configurar sesión</button>
-    <button id="togglePresentation" type="button" class="outline">▣ Pantalla de clase</button>
+    <button id="togglePresentation" type="button" class="outline">▣ Presentar clase</button>
     <button id="toggleSound" type="button" class="outline" aria-pressed="true">🔊 Sonido activado</button>
   </div>
 </header>
+<section id="deviceChoice" class="device-choice" aria-label="Elegir cómo mostrar el entrenamiento">
+ <div class="device-choice-inner">
+  <h2>¿Cómo vas a impartir la clase?</h2>
+  <div class="device-options" role="group" aria-label="Modo de pantalla">
+   <button id="mirrorMode" type="button" aria-pressed="true">📱 Móvil conectado a TV</button>
+   <button id="tabletMode" type="button" aria-pressed="false">▣ Usar iPad o tablet</button>
+  </div>
+  <p id="deviceHint" role="status">La TV duplica lo que aparece en el móvil. Gira el teléfono en horizontal; los controles aparecerán también en la TV, pero podrás recogerlos.</p>
+ </div>
+</section>
 <section id="config" class="config" hidden>
   <form id="configForm">
     <h2>Configuración del entrenador</h2>
@@ -85,6 +203,7 @@
   <button id="revokePreview" type="button" hidden>Desconectar mando</button>
   <button id="unlockAudio" type="button" hidden>🔊 Activar avisos en esta pantalla</button>
   <div id="display" class="display"></div>
+  <button id="coachToggle" class="coach-toggle" type="button" aria-controls="coach" aria-expanded="true" aria-label="Ocultar los controles de la clase">Ocultar mandos</button>
   <div class="coach-label">CONTROLES DEL ENTRENADOR · SOLO EN ESTA PANTALLA</div>
   <div class="coach" id="coach">
     <button id="start" type="button">▶ Iniciar</button>
@@ -93,7 +212,7 @@
     <button id="reset" type="button" class="danger">↺ Reiniciar</button>
   </div>
   <p class="notice">Este prototipo funciona únicamente en este navegador. No publica clases, no sincroniza la televisión con el móvil y no guarda información personal.</p>
-  <button id="exitPresentation" type="button">Salir de TV</button>
+  <button id="exitPresentation" type="button">Salir de presentación</button>
 </section>
 <script src="src/hf-preview-link.js"></script>
 <script>
@@ -128,6 +247,7 @@
   let config=JSON.parse(JSON.stringify(defaults));
   const params=new URLSearchParams(location.search);
   const requestedMode=params.get('mode');
+  let deviceMode=params.get('view')==='tablet'?'tablet':'mirror';
   const previewPair=params.get('pair');
   const screenPreview=params.get('role')==='screen'&&Boolean(window.HFPreviewLink?.isValidPair(previewPair));
   let previewBridge=null,previewTimer=null;
@@ -412,16 +532,57 @@
       el('config').hidden=true;el('toggleConfig').setAttribute('aria-expanded','false');
     }catch(e){el('configError').textContent=e.message;}
   };
+  function updateDeviceUI(){
+    document.body.classList.toggle('session-mode-mirror',deviceMode==='mirror');
+    document.body.classList.toggle('session-mode-tablet',deviceMode==='tablet');
+    el('mirrorMode').setAttribute('aria-pressed',String(deviceMode==='mirror'));
+    el('tabletMode').setAttribute('aria-pressed',String(deviceMode==='tablet'));
+    el('deviceHint').textContent=deviceMode==='mirror'
+      ?'La TV duplica la pantalla del móvil por HDMI. Gira el móvil en horizontal. Los mandos se ven en ambos dispositivos y se pueden recoger.'
+      :'Abre HF directamente en el iPad o la tablet: los controles táctiles permanecen en la parte inferior. No hace falta enlazar otro dispositivo.';
+  }
+  function chooseDevice(next){
+    if(!['mirror','tablet'].includes(next))return false;
+    deviceMode=next;
+    updateDeviceUI();
+    return true;
+  }
+  function setDockCollapsed(collapse){
+    document.body.classList.toggle('controls-collapsed',Boolean(collapse));
+    el('coachToggle').textContent=collapse?'Mostrar mandos':'Ocultar mandos';
+    el('coachToggle').setAttribute('aria-expanded',String(!collapse));
+    el('coachToggle').setAttribute('aria-label',collapse?'Mostrar los controles de la clase':'Ocultar los controles de la clase');
+  }
   function presentation(on){
     document.body.classList.toggle('presentation',on);
-    el('togglePresentation').textContent=on?'Salir de pantalla':'▣ Pantalla de clase';
-    if(on&&el('screen').requestFullscreen)el('screen').requestFullscreen().catch(()=>{});
-    if(!on&&document.fullscreenElement)document.exitFullscreen().catch(()=>{});
+    if(on){
+      updateDeviceUI();
+      setDockCollapsed(false);
+    }
+    el('togglePresentation').textContent=on?'Salir de presentación':'▣ Presentar clase';
+    if(on&&el('screen').requestFullscreen){
+      // iPhone Safari may not expose Element.requestFullscreen; CSS is the fallback.
+      try{Promise.resolve(el('screen').requestFullscreen()).catch(()=>{});}catch(e){}
+    }
+    if(!on&&document.fullscreenElement&&document.exitFullscreen){
+      try{Promise.resolve(document.exitFullscreen()).catch(()=>{});}catch(e){}
+    }
   }
+  el('mirrorMode').onclick=()=>chooseDevice('mirror');
+  el('tabletMode').onclick=()=>chooseDevice('tablet');
+  el('coachToggle').onclick=()=>setDockCollapsed(!document.body.classList.contains('controls-collapsed'));
   el('togglePresentation').onclick=()=>presentation(!document.body.classList.contains('presentation'));
   el('exitPresentation').onclick=()=>presentation(false);
-  document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&document.body.classList.contains('presentation')){document.body.classList.remove('presentation');el('togglePresentation').textContent='▣ Pantalla de clase';}});
-  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.body.classList.contains('presentation'))presentation(false);});
+  document.addEventListener('fullscreenchange',()=>{
+    if(!document.fullscreenElement&&document.body.classList.contains('presentation')){
+      // Do not discard the CSS presentation when Fullscreen API is unavailable.
+      if(document.fullscreenEnabled===true) presentation(false);
+    }
+  });
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&document.body.classList.contains('presentation'))presentation(false);
+  });
+  updateDeviceUI();
   function previewSnapshot(){
     return {state:{...state},config:JSON.parse(JSON.stringify(config))};
   }
