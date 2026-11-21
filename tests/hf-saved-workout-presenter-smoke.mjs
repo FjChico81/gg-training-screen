@@ -57,8 +57,10 @@ test('legacy 5 min bicycle without @seconds is manual: no fabricated countdown',
  assert.equal(p.plan.guided[0].seconds,0);
  assert.equal(p.plan.guided[0].target,'5 min');
 });
-test('AMRAP, EMOM and FOR TIME are not silently reinterpreted',()=>{
- for(const name of ['AMRAP 900s · Ejemplo','EMOM · SkiErg','FOR TIME 1200s · Ejemplo']){
+test('valid AMRAP is preserved while malformed EMOM and FOR TIME are rejected',()=>{
+ const amrap=toHFPresentation({name:'AMRAP',blocks:[{name:'AMRAP 900s · Ejemplo',items:['Burpees @30']}]},'guided');
+ assert.equal(amrap.plan.segments[0].type,'amrap');
+ for(const name of ['EMOM · SkiErg','FOR TIME 1200s · Ejemplo']){
   assert.throws(()=>toHFPresentation({name:'Complex',blocks:[{name,items:['Burpees @30']}]},'guided'),
     HFPresentationError);
  }
