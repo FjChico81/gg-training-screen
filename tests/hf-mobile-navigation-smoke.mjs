@@ -52,6 +52,7 @@ class MockElement{
     return visit(this);
   }
   focus(){this.focused=true}
+  click(){this.onclick?.()}
 }
 function makeApp(){
   const doc={};
@@ -138,16 +139,44 @@ test('Clases contains class chooser, templates, favorites and collective history
   assert.equal(app.organizer.parentElement,page);
   assert.equal(page.querySelector('.hf-class-intro').hidden,true);
 });
-test('Home shortcuts focus the selected tab after hiding the shortcut',()=>{
+test('Home offers creation or opens one saved routine and shows the latest session',()=>{
   const app=makeApp();
   const nav=mountHFMobileNavigation(app.doc);
-  const shortcuts=app.panel.querySelector('.hf-home-shortcuts');
-  for(const [index,key] of ['workouts','classes'].entries()){
-    nav.selectTab('home');
-    shortcuts.children[index].onclick();
-    assert.equal(nav.activeTab(),key);
-    assert.equal(byId(app,'hfPrimaryTab'+key).focused,true);
-  }
+  const action=app.panel.querySelector('.hf-home-action');
+  const recent=app.panel.querySelector('.hf-home-recent');
+  assert.equal(action.textContent,'Crear mi primer entrenamiento');
+  assert.equal(recent.hidden,true);
+  action.click();
+  assert.equal(app.counts().newClicks,1);
+  let opened;
+  nav.updateHome({
+    routine:{id:'fuerza',name:'Fuerza'},
+    recentSession:{name:'Carrera',date:'21/11/2026'},
+    openWorkout:id=>{opened=id;}
+  });
+  assert.equal(action.textContent,'Abrir rutina');
+  action.click();
+  assert.equal(opened,'fuerza');
+  assert.equal(recent.textContent,'Última sesión: Carrera · 21/11/2026');
+  assert.equal(recent.hidden,false);
+});
+test('An active personal session takes priority over an interrupted class and a saved routine',()=>{
+  const app=makeApp();
+  const nav=mountHFMobileNavigation(app.doc);
+  const card=app.panel.querySelector('.hf-home-card');
+  const action=app.panel.querySelector('.hf-home-action');
+  app.resume.className='hf-resume-card';
+  const routine={id:'r1',name:'Fuerza'};
+  nav.updateHome({routine});
+  assert.equal(card.hidden,true);
+  assert.equal(app.resume.hidden,false);
+  let resumed=false;
+  nav.updateHome({routine,activeWorkout:{name:'Carrera'},resumeWorkout:()=>{resumed=true;}});
+  assert.equal(card.hidden,false);
+  assert.equal(app.resume.hidden,true);
+  assert.equal(action.textContent,'Continuar sesión');
+  action.click();
+  assert.equal(resumed,true);
 });
 test('Opening templates from a personal workout reveals Clases before navigating within it',()=>{
   const app=makeApp();
