@@ -409,7 +409,7 @@
   function clearCurrentCheckpoint(){
     if(!checkpointTools||!checkpointRunId||typeof localStorage==='undefined')return;
     try{
-      const saved=checkpointTools.readHFCheckpoint(localStorage);
+      const saved=checkpointTools.readHFCheckpoint(localStorage,{now:Date.now()});
       if(saved?.runId===checkpointRunId)checkpointTools.clearHFCheckpoint(localStorage);
     }catch(error){
       // Never remove an unknown/corrupted record implicitly.
@@ -827,7 +827,7 @@
       render();await loadSavedHFPresentation();return;
     }
     try{
-      recoverySnapshot=checkpointTools.readHFCheckpoint(localStorage);
+      recoverySnapshot=checkpointTools.readHFCheckpoint(localStorage,{now:Date.now()});
       if(!recoverySnapshot){
         recoveryPending=false;render();
         await loadSavedHFPresentation();return;
@@ -851,7 +851,7 @@
   el('resumeRecovery').onclick=()=>{
     if(!recoverySnapshot||!checkpointTools)return;
     try{
-      const data=checkpointTools.readHFCheckpoint(localStorage);
+      const data=checkpointTools.readHFCheckpoint(localStorage,{now:Date.now()});
       if(!data||data.runId!==recoverySnapshot.runId)
         throw Error('La copia ha cambiado. Vuelve a abrir la pantalla.');
       config=JSON.parse(JSON.stringify(data.config));
