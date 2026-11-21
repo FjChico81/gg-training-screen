@@ -126,6 +126,9 @@
  .presentation.session-mode-tablet .coach button{min-height:46px;font-size:14px}
 }
 
+ .special-status{font-size:clamp(15px,2vw,24px);font-weight:900;color:#ffe0bd;
+  background:#3d2c21;border:1px solid #89593a;border-radius:12px;padding:11px 15px;
+  margin:9px 0 14px;font-variant-numeric:tabular-nums}
 .import-notice{margin:8px 0 14px;padding:12px 14px;border:1px solid #a1694c;border-radius:11px;background:#322824;color:#ffe5d4;line-height:1.45}
 .import-notice strong{color:#ffbd92}
 .import-notice.error{border-color:#a35a60;background:#392729}
@@ -187,6 +190,7 @@
     <div><span id="phaseTag" class="status" role="status">PREPARADO</span><div class="sub">TIEMPO TOTAL: <strong class="session-total" id="totalClock">00:00</strong></div></div>
   </div>
   <div id="importNotice" class="import-notice" hidden role="status" aria-live="polite"></div>
+  <div id="specialStatus" class="special-status" hidden role="status"></div>
   <div id="display" class="display"></div>
   <button id="coachToggle" class="coach-toggle" type="button" aria-controls="coach" aria-expanded="true" aria-label="Ocultar los controles de la clase">Ocultar mandos</button>
   <div class="coach-label">CONTROLES DEL ENTRENADOR · SOLO EN ESTA PANTALLA</div>
@@ -378,9 +382,17 @@
   }
   function tick(){
     let count=0,now=Date.now();
-    while(!state.paused&&state.deadline!==null&&now>=state.deadline&&count++<200&&state.phase!=='finished'){
-      const over=now-state.deadline;
-      nextPhase(over);
+    while(!state.paused&&state.phase!=='ready'&&state.phase!=='finished'&&count++<200){
+      const seg=activeSpecial();
+      const globalDeadline=seg&&seg.type!=='emom'&&seg.limitSeconds>0
+        ?state.specialAnchor+seg.limitSeconds*1000-state.specialElapsedMs:null;
+      const exerciseDeadline=state.deadline;
+      if(globalDeadline!==null&&now>=globalDeadline&&
+        (exerciseDeadline===null||globalDeadline<=exerciseDeadline)){
+        finishSpecialByLimit(now-globalDeadline);
+      }else if(exerciseDeadline!==null&&now>=exerciseDeadline){
+        nextPhase(now-exerciseDeadline);
+      }else break;
       now=Date.now();
     }
     if(count>=200){pauseSession();}
@@ -394,6 +406,18 @@
       main.textContent=time(shown,timed);
     }
     el('totalClock').textContent=time(totalElapsed());
+    const seg=activeSpecial(),label=el('specialStatus');
+    label.hidden=!seg;
+    if(seg){
+      const elapsed=activeSpecialElapsed();
+      const remaining=Math.max(0,seg.limitSeconds*1000-elapsed);
+      const type=seg.type==='amrap'?'AMRAP':seg.type==='emom'?'EMOM':'FOR TIME';
+      const detail=seg.type==='amrap'?' · '+state.amrapRounds+' rondas completas'
+        :seg.type==='emom'?' · Ronda '+(Math.floor((state.step-seg.start)/2)+1)+'/'+seg.rounds
+        :' · '+(state.step-seg.start+1)+'/'+(seg.end-seg.start+1)+' ejercicios';
+      label.textContent=type+' · '+seg.label+detail+' · '+
+        (seg.limitSeconds===0?'Tiempo '+time(elapsed):'Restante '+time(remaining,true));
+    }
   }
   function node(tag,className,txt){
     const n=document.createElement(tag);
@@ -472,7 +496,9 @@
     el('guidedMode').setAttribute('aria-pressed',String(isGuided));
     el('stationsMode').setAttribute('aria-pressed',String(!isGuided));
     el('guidedConfig').hidden=!isGuided;el('stationConfig').hidden=isGuided;
-    el('formatLabel').textContent=isGuided?'01 · CLASE GUIADA':'02 · CIRCUITO POR ESTACIONES';
+    el('formatLabel').textContent=isGuided?(activeSpecial()?
+      activeSpecial().type.toUpperCase().replace('FOR-TIME','FOR TIME')+' · CLASE COLECTIVA':'01 · CLASE GUIADA')
+      :'02 · CIRCUITO POR ESTACIONES';
     el('screenTitle').textContent=importedTitle|| (isGuided?'HF · Clase guiada':'HF · Circuito híbrido');
     el('screen').className='screen '+(state.phase==='change'?'change-phase':isGuided&&state.phase!=='finished'&&/^descanso$/i.test(config.guided[state.step]?.name||'')?'rest-phase':'work-phase');
     const phase=state.phase==='ready'?'PREPARADO':done?'FINALIZADO':state.paused?'EN PAUSA':state.phase==='change'?'CAMBIO DE ESTACIÓN':isGuided&&/^descanso$/i.test(config.guided[state.step]?.name||'')?'DESCANSO':'EN MARCHA';
@@ -487,7 +513,8 @@
     el('pause').disabled=ready||done;
     el('pause').textContent=state.paused?'▶ Reanudar':'Ⅱ Pausar';
     el('next').disabled=ready||done||state.paused;
-    el('next').textContent=isGuided?'Siguiente ejercicio ▶':state.phase==='change'?'Iniciar siguiente estación ▶':'Terminar intervalo ▶';
+    el('next').textContent=isGuided?(activeSpecial()?.type==='amrap'&&state.step===activeSpecial().end
+      ?'Completar ronda ▶':'Siguiente ejercicio ▶'):state.phase==='change'?'Iniciar siguiente estación ▶':'Terminar intervalo ▶';
     tick();
   }
   function parseGuided(raw){
@@ -556,6 +583,7 @@
     try{
       const next=JSON.parse(JSON.stringify(config));
       if(state.mode==='guided'){
+        if(config.segments?.length)throw Error('Los bloques AMRAP, EMOM y FOR TIME se editan desde el editor original de HF; abre la rutina allí.');
         next.guided=parseGuided(el('guidedLines').value).map((entry,i)=>{
           const previous=config.guided[i];
           return previous&&entry.name===previous.name&&entry.target===previous.target&&entry.seconds===previous.seconds
@@ -646,7 +674,10 @@
       importedTitle=payload.title;
       importedMode=payload.mode;
       state.mode=payload.mode;
-      if(payload.mode==='guided')config.guided=payload.plan.guided.map(e=>({...e}));
+      if(payload.mode==='guided'){
+        config.guided=payload.plan.guided.map(e=>({...e}));
+        config.segments=(payload.plan.segments||[]).map(e=>({...e}));
+      }
       else config={...config,stations:payload.plan.stations.map(e=>({...e})),
         rounds:payload.plan.rounds,work:payload.plan.work,change:payload.plan.change};
       importReviewPending=payload.requiresReview;
