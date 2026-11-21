@@ -733,6 +733,19 @@ function setupHF(){
  $('library').querySelector('.library-title').textContent='Clases y entrenamientos';
  const intro=node('p','Prepara la sesión y abre su pizarra. Durante la clase, activa «Pantalla de clase» para que el grupo siga los ejercicios, los tiempos y el siguiente movimiento.','hf-class-intro');
  $('library').querySelector('.library-title').after(intro);
+ const demo=node('section','','hf-class-chooser');
+ demo.setAttribute('aria-label','Formatos de la asociación');
+ const demoTitle=node('h3','', 'Entrenamientos colectivos');
+ const demoNote=node('p','Prototipos de clase: todavía no sincronizan móvil y pantalla ni guardan resultados.','muted small');
+ const links=node('div','','hf-class-links');
+ for(const [label,mode] of [['Clase guiada','guided'],['Circuito por estaciones','stations']]){
+   const link=node('a',label,'hf-class-link');
+   link.href='hf-class-prototype.html?mode='+mode;
+   link.setAttribute('aria-label','Abrir prototipo de '+label.toLowerCase());
+   links.append(link);
+ }
+ demo.append(demoTitle,demoNote,links);
+ intro.after(demo);
  $('new').textContent='＋ Preparar una clase';
  $('historyButton').textContent='Historial de sesiones';
  $('editor').querySelector('.gold').textContent='EDITOR HF';
