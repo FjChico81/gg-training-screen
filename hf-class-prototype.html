@@ -16,6 +16,13 @@
 .screen-only .top,.screen-only .config,.screen-only .coach,.screen-only .coach-label,.screen-only .notice{display:none!important}
 #previewBanner{font-size:12px;font-weight:850;color:#ffba91}
 #unlockAudio{font-size:12px;padding:7px 11px;min-height:36px;background:#514038;color:#ffe1cd}
+.preview-consent{position:fixed;z-index:90;inset:0;display:grid;place-items:center;background:#0a0a0aeb;padding:clamp(18px,6vw,45px)}
+.preview-consent .consent-card{max-width:610px;border-radius:22px;padding:clamp(22px,5vw,38px);border:2px solid #aa5f3a;background:#262426;box-shadow:0 25px 65px #000b}
+.preview-consent h2{font-size:clamp(24px,4vw,36px);margin:8px 0 15px;color:#ffbd92}
+.preview-consent p{font-size:clamp(15px,2vw,18px);color:#f2e6e0;line-height:1.45}
+.preview-consent .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.preview-consent .actions button{flex:1;min-width:175px}
+#revokePreview{position:fixed;right:14px;bottom:14px;z-index:5;font-size:12px;padding:7px 11px;min-height:35px;background:#623d39;color:#fff}
 </style>
 </head>
 <body>
@@ -63,6 +70,19 @@
     <div><span id="phaseTag" class="status" role="status">PREPARADO</span><div class="sub">TIEMPO TOTAL: <strong class="session-total" id="totalClock">00:00</strong></div></div>
   </div>
   <div id="previewBanner" class="sub" hidden role="status"></div>
+  <div id="screenConsent" class="preview-consent" hidden role="dialog" aria-modal="true" aria-labelledby="consentTitle">
+    <div class="consent-card">
+      <div class="eyebrow">HF · SIMULACIÓN DE EMPAREJAMIENTO</div>
+      <h2 id="consentTitle">¿Permitir el mando del entrenador?</h2>
+      <p>La pantalla no aceptará órdenes hasta que autorices esta conexión de prueba.</p>
+      <p><strong>Esta demostración solo conecta pestañas del mismo navegador.</strong> No es una conexión real entre teléfonos y televisores.</p>
+      <div class="actions">
+        <button id="approvePreview" type="button">✓ Permitir esta prueba</button>
+        <button id="denyPreview" class="secondary" type="button">Rechazar</button>
+      </div>
+    </div>
+  </div>
+  <button id="revokePreview" type="button" hidden>Desconectar mando</button>
   <button id="unlockAudio" type="button" hidden>🔊 Activar avisos en esta pantalla</button>
   <div id="display" class="display"></div>
   <div class="coach-label">CONTROLES DEL ENTRENADOR · SOLO EN ESTA PANTALLA</div>
@@ -110,7 +130,7 @@
   const requestedMode=params.get('mode');
   const previewPair=params.get('pair');
   const screenPreview=params.get('role')==='screen'&&Boolean(window.HFPreviewLink?.isValidPair(previewPair));
-  let previewBridge=null;
+  let previewBridge=null,previewTimer=null;
   let state={mode:requestedMode==='stations'?'stations':'guided',phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0};
   let sound=true;
   const pad=n=>String(n).padStart(2,'0');
@@ -408,36 +428,65 @@
   function setupScreenPreview(){
     if(!screenPreview)return;
     document.body.classList.add('presentation','screen-only');
-    const banner=el('previewBanner');
+    const banner=el('previewBanner'),consent=el('screenConsent'),revoke=el('revokePreview');
     banner.hidden=false;
-    banner.textContent='SIMULACIÓN EN DOS PESTAÑAS · Solo el mismo navegador';
+    banner.textContent='SOLICITUD PENDIENTE · El mando aún no está autorizado';
+    consent.hidden=false;
     el('unlockAudio').hidden=false;
     el('unlockAudio').onclick=()=>{
       notify();el('unlockAudio').hidden=true;
     };
-    try{
-      previewBridge=window.HFPreviewLink.create({
-        pair:previewPair,role:'screen',
-        onCommand({action}){
-          if(action==='snapshot'){previewBridge.publish(previewSnapshot());return true;}
-          let accepted=false;
-          const active=state.phase!=='ready'&&state.phase!=='finished';
-          if(action==='start'&&state.phase==='ready'){startSession();accepted=true;}
-          else if(action==='pause'&&active&&!state.paused){pauseSession();accepted=true;}
-          else if(action==='resume'&&active&&state.paused){startSession();accepted=true;}
-          else if(action==='next'&&active&&!state.paused){nextPhase();accepted=true;}
-          else if(action==='reset'){resetSession(true);accepted=true;}
-          previewBridge.publish(previewSnapshot());
-          return accepted;
-        }
-      });
-      banner.textContent='SIMULACIÓN DE PANTALLA · Sincronización entre pestañas del mismo navegador';
-      previewBridge.publish(previewSnapshot());
-      setInterval(()=>{if(previewBridge)previewBridge.publish(previewSnapshot());},1000);
-      window.addEventListener('pagehide',()=>previewBridge?.close(),{once:true});
-    }catch(e){
-      banner.textContent='El canal local de simulación no está disponible. Los controles remotos no funcionarán.';
+    function unlink(showPrompt=true){
+      previewBridge?.close();
+      previewBridge=null;
+      if(state.phase!=='ready'&&state.phase!=='finished'&&!state.paused)pauseSession();
+      consent.hidden=!showPrompt;
+      revoke.hidden=showPrompt;
+      banner.textContent='SIN MANDO · La pantalla necesita aceptar el enlace';
     }
+    el('approvePreview').onclick=()=>{
+      if(previewBridge)return;
+      try{
+        const bridge=window.HFPreviewLink.create({
+          pair:previewPair,role:'screen',
+          onCommand({action}){
+            if(action==='snapshot'){bridge.publish(previewSnapshot());return true;}
+            let accepted=false;
+            const active=state.phase!=='ready'&&state.phase!=='finished';
+            if(action==='start'&&state.phase==='ready'){startSession();accepted=true;}
+            else if(action==='pause'&&active&&!state.paused){pauseSession();accepted=true;}
+            else if(action==='resume'&&active&&state.paused){startSession();accepted=true;}
+            else if(action==='next'&&active&&!state.paused){nextPhase();accepted=true;}
+            else if(action==='reset'){resetSession(true);accepted=true;}
+            bridge.publish(previewSnapshot());
+            return accepted;
+          }
+        });
+        previewBridge=bridge;
+        consent.hidden=true;
+        revoke.hidden=false;
+        revoke.textContent='Desconectar mando';
+        banner.textContent='MODO PRUEBA · Mando autorizado solo para este navegador';
+        bridge.publish(previewSnapshot());
+        if(!previewTimer)previewTimer=setInterval(()=>{
+          previewBridge?.publish(previewSnapshot());
+        },1000);
+      }catch(e){
+        banner.textContent='Este navegador no permite el enlace de prueba.';
+        consent.hidden=false;
+      }
+    };
+    el('denyPreview').onclick=()=>{
+      unlink(false);
+      revoke.hidden=false;
+      revoke.textContent='Revisar solicitud';
+      banner.textContent='SOLICITUD RECHAZADA · Sin acceso remoto';
+    };
+    revoke.onclick=()=>{
+      if(previewBridge)unlink(true);
+      else {revoke.hidden=true;consent.hidden=false;}
+    };
+    window.addEventListener('pagehide',()=>previewBridge?.close(),{once:true});
   }
   loadForms();render();setInterval(tick,160);setupScreenPreview();
 })();
