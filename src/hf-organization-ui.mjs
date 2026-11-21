@@ -104,25 +104,38 @@ export function mountHFOrganization({
       content.append(create('strong',tmpl.name),
         create('p',tmpl.category+' · '+tmpl.workout.blocks.length+' bloques','hf-org-caption'));
       const actions=create('div',undefined,'hf-org-actions');
-      actions.append(
-        button('Presentar',()=>onPresent(tmpl.workout,'guided')),
-        button('Estaciones',()=>onPresent(tmpl.workout,'stations')),
-        button('Usar en editor',()=>onDraft(tmpl)),
-        button('Editar datos',()=>safe(()=>{
-          const name=prompt('Nombre de la plantilla',tmpl.name);
-          if(name===null)return;
-          const categoryName=prompt('Categoría: '+tools.HF_CATEGORIES.join(', '),tmpl.category);
-          if(categoryName===null)return;
-          tools.renameHFTemplate(store,tmpl.id,{name,category:categoryName.trim()});
+      const editBox=create('div',undefined,'hf-org-edit');
+      editBox.hidden=true;
+      const nameLabel=create('label','Nombre de plantilla');
+      const nameField=create('input');nameField.type='text';nameField.maxLength=70;
+      nameField.value=tmpl.name;nameField.setAttribute('aria-label','Nombre de plantilla');
+      const categoryLabel=create('label','Categoría');
+      const categoryField=create('select');
+      categoryField.setAttribute('aria-label','Categoría de la plantilla');
+      for(const categoryName of tools.HF_CATEGORIES){
+        const option=create('option',categoryName);option.value=categoryName;
+        categoryField.append(option);
+      }
+      categoryField.value=tmpl.category;
+      editBox.append(nameLabel,nameField,categoryLabel,categoryField,
+        button('Guardar cambios',()=>safe(()=>{
+          tools.renameHFTemplate(store,tmpl.id,{name:nameField.value,category:categoryField.value});
           renderTemplates();
         })),
+        button('Cancelar',()=>{editBox.hidden=true;}));
+      const templateWorkout={...tmpl.workout,name:tmpl.name};
+      actions.append(
+        button('Presentar',()=>onPresent(templateWorkout,'guided')),
+        button('Estaciones',()=>onPresent(templateWorkout,'stations')),
+        button('Usar en editor',()=>onDraft(tmpl)),
+        button('Editar datos',()=>{editBox.hidden=!editBox.hidden;}),
         button('Quitar',()=>safe(()=>{
           if(!confirm('¿Eliminar solo la plantilla «'+tmpl.name+'»? La rutina de origen y el historial no se modificarán.'))return;
           tools.removeHFTemplate(store,tmpl.id);
           renderTemplates();
         }))
       );
-      card.append(content,actions);templateList.append(card);
+      card.append(content,actions,editBox);templateList.append(card);
     }
   }
   function niceDuration(ms){
