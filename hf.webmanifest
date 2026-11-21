@@ -1,0 +1,25 @@
+{
+  "id": "./?app=hf",
+  "name": "HF · Hybrid Funcional Club",
+  "short_name": "HF",
+  "description": "Clases y entrenamientos funcionales de HF",
+  "start_url": "./index.html?app=hf",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1c1c1e",
+  "theme_color": "#1c1c1e",
+  "icons": [
+    {
+      "src": "assets/icons/hf-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/hf-app.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
