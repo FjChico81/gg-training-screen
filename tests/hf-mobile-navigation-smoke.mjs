@@ -136,14 +136,14 @@ test('Clases contains class chooser, templates, favorites and collective history
   assert.equal(nav.activeTab(),'classes');
   assert.equal(app.chooser.parentElement,page);
   assert.equal(app.organizer.parentElement,page);
-  assert.equal(page.querySelector('.hf-class-intro').textContent.includes('tablet'),true);
+  assert.equal(page.querySelector('.hf-class-intro').hidden,true);
 });
 test('Profile, synchronization and exercise library are in settings, not the first screen',()=>{
   const app=makeApp();mountHFMobileNavigation(app.doc);
   assert.equal(app.profile.parentElement,app.settings);
   assert.equal(app.cloud.parentElement,app.settings);
   assert.equal(app.exerciseLibrary.parentElement,app.settings);
-  assert.equal(app.settings.querySelector('.hf-settings-section-title').textContent,'Perfil y herramientas');
+  assert.equal(app.settings.querySelector('.hf-settings-section-title').textContent,'Perfil y sincronización');
   app.exerciseLibrary.onclick();
   assert.equal(app.counts().exerciseClicks,1);
 });
