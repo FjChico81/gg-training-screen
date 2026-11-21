@@ -1,0 +1,46 @@
+name: HF collective recovery and advanced formats
+
+on:
+  push:
+    branches:
+      - feature/hf-recovery-advanced-ux-v1
+    paths:
+      - 'hf-class-display.html'
+      - 'index.html'
+      - 'src/hf-*.mjs'
+      - 'tests/hf-*.mjs'
+      - 'tests/hf-*.cjs'
+      - '.github/workflows/hf-advanced-recovery.yml'
+  pull_request:
+    paths:
+      - 'hf-class-display.html'
+      - 'index.html'
+      - 'src/hf-*.mjs'
+      - 'tests/hf-*.mjs'
+      - 'tests/hf-*.cjs'
+      - '.github/workflows/hf-advanced-recovery.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  hf-advanced:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Checkout HF branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Node version
+        run: node --version
+      - name: Run offline HF tests (no external requests)
+        run: |
+          node --test \
+            tests/hf-class-display-smoke.cjs \
+            tests/hf-device-modes-smoke.cjs \
+            tests/hf-saved-workout-presenter-smoke.mjs \
+            tests/hf-saved-display-integration-smoke.cjs \
+            tests/hf-advanced-format-smoke.mjs \
+            tests/hf-class-checkpoint-smoke.mjs \
+            tests/hf-advanced-runtime-smoke.cjs
