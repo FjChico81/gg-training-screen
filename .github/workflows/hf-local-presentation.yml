@@ -12,6 +12,7 @@ on:
       - 'tests/hf-class-display-smoke.cjs'
       - 'tests/hf-device-modes-smoke.cjs'
       - 'tests/hf-saved-workout-presenter-smoke.mjs'
+      - 'tests/hf-saved-display-integration-smoke.cjs'
       - '.github/workflows/hf-local-presentation.yml'
   pull_request:
     paths:
@@ -22,6 +23,7 @@ on:
       - 'tests/hf-class-display-smoke.cjs'
       - 'tests/hf-device-modes-smoke.cjs'
       - 'tests/hf-saved-workout-presenter-smoke.mjs'
+      - 'tests/hf-saved-display-integration-smoke.cjs'
       - '.github/workflows/hf-local-presentation.yml'
 
 permissions:
@@ -43,4 +45,5 @@ jobs:
           node --test \
             tests/hf-class-display-smoke.cjs \
             tests/hf-device-modes-smoke.cjs \
-            tests/hf-saved-workout-presenter-smoke.mjs
+            tests/hf-saved-workout-presenter-smoke.mjs \
+            tests/hf-saved-display-integration-smoke.cjs
