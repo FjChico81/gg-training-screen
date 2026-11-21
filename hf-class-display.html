@@ -377,7 +377,7 @@
     el('collectiveArchiveStatus').hidden=false;
     el('collectiveArchiveStatus').textContent='Guardando el resultado colectivo en este dispositivo…';
     el('retryCollectiveArchive').hidden=true;
-    void import('./src/hf-class-organization.mjs').then(({hfScopedStorage,appendHFCollectiveHistory})=>{
+    void import('./src/hf-class-organization.mjs?v=2.9.64').then(({hfScopedStorage,appendHFCollectiveHistory})=>{
       const store=hfScopedStorage(localStorage,hfProfileId);
       return appendHFCollectiveHistory(store,entry);
     }).then(()=>{
@@ -889,7 +889,7 @@
       render();await loadSavedHFPresentation();return;
     }
     try{
-      checkpointTools=await import('./src/hf-class-checkpoint.mjs');
+      checkpointTools=await import('./src/hf-class-checkpoint.mjs?v=2.9.64');
     }catch(error){
       checkpointTools=null;recoveryPending=false;
       el('saveIndicator').hidden=false;
