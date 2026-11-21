@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {toHFPresentation,HFPresentationError} from '../src/hf-workout-presenter.mjs';
+import {toHFPresentation,HFPresentationError,createHFHandoff,consumeHFHandoff} from '../src/hf-workout-presenter.mjs';
 const source=w=>({id:'x',name:'HF · Mixto',blocks:w});
 const block=(name,...items)=>({name,items});
 test('AMRAP native HF editor block keeps round loop and one 15 minute global cap',()=>{
@@ -53,4 +53,17 @@ test('station adaptation never silently converts advanced sequential formats',()
  for(const name of ['AMRAP 300s · HIIT','EMOM · SkiErg','FOR TIME 600s · Circuito · Ronda 1/1']){
   assert.throws(()=>toHFPresentation(source([block(name,'SkiErg','Burpees')]),'stations'),HFPresentationError);
  }
+});
+
+test('tampered ephemeral AMRAP caps and EMOM intervals are rejected before rendering',()=>{
+ const kv=new Map();
+ const store={getItem:k=>kv.get(k)||null,setItem:(k,v)=>kv.set(k,v)};
+ const uuid='11111111-2222-4333-8444-555555555555',now=1795270000000;
+ const w=source([block('AMRAP 300s · Híbrido','Carrera 300 m','10 burpees')]);
+ createHFHandoff(w,'guided',{store,uuid:()=>uuid,now:()=>now});
+ const key=[...kv.keys()][0];
+ const altered=JSON.parse(kv.get(key));
+ altered.plan.segments[0].limitSeconds=9999999;
+ kv.set(key,JSON.stringify(altered));
+ assert.throws(()=>consumeHFHandoff(uuid,{store,now:()=>now+1}),HFPresentationError);
 });
