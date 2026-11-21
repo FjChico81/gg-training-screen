@@ -832,6 +832,13 @@ function setupHF(){
  document.querySelectorAll('[data-tv-toggle]').forEach(button=>button.textContent='Pantalla de clase');
  $('updateBannerText').textContent='Hay una versión nueva de HF';
  $('restoreFile').setAttribute('aria-label','Seleccionar copia de seguridad HF');
+ // HF-only progressive navigation enhancement; keep existing engine and IDs.
+ void import('./src/hf-mobile-navigation.mjs?v=mobile1').then(({mountHFMobileNavigation})=>{
+   mountHFMobileNavigation(document,{profileLabel:localProfile.name});
+ }).catch(error=>{
+   // On module failure, leave the proven legacy layout accessible.
+   console.warn('No se pudo activar la navegación HF:',error);
+ });
 }
 function setupLocalProfiles(){
  const select=$('localProfileSelect');
