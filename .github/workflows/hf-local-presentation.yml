@@ -1,0 +1,41 @@
+name: HF local presentation - guided, stations, HDMI and tablet
+
+on:
+  push:
+    branches:
+      - feature/hf-local-presentation-v1
+    paths:
+      - 'hf-class-display.html'
+      - 'index.html'
+      - 'assets/hf-association.css'
+      - 'tests/hf-class-display-smoke.cjs'
+      - 'tests/hf-device-modes-smoke.cjs'
+      - '.github/workflows/hf-local-presentation.yml'
+  pull_request:
+    paths:
+      - 'hf-class-display.html'
+      - 'index.html'
+      - 'assets/hf-association.css'
+      - 'tests/hf-class-display-smoke.cjs'
+      - 'tests/hf-device-modes-smoke.cjs'
+      - '.github/workflows/hf-local-presentation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  hf-local-display:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Show Node runtime
+        run: node --version
+      - name: Check independent HF presentation (no cloud or installs)
+        run: |
+          node --test \
+            tests/hf-class-display-smoke.cjs \
+            tests/hf-device-modes-smoke.cjs
