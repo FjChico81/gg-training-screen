@@ -340,6 +340,7 @@
   function finish(over=0){
     state.sessionElapsedMs=Math.max(0,totalElapsed()-over);
     state.phase='finished';state.paused=false;state.deadline=null;state.remainingMs=0;state.sessionAnchor=0;
+    clearCurrentCheckpoint();
     notify();
   }
   function nextPhase(over=0){
@@ -364,6 +365,53 @@
     }
     notify();render();
   }
+  function makeCheckpoint(now=Date.now()){
+    const remaining=state.deadline===null?state.remainingMs:
+      Math.max(0,state.deadline-now);
+    const savedState={
+      ...state,paused:true,deadline:null,sessionAnchor:0,phaseAnchor:0,specialAnchor:0,
+      remainingMs:remaining,sessionElapsedMs:totalElapsed(),
+      phaseElapsedMs:currentElapsed(),specialElapsedMs:activeSpecialElapsed(),
+      results:state.results.slice()
+    };
+    return checkpointTools.makeHFCheckpoint({
+      runId:checkpointRunId,title:importedTitle||el('screenTitle').textContent,
+      deviceMode,config,state:savedState,now
+    });
+  }
+  function persistCheckpoint(force=false){
+    if(typeof localStorage==='undefined'||!checkpointTools||!checkpointRunId||
+      recoveryPending||importBlocked||!['work','change'].includes(state.phase))return;
+    const now=Date.now();
+    if(!force&&now-lastCheckpointAt<2000)return;
+    lastCheckpointAt=now;
+    try{
+      checkpointTools.writeHFCheckpoint(localStorage,makeCheckpoint(now),{now});
+      el('saveIndicator').hidden=false;
+      el('saveIndicator').textContent='✓ Clase protegida en este dispositivo · Última copia '+
+        new Date(now).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+      checkpointWarned=false;
+    }catch(error){
+      if(!checkpointWarned){
+        checkpointWarned=true;
+        el('saveIndicator').hidden=false;
+        el('saveIndicator').textContent='⚠ Sin copia recuperable: '+
+          (error?.message||'error de almacenamiento');
+      }
+    }
+  }
+  function clearCurrentCheckpoint(){
+    if(!checkpointTools||!checkpointRunId||typeof localStorage==='undefined')return;
+    try{
+      const saved=checkpointTools.readHFCheckpoint(localStorage);
+      if(saved?.runId===checkpointRunId)checkpointTools.clearHFCheckpoint(localStorage);
+    }catch(error){
+      // Never remove an unknown/corrupted record implicitly.
+      el('saveIndicator').hidden=false;
+      el('saveIndicator').textContent='⚠ Comprueba la copia local antes de descartarla.';
+    }
+    checkpointRunId=null;
+  }
   function startSession(){
     if(state.phase==='finished'||importBlocked||importReviewPending||recoveryPending)return;
     if(state.phase==='ready'){
@@ -381,7 +429,10 @@
       state.paused=false;
       if(state.remainingMs!==null)state.deadline=now+state.remainingMs;
     }
+    if(!checkpointRunId&&typeof crypto!=='undefined'&&crypto.randomUUID)
+      checkpointRunId=crypto.randomUUID();
     notify();render();
+    persistCheckpoint(true);
   }
   function pauseSession(){
     if(state.phase==='ready'||state.phase==='finished')return;
@@ -393,11 +444,14 @@
     state.deadline=null;
     state.paused=true;
     render();
+    persistCheckpoint(true);
   }
   function resetSession(force=false){
     if(!force&&state.phase!=='ready'&&state.phase!=='finished'&&!confirm('¿Reiniciar esta clase? Se descartará el progreso local de esta sesión.'))return false;
     const mode=state.mode;
     state={mode,phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0,specialIndex:-1,specialElapsedMs:0,specialAnchor:0,amrapRounds:0,results:[]};
+    clearCurrentCheckpoint();
+    el('saveIndicator').hidden=true;
     render();return true;
   }
   function tick(){
@@ -426,6 +480,7 @@
       main.textContent=time(shown,timed);
     }
     el('totalClock').textContent=time(totalElapsed());
+    persistCheckpoint(false);
     const seg=activeSpecial(),label=el('specialStatus');
     label.hidden=!seg;
     if(seg){
