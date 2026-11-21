@@ -38,7 +38,7 @@ function boot(){
     Date:VirtualDate,setInterval:()=>0,console,confirm:()=>true,alert:()=>{}};
  vm.runInNewContext(injected,context,{timeout:1000,filename:'hf-advanced-screen'});
  return {t:context.__test,el:id=>document.getElementById(id),
-   advance(ms){now+=ms;this.t.tick();},now:()=>now};
+   advance(ms){now+=ms;this.t.tick();},jump(ms){now+=ms;},now:()=>now};
 }
 const step=(name,seconds=0)=>({name,target:'Objetivo',seconds});
 const advanced=(type,steps,limitSeconds)=>({
@@ -106,4 +106,12 @@ test('AMRAP timeout skips remaining unfinished work and continues with the next 
  assert.equal(x.t.getState().phase,'work');
  assert.equal(x.t.getState().results[0].complete,false);
  x.advance(60001);assert.equal(x.t.getState().phase,'finished');
+});
+
+test('manual next after FOR TIME global deadline is incomplete, not falsely completed',()=>{
+ const x=boot();x.t.setGuided(advanced('for-time',[step('Carrera 400 m')],5));
+ x.t.start();x.jump(5001);x.t.next();
+ assert.equal(x.t.getState().phase,'finished');
+ assert.equal(x.t.getState().results[0].complete,false);
+ assert.equal(x.t.getState().results[0].seconds,5);
 });
