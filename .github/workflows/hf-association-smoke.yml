@@ -1,0 +1,46 @@
+name: HF WEB - Class and Pairing Smoke
+
+on:
+  push:
+    branches:
+      - feature/hf-association-screen-v1
+    paths:
+      - 'hf-class-prototype.html'
+      - 'hf-coach-preview.html'
+      - 'hf-pair-preview.html'
+      - 'src/hf-*'
+      - 'tests/hf-*'
+      - 'db/hf-training/*DRAFT-DO-NOT-APPLY.sql'
+      - '.github/workflows/hf-association-smoke.yml'
+  pull_request:
+    paths:
+      - 'hf-class-prototype.html'
+      - 'hf-coach-preview.html'
+      - 'hf-pair-preview.html'
+      - 'src/hf-*'
+      - 'tests/hf-*'
+      - 'db/hf-training/*DRAFT-DO-NOT-APPLY.sql'
+      - '.github/workflows/hf-association-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  hf-safe-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout isolated HF branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Show Node runtime
+        run: node --version
+      - name: Test HF-only modules (no installs or network)
+        run: |
+          node --test \
+            tests/hf-class-prototype-smoke.cjs \
+            tests/hf-preview-link-smoke.cjs \
+            tests/hf-live-client-smoke.mjs \
+            tests/hf-pairing-client-smoke.mjs \
+            tests/hf-rls-draft-static-guard.cjs
