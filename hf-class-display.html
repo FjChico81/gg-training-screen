@@ -126,6 +126,13 @@
  .presentation.session-mode-tablet .coach button{min-height:46px;font-size:14px}
 }
 
+ .recovery-panel{border:2px solid #fa9a62;background:#302823;border-radius:14px;
+   padding:clamp(14px,2vw,24px);margin:12px 0 18px}
+ .recovery-panel strong{font-size:clamp(18px,2.5vw,27px);color:#ffcfaf}
+ .recovery-panel p{line-height:1.5;color:#f5dfd0}
+ .recovery-actions{display:flex;gap:10px;flex-wrap:wrap}
+ .recovery-actions button{min-height:52px;flex:1;min-width:200px}
+ .save-indicator{font-size:13px;color:#bbded0;margin:8px 0}
  .special-status{font-size:clamp(15px,2vw,24px);font-weight:900;color:#ffe0bd;
   background:#3d2c21;border:1px solid #89593a;border-radius:12px;padding:11px 15px;
   margin:9px 0 14px;font-variant-numeric:tabular-nums}
@@ -190,6 +197,15 @@
     <div><span id="phaseTag" class="status" role="status">PREPARADO</span><div class="sub">TIEMPO TOTAL: <strong class="session-total" id="totalClock">00:00</strong></div></div>
   </div>
   <div id="importNotice" class="import-notice" hidden role="status" aria-live="polite"></div>
+  <section id="recoveryPanel" class="recovery-panel" hidden aria-label="Recuperar clase anterior">
+    <strong id="recoveryTitle">Recuperación de clase</strong>
+    <p id="recoveryMessage" role="status"></p>
+    <div class="recovery-actions">
+      <button id="resumeRecovery" type="button">▶ Continuar clase en pausa</button>
+      <button id="discardRecovery" class="secondary" type="button">Descartar copia y abrir clase nueva</button>
+    </div>
+  </section>
+  <div id="saveIndicator" class="save-indicator" role="status" hidden></div>
   <div id="specialStatus" class="special-status" hidden role="status"></div>
   <div id="display" class="display"></div>
   <button id="coachToggle" class="coach-toggle" type="button" aria-controls="coach" aria-expanded="true" aria-label="Ocultar los controles de la clase">Ocultar mandos</button>
@@ -239,6 +255,10 @@
   let deviceMode=params.get('view')==='tablet'?'tablet':'mirror';
   let state={mode:requestedMode==='stations'?'stations':'guided',phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0,specialIndex:-1,specialElapsedMs:0,specialAnchor:0,amrapRounds:0,results:[]};
   let sound=true;
+  // Independent, device-local HF checkpoint; never reads or writes GG storage.
+  let checkpointTools=null,checkpointRunId=null,recoverySnapshot=null,checkpointError=null;
+  let recoveryPending=typeof localStorage!=='undefined',lastCheckpointAt=0;
+  let checkpointWarned=false;
   const pad=n=>String(n).padStart(2,'0');
   function time(ms,countdown=false){
     const seconds=Math.max(0,countdown?Math.ceil(ms/1000):Math.floor(ms/1000));
@@ -345,7 +365,7 @@
     notify();render();
   }
   function startSession(){
-    if(state.phase==='finished')return;
+    if(state.phase==='finished'||importBlocked||importReviewPending||recoveryPending)return;
     if(state.phase==='ready'){
       state.phase='work';
       state.sessionElapsedMs=0;
@@ -375,7 +395,7 @@
     render();
   }
   function resetSession(force=false){
-    if(!force&&state.phase!=='ready'&&state.phase!=='finished'&&!confirm('¿Reiniciar la sesión actual? Se perderá el progreso del prototipo.'))return false;
+    if(!force&&state.phase!=='ready'&&state.phase!=='finished'&&!confirm('¿Reiniciar esta clase? Se descartará el progreso local de esta sesión.'))return false;
     const mode=state.mode;
     state={mode,phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0,specialIndex:-1,specialElapsedMs:0,specialAnchor:0,amrapRounds:0,results:[]};
     render();return true;
@@ -508,7 +528,7 @@
       'Vuelta '+Math.min(config.rounds,Math.floor(state.turn/config.stations.length)+1)+' de '+config.rounds+' · Rotación '+Math.min(turn,config.stations.length*config.rounds)+' de '+config.stations.length*config.rounds;
     const display=el('display');display.replaceChildren(isGuided?guidedView():stationView());
     const ready=state.phase==='ready';
-    el('start').disabled=done||(!ready&&!state.paused)||importReviewPending||importBlocked;
+    el('start').disabled=done||(!ready&&!state.paused)||importReviewPending||importBlocked||recoveryPending;
     el('start').textContent=ready?'▶ Iniciar clase':'▶ Reanudar';
     el('pause').disabled=ready||done;
     el('pause').textContent=state.paused?'▶ Reanudar':'Ⅱ Pausar';
@@ -563,7 +583,7 @@
   el('stationsMode').onclick=()=>switchMode('stations');
   el('start').onclick=startSession;
   el('pause').onclick=pauseSession;
-  el('next').onclick=()=>{if(!state.paused)nextPhase();};
+  el('next').onclick=()=>{if(!state.paused&&!recoveryPending&&!importBlocked)nextPhase();};
   el('reset').onclick=()=>resetSession();
   el('toggleSound').onclick=()=>{
     sound=!sound;
