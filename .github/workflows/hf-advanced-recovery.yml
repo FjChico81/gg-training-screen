@@ -43,4 +43,5 @@ jobs:
             tests/hf-saved-display-integration-smoke.cjs \
             tests/hf-advanced-format-smoke.mjs \
             tests/hf-class-checkpoint-smoke.mjs \
-            tests/hf-advanced-runtime-smoke.cjs
+            tests/hf-advanced-runtime-smoke.cjs \
+            tests/hf-recovery-ui-smoke.cjs
