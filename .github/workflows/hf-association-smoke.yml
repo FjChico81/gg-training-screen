@@ -52,4 +52,5 @@ jobs:
             tests/hf-two-device-contract-smoke.mjs \
             tests/hf-memory-auth-smoke.mjs \
             tests/hf-coach-controller-smoke.mjs \
-            tests/hf-live-rollout-smoke.mjs
+            tests/hf-live-rollout-smoke.mjs \
+            tests/hf-local-display-modes-smoke.cjs
