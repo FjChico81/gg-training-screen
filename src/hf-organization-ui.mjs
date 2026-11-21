@@ -60,7 +60,46 @@ export function mountHFOrganization({
   }));
   historyActions.append(moreHistory,exportHistory);
   history.append(historyList,historyActions);
-  wrapper.append(summary,errorBox,favorites,templates,history);
+  // One visible panel at a time: prevents a long, cluttered mobile homepage.
+  // The three panels are still present in the DOM with accessible tab semantics.
+  const tabs=create('div',undefined,'hf-org-tabs');
+  tabs.setAttribute('role','tablist');
+  tabs.setAttribute('aria-label','Organización de clases HF');
+  const panels={favorites,templates,history};
+  const tabMap=new Map();
+  const labels={favorites:'★ Favoritos',templates:'▦ Plantillas',history:'◷ Historial'};
+  function selectTab(key){
+    if(!Object.hasOwn(panels,key))return;
+    for(const [name,panel] of Object.entries(panels)){
+      const active=name===key,tab=tabMap.get(name);
+      panel.hidden=!active;
+      tab.setAttribute('aria-selected',String(active));
+      tab.tabIndex=active?0:-1;
+    }
+  }
+  for(const [key,panel] of Object.entries(panels)){
+    const tab=button(labels[key],()=>selectTab(key),'hf-org-tab');
+    tab.id='hfOrgTab'+key;
+    tab.setAttribute('role','tab');
+    tab.setAttribute('aria-controls',panel.id);
+    panel.setAttribute('role','tabpanel');
+    panel.setAttribute('aria-labelledby',tab.id);
+    tabMap.set(key,tab);
+    tabs.append(tab);
+  }
+  tabs.onkeydown=event=>{
+    const keys=Object.keys(panels);
+    const selected=keys.findIndex(key=>tabMap.get(key).getAttribute('aria-selected')==='true');
+    const next=event.key==='ArrowRight'?(selected+1)%keys.length:
+      event.key==='ArrowLeft'?(selected+keys.length-1)%keys.length:
+      event.key==='Home'?0:event.key==='End'?keys.length-1:-1;
+    if(next<0)return;
+    event.preventDefault();
+    selectTab(keys[next]);
+    tabMap.get(keys[next]).focus();
+  };
+  selectTab('favorites');
+  wrapper.append(summary,errorBox,tabs,favorites,templates,history);
   host.replaceChildren(wrapper);
 
   function renderFavorites(){
@@ -175,6 +214,7 @@ export function mountHFOrganization({
   search.oninput=()=>{templateQuery=search.value;safe(renderTemplates)};
   category.onchange=()=>{templateCategory=category.value;safe(renderTemplates)};
   return Object.freeze({
+    openTab:key=>selectTab(key),
     refresh(){
       try{
         renderFavorites();renderTemplates();renderHistory();errorBox.textContent='';
