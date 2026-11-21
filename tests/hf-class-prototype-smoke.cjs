@@ -16,7 +16,8 @@ assert.doesNotMatch(source,/\b(localStorage|sessionStorage|WebSocket|supabase|fe
 function makeNode(tagName,id=''){
   const attrs={};
   return {
-    tagName,id,hidden:false,value:'',textContent:'',disabled:false,children:[],style:{},
+    tagName,id,hidden:false,_value:'',textContent:'',disabled:false,children:[],style:{},
+    get value(){return this._value;},set value(v){this._value=String(v);},
     previousElementSibling:{textContent:id},
     classList:{toggle(){},add(){},remove(){},contains(){return false}},
     setAttribute(name,val){attrs[name]=val;},
