@@ -93,7 +93,7 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal'}={}){
     const icon=create('span',symbol,'hf-home-shortcut-icon');
     icon.setAttribute('aria-hidden','true');
     button.append(icon,create('strong',label),create('small',description));
-    button.onclick=()=>selectTab(target);
+    button.onclick=()=>selectTab(target,{focus:true});
     return button;
   }
   shortcuts.append(

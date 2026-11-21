@@ -138,6 +138,31 @@ test('Clases contains class chooser, templates, favorites and collective history
   assert.equal(app.organizer.parentElement,page);
   assert.equal(page.querySelector('.hf-class-intro').hidden,true);
 });
+test('Home shortcuts focus the selected tab after hiding the shortcut',()=>{
+  const app=makeApp();
+  const nav=mountHFMobileNavigation(app.doc);
+  const shortcuts=app.panel.querySelector('.hf-home-shortcuts');
+  for(const [index,key] of ['workouts','classes'].entries()){
+    nav.selectTab('home');
+    shortcuts.children[index].onclick();
+    assert.equal(nav.activeTab(),key);
+    assert.equal(byId(app,'hfPrimaryTab'+key).focused,true);
+  }
+});
+test('Opening templates from a personal workout reveals Clases before navigating within it',()=>{
+  const app=makeApp();
+  const navigation=mountHFMobileNavigation(app.doc);
+  navigation.selectTab('workouts');
+  const html=readFileSync(resolve('index.html'),'utf8');
+  const implementation=html.match(/hfShowClub=(key=>\{[\s\S]*?\n   \});/)?.[1];
+  assert.ok(implementation);
+  const visits=[];
+  const panel={openTab:key=>visits.push([key,navigation.activeTab()])};
+  const organizer={scrollIntoView:()=>visits.push(['scroll',navigation.activeTab()])};
+  const showClub=new Function('hfMobileNavigation','panel','organizer','return '+implementation);
+  showClub(navigation,panel,organizer)('templates');
+  assert.deepEqual(visits,[['templates','classes'],['scroll','classes']]);
+});
 test('Profile, synchronization and exercise library are in settings, not the first screen',()=>{
   const app=makeApp();mountHFMobileNavigation(app.doc);
   assert.equal(app.profile.parentElement,app.settings);

@@ -1,6 +1,7 @@
 # HF WEB · Rediseño de la navegación móvil
 
-Fecha: 21/11/2026  
+Fecha: 21/11/2026
+
 Estado: **IMPLEMENTADO EN RAMA DE DESARROLLO. NO PUBLICADO.**
 
 ## Problema detectado

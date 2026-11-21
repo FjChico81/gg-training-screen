@@ -725,7 +725,7 @@ function setupHF(){
  document.querySelector('meta[name="theme-color"]').content='#1c1c1e';
  const style=document.createElement('link');
  style.rel='stylesheet';
- style.href='assets/hf-association.css?v=2.9.64';
+ style.href='assets/hf-association.css?v=mobile1';
  document.head.append(style);
  $('brandTitle').textContent='HF';
  $('brandSubtitle').textContent='Hybrid Funcional Club “Go All Out”';
@@ -781,6 +781,7 @@ function setupHF(){
    });
    hfRefreshClub=()=>panel.refresh();
    hfShowClub=key=>{
+     hfMobileNavigation?.selectTab('classes',{focus:true});
      panel.openTab(key);
      organizer.scrollIntoView?.({behavior:'smooth',block:'start'});
    };
@@ -833,8 +834,8 @@ function setupHF(){
  $('updateBannerText').textContent='Hay una versión nueva de HF';
  $('restoreFile').setAttribute('aria-label','Seleccionar copia de seguridad HF');
  // HF-only progressive navigation enhancement; keep existing engine and IDs.
- void import('./src/hf-mobile-navigation.mjs?v=mobile1').then(({mountHFMobileNavigation})=>{
-   mountHFMobileNavigation(document,{profileLabel:localProfile.name});
+ void import('./src/hf-mobile-navigation.mjs?v=mobile2').then(({mountHFMobileNavigation})=>{
+   hfMobileNavigation=mountHFMobileNavigation(document,{profileLabel:localProfile.name});
  }).catch(error=>{
    // On module failure, leave the proven legacy layout accessible.
    console.warn('No se pudo activar la navegación HF:',error);
@@ -962,7 +963,7 @@ document.addEventListener('keydown',event=>{
   const menu=document.querySelector('.routine-options:not(.hidden)');
   if(menu){setRoutineMenu(menu,false);menu.previousElementSibling.focus()}
 });
-let hfPresenting=false;
+let hfPresenting=false,hfMobileNavigation;
 let hfClubTools=null,hfFavoritesOnly=false;
 let hfRefreshClub=()=>{},hfShowClub=()=>{},hfToggleFavorite=()=>alert('Favoritos HF todavía no disponibles'),hfSaveTemplate=()=>alert('Plantillas HF todavía no disponibles');
 async function presentHFPreparedWorkout(workout,mode='guided'){
