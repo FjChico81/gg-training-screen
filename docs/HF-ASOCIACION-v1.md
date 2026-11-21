@@ -1,54 +1,117 @@
-# HF · Asociación · Modelo de uso y primera personalización
+# HF · Asociación · Experiencia de clases colectivas
 
-Estado: **implementación visual inicial en rama de desarrollo**. No publicada ni validada en una pantalla real.
+Estado general: **prototipo funcional aislado en rama de desarrollo**. No publicado, no integrado con las rutinas de producción, ni verificado en pantalla física.
 
-## 1. Qué es HF
+## Objetivo
 
-HF es la aplicación independiente de una asociación de entrenamiento funcional híbrido. Una clase puede combinar fuerza, carrera, ergómetros (SkiErg, remo, bici, etc.), movimientos funcionales y descansos PROGRAMADOS. Una pantalla colectiva permite que los asistentes conozcan el trabajo actual y el siguiente paso.
+HF es el software específico de una asociación de entrenamiento híbrido que combina fuerza, carrera, ergómetros y trabajo funcional. El usuario de la pantalla es **el grupo**, mientras que el entrenador configura y controla la sesión desde un panel privado.
 
-La clase la administra una persona autorizada. Los datos personales, accesos de administrador y ajustes de usuario no deben mostrarse en la televisión pública.
+**Diferenciación GG/VECTOR:** GG/VECTOR no usa estas pantallas; los cambios se limitan a HF y al prototipo `hf-class-prototype.html`. No se modifica HPS, su código ni su infraestructura.
 
-## 2. Roles y superficies
+## Dos formatos de sesión
 
-| Superficie | Uso |
-| --- | --- |
-| Panel del entrenador | Preparar clases, elegir sesión, iniciar, pausar, avanzar, editar, consultar resultados |
-| Pantalla de clase | Ejercicio actual, dosis o distancia, GIF, tiempo o cuenta atrás, siguiente ejercicio, descanso explícito y avisos sonoros |
-| Usuarios participantes | Seguir la sesión sin necesidad de identificarse ante la pantalla pública |
+### A. Clase guiada
 
-**No confundir** "pantalla de clase" (interfaz de presentación) con el modo TV individual actual. Tampoco confundir una sesión grupal con guardar pulsaciones de un individuo.
+- Secuencia ordenada de ejercicios.
+- TV: gran ejercicio actual, objetivo (reps, metros, tiempo), GIF cuando existe, cuenta atrás o cronómetro, ejercicio siguiente y progreso.
+- Ejercicios de duración definida: avance automático al vencer el tiempo.
+- Ejercicios por repeticiones o distancia: el entrenador marca el paso completado; no se presupone cuánto se tarda.
+- Un descanso aparece exclusivamente como **paso explícito** con nombre DESCANSO y duración >0. No se insertan pausas automáticas por defecto.
+- El ejemplo incluye carrera, fuerza, SkiErg, burpees y descanso programado.
 
-## 3. Funcionalidad de la primera etapa
+### B. Circuito por estaciones
 
-- Diferenciar la identidad de HF, la biblioteca de clases y el editor respecto a VECTOR.
-- Adaptar el modo TV existente a una disposición de grupo, con ejercicio actual a mayor tamaño y tarjeta de próximo ejercicio.
-- Mantener cronómetros, botones, GIFs y descansos existentes sin modificar la lógica del motor compartido.
-- Ocultar la tarjeta de frecuencia cardíaca individual en la composición pública HF.
-- Todos los cambios de estilo se limitan a `html[data-edition="hf"]`.
+- Entre 2 y 8 estaciones en el prototipo, un grupo por estación, identificados A-H.
+- Pantalla general: **todas las estaciones simultáneamente**, nombre del ejercicio, dosis, GIF cuando existe y grupo actual.
+- Cronómetro **común** para el intervalo de trabajo.
+- Al terminar el intervalo, si se ha programado un cambio >0 s, aparece la fase `CAMBIO DE ESTACIÓN`. En ella cada tarjeta indica qué grupo llega.
+- Si el cambio =0, se pasa directamente al siguiente intervalo, sin pausa ni descanso ficticio.
+- Después de cada intervalo los grupos se desplazan a la estación siguiente, con retorno de la última a la primera.
+- Cada grupo completa todas las estaciones en cada vuelta. La sesión termina al cabo de `vueltas × número de estaciones` intervalos de trabajo.
+- No se muestran biometrías individuales en la TV.
 
-## 4. Limitaciones que continúan
+### Política temporal
 
-- Todavía NO existe un canal de control remoto desde un teléfono hacia la pantalla. Cambiar la rutina en el móvil no significa controlar en vivo la sesión de la TV.
-- La pantalla pública todavía utiliza la misma ruta de app; ocultar visualmente ajustes no constituye aislamiento de permisos. Se requiere una ruta/página de presentación con permisos separados antes del uso público real.
-- No hay programación de varias estaciones simultáneas en esta etapa. El motor sigue un recorrido de ejercicios.
-- El histórico actual no equivale a un registro individual por participante, ni está sincronizado en todas las superficies.
-- Sin pruebas en un televisor real no puede declararse experiencia validada.
+- Diferenciar con claridad un tiempo **programado** (avance automático), un objetivo sin duración (avance del entrenador) y un **descanso explícito**.
+- En la vista por estaciones, la transición programada es un periodo de desplazamiento. El sistema no la confunde con una fase de ejercicio.
+- Pausar congela el tiempo y el cursor del ejercicio. Reanudar conserva ambos.
+- Evitar saltos por doble pulsación o reanudaciones remotas duplicadas en la futura integración con base de datos.
 
-## 5. Siguientes entregas propuestas
+## Prototipo realizado
 
-1. **Pantalla pública aislada** con URL de solo presentación, sin gestión ni datos personales.
-2. **Mando del entrenador** desde iPhone/Android con roles y sincronización HF exclusiva, sin duplicar estados al reconectar.
-3. **Modo circuito por estaciones**, para grupos que rotan simultáneamente, y modo clase secuencial.
-4. **Plantillas de entrenamientos HF** por objetivos, material disponible y tipo de clase.
-5. **Ensayos** en TV 16:9 y 4K, tablet Samsung, iPhone y escritorio; volumen de avisos, visibilidad a distancia, reanudación y sin conexión.
+Archivo: `hf-class-prototype.html`
 
-## 6. Aceptación de esta rama visual
+Incluye:
+- Selector de formato 01/02.
+- Configurador de clase guiada con pasos `nombre | objetivo | segundos`, aceptando 0 para paso manual.
+- Configurador de circuito `nombre | objetivo`, vueltas, tiempo de trabajo y cambio entre estaciones.
+- Pantalla adaptativa oscura/naranja HF, modo presentación y botón de salida.
+- Iniciar, pausar/reanudar, avanzar, reiniciar, aviso sonoro de transición.
+- GIFs autorizados del repositorio compartido cuando corresponden; si no existe coincidencia, aparece un icono, nunca una supuesta demostración inventada.
+- Cálculo del tiempo total y de los cambios de estación. Sin almacenamiento, acceso a cuentas ni comunicación con producción.
 
-- [ ] HF muestra textos de asociación y llamada a "Pantalla de clase".
-- [ ] En HF apaisado, el ejercicio actual destaca sobre el siguiente y el cronómetro.
-- [ ] El modo de presentación de HF no muestra la FC individual.
-- [ ] En GG/VECTOR no cambian textos ni aspecto visual.
-- [ ] Se prueban temporizadores, descansos y GIFs en ambos productos.
-- [ ] Se prueba la presentación en la pantalla física de la asociación.
+### Prueba simulada realizada (2026-11-21)
 
-No fusionar con `main` ni desplegar hasta completar las pruebas correspondientes.
+**12/12 comprobaciones de lógica superadas**, usando reloj simulado y DOM mínimo:
+- Inicio guiado y cuenta atrás de 90 s.
+- Vencimiento de fase, avance único y ausencia de descanso inventado.
+- Descanso programado de 30 s y salida hacia SkiErg.
+- Pausa/reanudación sin cambiar de ejercicio.
+- Cambio de formato que reinicia su estado.
+- Circuito trabajo 60 s → cambio 20 s → siguiente rotación.
+- 4 estaciones × 3 vueltas = 12 intervalos, **940 s** de duración programada total (12 × 60 + 11 × 20).
+- Validaciones de entrada, incluida prohibición de descanso a 0 s.
+- Revisión sintáctica JS y ausencia de conectores a datos en el prototipo.
+
+**Estas pruebas no sustituyen** un ensayo del navegador real en TV, iOS y Android. Son verificaciones de comportamiento en simulación, no evidencia de publicación ni de conectividad remota.
+
+## Modelo de datos propuesto para la integración real
+
+```ts
+type Step = {
+  id: string;
+  kind: "exercise" | "rest";
+  exerciseId?: string;
+  name: string;
+  target: string;
+  durationSeconds: number | null; // null => avance manual
+};
+type GuidedClass = { id: string; title: string; type: "guided"; steps: Step[] };
+type Station = { id: string; name: string; exerciseId?: string; target: string };
+type StationsClass = {
+  id: string;
+  title: string;
+  type: "stations";
+  stations: Station[];
+  rounds: number;
+  workSeconds: number;
+  transitionSeconds: number; // 0 => sin transición
+};
+type ClassRuntime = {
+  sessionId: string;
+  cursor: number;
+  phase: "ready" | "work" | "rest" | "change" | "paused" | "finished";
+  deadlineUtc: string | null;
+  revision: number;
+  updatedBy: string;
+};
+```
+
+El modelo es **propuesto** y no se ha aplicado a la base de datos. El servidor será la fuente de verdad del control remoto; las órdenes se validarán y aplicarán de forma idempotente y con `revision` para evitar doble avance o escritura concurrente.
+
+## Seguridad y sincronización pendiente
+
+Para producción: pantalla pública con URL de solo lectura y token temporal limitado, separada de la administración; roles RLS exclusivos de HF; acceso del entrenador autenticado; sin claves de servicio en el navegador ni exposición de usuarios, correos o historiales. La pantalla debe ser capaz de reconectar y recuperar el estado desde HF, no de manejar la sesión como segundo escritor.
+
+La futura sincronización TV ↔ móvil **no está implementada en este prototipo**. Tampoco lo están estaciones con número de grupos diferente del número de estaciones, bloques con descansos entre vueltas, variantes avanzadas, múltiples pantallas sincronizadas o informes individuales.
+
+## Criterios previos a publicación
+
+- [ ] Probar en televisor 16:9 la legibilidad desde el fondo de la sala.
+- [ ] Probar en Samsung, iPhone y escritorio: iniciar, pausar, reiniciar, bloquear pantalla y reanudar.
+- [ ] Comprobar volumen y permisos de audio, modo presentación y carga de GIFs con red lenta.
+- [ ] Auditar reglas de cambios y descansos en límites (0 s, último intervalo, última vuelta).
+- [ ] Implementar separación real de permisos y canal sincronizado exclusivo HF antes de permitir el control remoto.
+- [ ] Integrar de forma controlada con la biblioteca y sesiones HF existentes sin alterar GG.
+- [ ] Validar la separación GG/HF con tests de regresión.
+- [ ] Solicitar autorización antes de cualquier despliegue en producción o migración de datos.
