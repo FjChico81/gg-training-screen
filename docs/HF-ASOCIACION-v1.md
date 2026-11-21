@@ -115,3 +115,22 @@ La futura sincronización TV ↔ móvil **no está implementada en este prototip
 - [ ] Integrar de forma controlada con la biblioteca y sesiones HF existentes sin alterar GG.
 - [ ] Validar la separación GG/HF con tests de regresión.
 - [ ] Solicitar autorización antes de cualquier despliegue en producción o migración de datos.
+
+## Avance de la integración — 21/11/2026
+
+- **Implementado en rama:** desde la portada HF (`index.html?app=hf`) se muestran dos accesos exclusivos de HF para abrir `hf-class-prototype.html?mode=guided` y `?mode=stations`. La portada GG/VECTOR no recibe esos accesos.
+- **Implementado en rama:** navegación de regreso a HF desde el prototipo, controles locales del entrenador y GIFs alojados en `assets/technique/` dentro del mismo despliegue.
+- **Probado por simulación:** 8/8 verificaciones de la lógica de modos, descanso programado, pausa/reanudación, cambio 0 s y 12 intervalos del circuito. También hay una suite de 7 pruebas Node en `tests/hf-class-prototype-smoke.cjs`, que aún debe ejecutarse en un entorno Node real.
+- **Preparado, NO aplicado:** borrador de tabla HF para sesiones en directo en `db/hf-training/class-live-sessions-DRAFT-DO-NOT-APPLY.sql`. Incluye RLS para entrenador y cuenta específica de pantalla, revisión optimista y caducidad. Se requiere auditoría y prueba local de políticas antes de ejecución.
+- **No implementado:** control entre iPhone y Samsung, autenticación y vinculación de la cuenta de pantalla, transmisión Realtime, recuperación multidispositivo, aislamiento definitivo del panel del entrenador, pruebas con TV real.
+- **No publicado en producción:** las modificaciones permanecen fuera de `main`. Una preview automática del proyecto GG está disponible en Vercel para la rama; puede requerir inicio de sesión por protección del despliegue. Que Vercel indique `READY` no sustituye la validación visual ni funcional.
+
+### Puertas de aceptación para sincronización real
+
+1. Validar proyecto de destino **exclusivamente HF TRAINING**, esquema existente y copia de seguridad.
+2. Crear un entorno aislado donde probar el SQL sin usar producción y ejecutar pruebas de permiso de entrenador, pantalla, terceros y usuarios anónimos.
+3. Implementar una cuenta de pantalla de solo lectura distinta de la del entrenador, con vinculación revocable.
+4. Usar `revision` y `last_command_id` para detectar conflictos. Un resultado de red incierto obliga a releer el estado, sin reenviar órdenes a ciegas.
+5. Conectar la vista TV a eventos de solo lectura con reconsulta de instantánea tras reconexión.
+6. Probar inicio, pausa, avance, pérdida de Wi-Fi, recuperación, latencia y caducidad entre iPhone y Samsung.
+7. Integrar con la biblioteca HF y publicar solo después de la revisión y autorización correspondientes.
