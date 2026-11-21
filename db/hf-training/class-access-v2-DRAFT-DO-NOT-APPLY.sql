@@ -183,7 +183,7 @@ create table public.hf_class_live_sessions (
   ),
   constraint hf_live_public_runtime_keys check (
     (runtime - array['mode','phase','step','turn','paused','deadlineUtc',
-      'elapsedMs','phaseElapsedMs'])='{}'::jsonb
+      'runningSinceUtc','remainingMs','elapsedMs','phaseElapsedMs'])='{}'::jsonb
   ),
   constraint hf_live_payload_limits check (
     octet_length(public_plan::text)<=32768 and octet_length(runtime::text)<=4096
