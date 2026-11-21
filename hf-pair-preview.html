@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1c1c1e">
+<title>HF · Simulación del mando</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:#1c1c1e;color:#f7f4f1;font-family:system-ui,-apple-system,sans-serif;padding:clamp(16px,5vw,36px)}main{max-width:750px;margin:auto}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px}header strong{color:#ff671d;font-size:62px;font-style:italic;letter-spacing:-.08em}
+a{color:#ffad78}h1{font-size:clamp(30px,6vw,48px);margin:12px 0}p{line-height:1.5;color:#cfcbc8}
+.notice{background:#302725;border:1px solid #80553f;padding:16px;border-radius:13px}
+article{background:#2b2b2f;border:1px solid #5c5b60;border-radius:17px;padding:20px;margin:16px 0}
+label{display:block;color:#ffab7d;font-weight:850;margin:0 0 8px}
+select{font:inherit;width:100%;padding:13px;border-radius:10px;background:#1e1e22;border:1px solid #777177;color:white;min-height:48px}
+button,.action{font:inherit;border:0;border-radius:12px;display:inline-block;text-decoration:none;text-align:center;padding:15px 18px;font-weight:850;cursor:pointer;min-height:50px}
+button{background:#ff671d;color:#17120f}.action{background:#ff671d;color:#17120f}.action.secondary{background:#444448;color:#fff;border:1px solid #77717a}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.actions a[aria-disabled=true]{opacity:.4;pointer-events:none}
+small{color:#bdb7b3}.links{word-break:break-all}.code{font:14px ui-monospace,monospace;color:#f8bf9f}
+@media(max-width:510px){.actions{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<header><strong>HF</strong><a href="index.html?app=hf">← Volver a HF</a></header>
+<h1>Simular el mando del entrenador</h1>
+<p>Comprueba cómo el entrenador podría iniciar, pausar y avanzar una clase mientras otra pestaña muestra los ejercicios.</p>
+<div class="notice"><strong>PRUEBA LOCAL · NO CONECTA DOS DISPOSITIVOS</strong><p>Abre ambos enlaces en <b>dos pestañas del mismo navegador y perfil</b>. No funciona entre iPhone y Samsung, ni sustituye la autenticación o la sincronización con HF TRAINING. No uses esta prueba para dirigir una clase real.</p></div>
+<article>
+<label for="classMode">Formato del entrenamiento</label>
+<select id="classMode"><option value="guided">01 · Clase guiada</option><option value="stations">02 · Circuito por estaciones</option></select>
+<p>1. Crea una prueba. 2. Abre la pantalla y pulsa «Permitir esta prueba». 3. Abre el mando en otra pestaña del mismo navegador. Puedes revocar el enlace desde la pantalla.</p>
+<button id="create" type="button">Crear nueva prueba</button>
+<div id="links" hidden>
+<p class="code" id="pairLabel"></p>
+<div class="actions">
+<a id="screenLink" class="action" target="_blank" rel="noopener noreferrer" href="#">1 · Abrir pantalla</a>
+<a id="coachLink" class="action secondary" target="_blank" rel="noopener noreferrer" href="#">2 · Abrir mando</a>
+</div>
+</div>
+</article>
+<small>El código de prueba se genera en este navegador. No da acceso a cuentas ni rutinas de HF. La versión real necesitará roles y permisos del servidor.</small>
+</main>
+<script>
+'use strict';
+const el=id=>document.getElementById(id);
+el('create').addEventListener('click',()=>{
+ if(!crypto?.randomUUID){alert('Tu navegador no permite generar una prueba segura.');return;}
+ const pair=crypto.randomUUID();
+ const mode=el('classMode').value==='stations'?'stations':'guided';
+ el('screenLink').href='hf-class-prototype.html?mode='+mode+'&role=screen&pair='+pair;
+ el('coachLink').href='hf-coach-preview.html?pair='+pair;
+ el('pairLabel').textContent='Identificador temporal: '+pair;
+ el('links').hidden=false;
+});
+</script>
+</body></html>

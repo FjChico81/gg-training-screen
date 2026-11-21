@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1c1c1e"><title>HF · Mando de prueba</title>
+<style>
+:root{--bg:#1c1c1e;--panel:#29292e;--text:#fff7f0;--muted:#c6c1bd;--orange:#ff671d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px system-ui,-apple-system,sans-serif;padding:clamp(12px,4vw,26px)}
+main{max-width:720px;margin:auto}header{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.brand{font-size:54px;color:var(--orange);font-weight:1000;font-style:italic;letter-spacing:-.08em}h1{margin:14px 0 8px;font-size:clamp(27px,5vw,42px)}
+a{color:#ffb991}.muted{color:var(--muted);line-height:1.45}.notice{padding:14px;background:#312723;border:1px solid #865037;border-radius:12px;font-size:14px;line-height:1.5}
+.card{background:var(--panel);border:1px solid #545459;border-radius:17px;padding:clamp(15px,3vw,23px);margin:13px 0}
+.status{font-size:13px;font-weight:900;color:#ffb38e;letter-spacing:.06em}.clock{font-size:clamp(59px,14vw,116px);font-weight:1000;font-variant-numeric:tabular-nums;line-height:1.15}
+.exercise{font-size:clamp(25px,5.5vw,45px);font-weight:950;line-height:1.1;margin:10px 0}.target{font-size:clamp(18px,3.5vw,25px);font-weight:900;color:#ffc09b}
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+button{min-height:63px;padding:12px 16px;background:var(--orange);color:#201712;border:0;border-radius:13px;font:inherit;font-weight:900;cursor:pointer}
+button.secondary{background:#44444a;color:#fff}button.danger{background:#704046;color:#fff}
+button:disabled{opacity:.4;cursor:not-allowed}button:focus-visible,a:focus-visible{outline:3px solid #ffb38e;outline-offset:3px}
+#feedback{min-height:20px;color:#fbd1ad;font-size:14px}
+@media(max-width:460px){button{min-height:66px}}
+</style></head>
+<body><main>
+<header><strong class="brand">HF</strong><a href="hf-pair-preview.html">← Volver</a></header>
+<h1>Mando del entrenador</h1>
+<div class="notice"><b>SIMULACIÓN · MISMO NAVEGADOR</b><div>Estos botones solo pueden controlar otra pestaña del mismo origen y perfil. No sirven para un televisor en otro dispositivo. No hay cuenta autenticada ni sincronización con Supabase.</div></div>
+<section class="card" aria-live="polite">
+ <div id="connection" class="status">Buscando pantalla de prueba…</div>
+ <div id="classMode" class="muted">Sin sesión</div>
+ <div id="exercise" class="exercise">Esperando conexión</div>
+ <div id="target" class="target">—</div>
+ <div id="clock" class="clock">--:--</div>
+ <div id="progress" class="muted"></div>
+</section>
+<section class="card">
+ <div class="actions">
+  <button id="start" type="button" disabled>▶ Iniciar</button>
+  <button id="pause" type="button" class="secondary" disabled>Ⅱ Pausar</button>
+  <button id="resume" type="button" class="secondary" disabled>▶ Reanudar</button>
+  <button id="next" type="button" class="secondary" disabled>Avanzar ▶</button>
+  <button id="reset" type="button" class="danger" disabled>↺ Reiniciar</button>
+  <button id="refresh" type="button" class="secondary">↻ Consultar estado</button>
+ </div>
+ <p id="feedback" role="status"></p>
+</section>
+<p class="muted">Si se interrumpe la comunicación, el mando se bloquea. Comprueba la sesión en pantalla antes de volver a pulsar; no se reenvían órdenes automáticamente.</p>
+</main>
+<script src="src/hf-preview-link.js"></script>
+<script>
+'use strict';
+(function(){
+ const el=id=>document.getElementById(id);
+ const pair=new URLSearchParams(location.search).get('pair');
+ let latest=null,latestAt=0,pending=null,pendingAt=0,bridge=null;
+ const buttons=['start','pause','resume','next','reset'];
+ const fmt=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+ function update(){
+   const connected=Boolean(latest&&Date.now()-latestAt<5000);
+   if(pending&&Date.now()-pendingAt>6000){
+     pending=null;el('feedback').textContent='Sin confirmación. Comprueba la pantalla; no se ha reenviado la orden.';
+   }
+   el('connection').textContent=connected?'● PANTALLA CONECTADA':'○ SIN CONEXIÓN CONFIRMADA';
+   el('connection').style.color=connected?'#94e7cf':'#ffb38e';
+   for(const id of buttons)el(id).disabled=!connected||Boolean(pending);
+   if(!latest||!connected){for(const id of buttons)el(id).disabled=true;return;}
+   const s=latest.state,cfg=latest.config;
+   const active=s.phase!=='ready'&&s.phase!=='finished';
+   el('start').disabled=active||Boolean(pending);
+   el('pause').disabled=!active||s.paused||Boolean(pending);
+   el('resume').disabled=!active||!s.paused||Boolean(pending);
+   el('next').disabled=!active||s.paused||Boolean(pending);
+   el('reset').disabled=Boolean(pending)||s.phase==='ready';
+   const stage=s.mode==='guided'?cfg.guided[Math.min(s.step,cfg.guided.length-1)]:cfg.stations[s.turn%cfg.stations.length];
+   el('classMode').textContent=s.mode==='guided'?'CLASE GUIADA':'CIRCUITO POR ESTACIONES';
+   el('exercise').textContent=s.phase==='finished'?'¡Clase terminada!':s.phase==='change'?'Cambiar de estación':stage?.name||'—';
+   el('target').textContent=s.phase==='finished'?'Sesión finalizada':stage?.target||'—';
+   el('progress').textContent=s.mode==='guided'?'Paso '+Math.min(s.step+1,cfg.guided.length)+' de '+cfg.guided.length:
+     'Rotación '+Math.min(s.turn+1,cfg.stations.length*cfg.rounds)+' de '+cfg.stations.length*cfg.rounds;
+   let ms=0;
+   const timed=s.mode==='stations'||Boolean(cfg.guided[s.step]?.seconds>0);
+   if(s.phase==='finished')ms=0;
+   else if(s.paused&&timed&&s.remainingMs!==null)ms=s.remainingMs;
+   else if(s.deadline!==null)ms=Math.max(0,s.deadline-Date.now());
+   else if(s.phase==='ready')ms=timed?(s.mode==='stations'?cfg.work:cfg.guided[s.step].seconds)*1000:0;
+   else ms=s.phaseElapsedMs+(!s.paused?Math.max(0,Date.now()-s.phaseAnchor):0);
+   el('clock').textContent=fmt(ms);
+ }
+ function send(action){
+   if(!bridge||!latest||Date.now()-latestAt>=5000||pending)return;
+   if(action==='reset'&&!confirm('¿Reiniciar el progreso de la clase en pantalla?'))return;
+   const id=bridge.send(action);
+   if(!id)return;
+   pending=id;pendingAt=Date.now();
+   el('feedback').textContent='Enviando orden '+action+'…';
+   update();
+ }
+ if(!window.HFPreviewLink||!window.HFPreviewLink.isValidPair(pair)){
+   el('feedback').textContent='Prueba no válida. Vuelve y genera una nueva.';
+ }else{
+   try{
+     bridge=window.HFPreviewLink.create({
+       pair,role:'coach',
+       onState(snapshot){
+         latest=snapshot;
+         latestAt=Date.now();
+         update();
+       },
+       onAck(commandId,accepted){
+         if(commandId!==pending)return;
+         pending=null;
+         el('feedback').textContent=accepted?'Orden recibida por la pantalla':'La pantalla no aceptó esa orden; comprueba su estado.';
+         bridge.requestState();
+         update();
+       }
+     });
+     bridge.requestState();
+     for(const id of buttons)el(id).addEventListener('click',()=>send(id));
+     el('refresh').addEventListener('click',()=>{bridge.requestState();el('feedback').textContent='Solicitando estado actual…'});
+     setInterval(()=>{bridge.requestState();update()},2000);
+     setInterval(update,250);
+     window.addEventListener('pagehide',()=>bridge.close(),{once:true});
+   }catch(e){el('feedback').textContent='No se pudo abrir el canal de prueba en este navegador.';}
+ }
+})();
+</script></body></html>

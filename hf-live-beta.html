@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1c1c1e">
+<title>HF · Control de clase (beta bloqueada)</title>
+<style>
+:root{--bg:#1c1c1e;--panel:#2b2b30;--line:#58575d;--accent:#ff671d;--text:#f8f4f0;--muted:#bcb9b6;--warn:#ffc18b}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--text);font:16px system-ui,-apple-system,sans-serif;padding:clamp(12px,3vw,27px)}
+main{max-width:1040px;margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+header strong{font-size:clamp(48px,8vw,80px);font-style:italic;font-weight:1000;letter-spacing:-.09em;color:var(--accent)}
+a{color:var(--warn)}h1{font-size:clamp(26px,4vw,40px);line-height:1.1;margin:14px 0}
+h2{font-size:clamp(20px,2.6vw,29px);margin:0 0 11px}h3{margin:8px 0;font-size:19px}
+p{line-height:1.5;color:var(--muted)}small{color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:clamp(15px,3vw,25px);margin:14px 0}
+.warning{border-color:#a46c49;background:#382b24}.warning p{color:#f5dfd1}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.row>*{min-width:0}
+nav{display:flex;gap:10px;margin:16px 0}
+nav a{text-decoration:none;display:inline-flex;justify-content:center;align-items:center;min-height:48px;flex:1;padding:12px;border-radius:10px;background:#44444a;color:#fff;font-weight:850}
+nav a[aria-current="page"]{background:var(--accent);color:#24150f}
+button{border:0;border-radius:11px;background:var(--accent);color:#211410;font:inherit;font-weight:850;min-height:48px;padding:11px 15px;cursor:pointer}
+button.secondary{background:#44444a;color:#fff}button.danger{background:#663b40;color:#fff}
+button:disabled{opacity:.5;cursor:not-allowed}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #ffc08d;outline-offset:2px}
+input,textarea,select{background:#1b1b1e;border:1px solid #77757c;border-radius:10px;color:white;padding:11px;font:inherit;width:100%;min-height:46px}
+textarea{min-height:164px;resize:vertical}
+label{display:block;color:#ffaf84;font-weight:750;margin:12px 0 5px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.actions button{flex:1}
+.status{font-weight:800;color:#ffaf84;margin:8px 0;min-height:23px;overflow-wrap:anywhere}
+.prompt{background:#3a302d;border-left:4px solid var(--accent);padding:12px;border-radius:8px;margin:10px 0}
+.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;overflow-wrap:anywhere}
+.public-screen{padding:clamp(12px,3vw,24px);background:#252327;border:1px solid #76503c;border-radius:16px;min-height:330px;display:flex;flex-direction:column;gap:13px}
+.big-exercise{font-weight:950;line-height:1.08;letter-spacing:-.03em;font-size:clamp(37px,6vw,87px)}
+.big-target{font-weight:850;color:#ffb591;font-size:clamp(23px,3vw,42px)}
+.big-clock{font-variant-numeric:tabular-nums;font-weight:1000;font-size:clamp(49px,9vw,124px);letter-spacing:-.045em}
+.group-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px}
+.group-card{border:1px solid #66524b;border-radius:12px;padding:14px;background:#342e2d}
+.mini{font-size:12px;color:#ffb591;font-weight:850;letter-spacing:.07em}
+.privacy{font-size:13px;color:#c7c3bf}
+@media(max-width:640px){.two{grid-template-columns:1fr}nav a{font-size:14px}}
+</style></head><body><main>
+<header><strong>HF</strong><a href="index.html?app=hf">← Volver a HF</a></header>
+<h1>Control colectivo de HF · Beta privada</h1>
+<nav aria-label="Elegir dispositivo">
+<a href="hf-live-beta.html?role=trainer" id="navTrainer">Entrenador · móvil</a>
+<a href="hf-live-beta.html?role=screen" id="navScreen">Pantalla · Samsung</a>
+</nav>
+<section id="blocked" class="card warning" role="status">
+  <h2>Conexión real todavía bloqueada</h2>
+  <p>No se ha acreditado que la cuenta de Supabase de HF TRAINING sea independiente de HPS. No se permite iniciar sesión, consultar ni modificar ese servidor hasta completar la verificación y la autorización de infraestructura.</p>
+  <p>La interfaz y su lógica están preparadas en desarrollo. Mientras tanto puedes utilizar la <a href="hf-pair-preview.html">simulación de mando y pantalla en dos pestañas</a>, que no accede a bases de datos.</p>
+</section>
+<section id="trainerPanel" hidden>
+ <section class="card" id="trainerAuth">
+  <h2>Acceso del entrenador</h2>
+  <label for="trainerEmail">Correo HF</label><input id="trainerEmail" type="email" autocomplete="username">
+  <label for="trainerPassword">Contraseña</label><input id="trainerPassword" type="password" autocomplete="current-password">
+  <div class="actions"><button id="trainerLogin">Iniciar sesión HF</button><button id="trainerLogout" class="secondary" hidden>Cerrar sesión</button></div>
+  <p class="privacy">Sesión en memoria. No se almacena la contraseña ni el token en el dispositivo.</p>
+ </section>
+ <section class="card" id="trainerTools" hidden>
+  <div class="row"><h2>Vincular pantalla</h2><button type="button" id="trainerEnd" class="secondary">Cerrar sesión local</button></div>
+  <label for="screenId">Identificador de la cuenta de pantalla HF</label><input id="screenId" placeholder="UUID proporcionado por la pantalla" autocomplete="off" spellcheck="false">
+  <div class="actions"><button id="requestPair">Solicitar vínculo</button><button id="checkPair" class="secondary">Comprobar aceptación</button></div>
+  <p class="status" id="pairStatus"></p>
+  <h2>Preparar una clase</h2>
+  <label for="classTitle">Nombre</label><input id="classTitle" maxlength="120" value="HF · Clase híbrida">
+  <label for="classMode">Formato</label><select id="classMode"><option value="guided">Clase guiada</option><option value="stations">Circuito por estaciones</option></select>
+  <label for="classLines">Ejercicios (nombre | objetivo | segundos en guiada)</label>
+  <textarea id="classLines" spellcheck="false">Movilidad | 90 segundos | 90&#10;Carrera | 400 metros | 0&#10;DESCANSO | 30 segundos | 30&#10;Burpees | 12 repeticiones | 0</textarea>
+  <div class="two">
+    <div><label for="laps">Vueltas de estaciones</label><input id="laps" type="number" value="3" min="1" max="12"></div>
+    <div><label for="workSecs">Trabajo (s)</label><input id="workSecs" type="number" value="60" min="10" max="1800"></div>
+    <div><label for="changeSecs">Cambio (s)</label><input id="changeSecs" type="number" value="20" min="0" max="300"></div>
+    <div><label for="durationMinutes">Duración máxima (min)</label><input id="durationMinutes" type="number" value="120" min="5" max="720"></div>
+  </div>
+  <div class="actions"><button id="createClass">Crear clase compartida</button></div>
+  <p class="status" id="classStatus"></p>
+  <section id="trainerControls" hidden>
+    <h3>Dirigir sesión</h3><p class="mono" id="activeClassId"></p>
+    <div class="two">
+      <button data-command="start">▶ Iniciar</button>
+      <button data-command="pause" class="secondary">Ⅱ Pausar</button>
+      <button data-command="resume" class="secondary">▶ Reanudar</button>
+      <button data-command="next" class="secondary">Siguiente ▶</button>
+      <button data-command="reset" class="danger">↺ Reiniciar</button>
+      <button id="refreshClass" class="secondary">↻ Leer estado</button>
+    </div>
+    <p class="status" id="commandStatus"></p>
+  </section>
+ </section>
+</section>
+<section id="screenPanel" hidden>
+ <section class="card" id="screenAuth">
+  <h2>Cuenta de la pantalla</h2>
+  <p>Debe ser una cuenta exclusiva de pantalla creada por un administrador de HF. Nunca uses aquí las credenciales de un entrenador.</p>
+  <label for="screenEmail">Correo de pantalla HF</label><input id="screenEmail" type="email" autocomplete="username">
+  <label for="screenPassword">Contraseña</label><input id="screenPassword" type="password" autocomplete="current-password">
+  <div class="actions"><button id="screenLogin">Conectar pantalla</button><button id="screenLogout" class="secondary" hidden>Desconectar cuenta</button></div>
+ </section>
+ <section class="card" id="screenTools" hidden>
+  <div class="row"><h2>Pantalla de la asociación</h2><button type="button" id="screenEnd" class="secondary">Cerrar sesión local</button></div>
+  <p>Identificador público de la pantalla: <strong class="mono" id="myScreenId"></strong></p>
+  <div class="actions"><button id="findRequests">Consultar solicitudes</button><button id="loadClasses" class="secondary">Ver clases asignadas</button></div>
+  <div id="requests"></div>
+  <div id="classes"></div>
+ </section>
+ <section class="public-screen" id="screenDisplay" hidden aria-live="polite">
+   <div class="mini" id="screenPhase">CLASE EN ESPERA</div>
+   <div class="big-exercise" id="screenExercise">HF</div>
+   <div class="big-target" id="screenTarget"></div>
+   <div class="big-clock" id="screenClock">00:00</div>
+   <div id="screenStations" class="group-grid" hidden></div>
+   <div class="status" id="screenConnection"></div>
+   <div class="privacy">Pantalla de solo lectura: sin datos personales ni permisos de entrenamiento.</div>
+ </section>
+</section>
+<p id="feedback" class="status" role="status"></p>
+</main>
+<script type="module">
+import {HF_LIVE_ROLLOUT_APPROVED} from './src/hf-live-rollout.mjs';
+import {HF_SUPABASE_CONFIG} from './config/hf-supabase.js';
+import {createHFMemoryAuth} from './src/hf-memory-auth.mjs';
+import {createHFPairingClient} from './src/hf-pairing-client.mjs';
+import {createHFLiveClient} from './src/hf-live-client.mjs';
+import {createHFCoachController} from './src/hf-coach-controller.mjs';
+import {createHFScreenWatcher} from './src/hf-screen-watcher.mjs';
+import {presentHFRuntime} from './src/hf-class-runtime.mjs';
+const $=id=>document.getElementById(id);
+const isScreen=new URLSearchParams(location.search).get('role')==='screen';
+$('navTrainer').setAttribute('aria-current',isScreen?'false':'page');
+$('navScreen').setAttribute('aria-current',isScreen?'page':'false');
+$('trainerPanel').hidden=isScreen;
+$('screenPanel').hidden=!isScreen;
+if(!HF_LIVE_ROLLOUT_APPROVED){
+  // Deliberate hard stop before constructing a network client or handlers.
+  // Do NOT allow a URL parameter or a local preference to bypass this gate.
+  const panel=$(isScreen?'screenPanel':'trainerPanel');
+  panel.querySelectorAll('input,select,textarea,button').forEach(n=>n.disabled=true);
+  $('feedback').textContent='Infraestructura pendiente de verificación. No se ha contactado con Supabase.';
+} else {
+  $('blocked').hidden=true;
+  const auth=createHFMemoryAuth(HF_SUPABASE_CONFIG);
+  const pairClient=createHFPairingClient(HF_SUPABASE_CONFIG);
+  const liveClient=createHFLiveClient(HF_SUPABASE_CONFIG);
+  let activePair=null,activeSession=null,watcher=null,busy=false;
+  const message=(id,text)=>{$(id).textContent=text;};
+  const session=()=>{
+    const value=auth.session;
+    if(!value)throw Error('Inicia sesión HF');
+    return value;
+  };
+  async function action(label,callback){
+    if(busy)return;
+    busy=true;
+    $('feedback').textContent=label+'…';
+    try{await callback();$('feedback').textContent='';}
+    catch(e){$('feedback').textContent=e?.message||'No se pudo completar la operación HF';}
+    finally{busy=false;}
+  }
+  function coach(){return createHFCoachController({
+    client:liveClient,pairingClient:pairClient,session:session()
+  });}
+  async function login(email,password){
+    await auth.login($(email).value,$(password).value);
+    $(password).value=''; 
+    if(isScreen){
+      $('screenAuth').hidden=true;$('screenTools').hidden=false;
+      $('myScreenId').textContent=session().user.id;
+      await findRequests();
+    }else{
+      $('trainerAuth').hidden=true;$('trainerTools').hidden=false;
+    }
+  }
+  function logout(){
+    watcher?.stop();watcher=null;activeSession=null;activePair=null;
+    auth.clear();
+    $('trainerAuth').hidden=isScreen;$('trainerTools').hidden=true;
+    $('screenAuth').hidden=!isScreen;$('screenTools').hidden=true;
+    $('screenDisplay').hidden=true;
+  }
+  $('trainerLogin').onclick=()=>action('Autenticando entrenador',()=>login('trainerEmail','trainerPassword'));
+  $('screenLogin').onclick=()=>action('Autenticando pantalla',()=>login('screenEmail','screenPassword'));
+  for(const id of ['trainerLogout','screenLogout','trainerEnd','screenEnd'])$(id).onclick=logout;
+  $('requestPair').onclick=()=>action('Solicitando vínculo',async()=>{
+    const row=await pairClient.requestPairing(session(),$('screenId').value.trim());
+    activePair=row.id;
+    message('pairStatus','Solicitud enviada. Identificador: '+row.id+'. La pantalla debe aceptarla.');
+  });
+  $('checkPair').onclick=()=>action('Consultando autorización',async()=>{
+    if(!activePair)throw Error('Primero solicita el vínculo');
+    const status=await pairClient.inspectUncertain(session(),activePair);
+    message('pairStatus',status.isActive?'Pantalla vinculada y autorizada':
+      'Pendiente, caducado o revocado. Verifica el estado de la pantalla.');
+  });
+  function plan(){
+    const mode=$('classMode').value;
+    const lines=$('classLines').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    if(mode==='guided')return {mode,publicPlan:{guided:lines.map((line,i)=>{
+      const p=line.split('|').map(x=>x.trim());
+      if(p.length!==3||!p[0]||!p[1]||!/^\d+$/.test(p[2]))
+        throw Error('Línea '+(i+1)+': nombre | objetivo | segundos');
+      return {name:p[0],target:p[1],seconds:Number(p[2])};
+    })}};
+    return {mode,publicPlan:{
+      stations:lines.map((line,i)=>{
+        const p=line.split('|').map(x=>x.trim());
+        if(p.length!==2||!p[0]||!p[1])throw Error('Estación '+(i+1)+': nombre | objetivo');
+        return {name:p[0],target:p[1]};
+      }),
+      rounds:Number($('laps').value),work:Number($('workSecs').value),change:Number($('changeSecs').value)
+    }};
+  }
+  $('classMode').onchange=()=>{
+    $('classLines').value=$('classMode').value==='stations'
+      ?'SkiErg | 250 metros\nSentadilla goblet | 12 repeticiones\nBurpees | 10 repeticiones\nCarrera | 150 metros'
+      :'Movilidad | 90 segundos | 90\nCarrera | 400 metros | 0\nDESCANSO | 30 segundos | 30\nBurpees | 12 repeticiones | 0';
+  };
+  $('createClass').onclick=()=>action('Creando clase',async()=>{
+    if(!activePair)throw Error('Vincula primero la pantalla');
+    const {mode,publicPlan}=plan();
+    const row=await coach().create({pairId:activePair,title:$('classTitle').value,
+      mode,publicPlan,durationMinutes:Number($('durationMinutes').value)});
+    activeSession=row.id;
+    $('trainerControls').hidden=false;
+    message('classStatus','Clase HF preparada. La pantalla debe abrir su sesión.');
+    $('activeClassId').textContent='Sesión '+row.id;
+  });
+  document.querySelectorAll('[data-command]').forEach(button=>{
+    button.onclick=()=>action('Enviando orden',async()=>{
+      if(!activeSession)throw Error('No hay clase activa');
+      const name=button.dataset.command;
+      if(name==='reset'&&!confirm('¿Reiniciar la clase para todos?'))return;
+      const row=await coach().command(activeSession,name);
+      message('commandStatus','Orden '+name+' aplicada. Revisión '+row.revision);
+    });
+  });
+  $('refreshClass').onclick=()=>action('Leyendo estado',async()=>{
+    const row=await liveClient.getSession(session(),activeSession);
+    message('commandStatus',row?'Estado: '+row.runtime.phase+' · revisión '+row.revision:
+      'La clase no está disponible o fue revocada');
+  });
+  async function findRequests(){
+    const rows=await pairClient.listPendingForScreen(session());
+    const parent=$('requests');parent.replaceChildren();
+    if(!rows.length){parent.append(document.createTextNode('No hay solicitudes pendientes.'));return;}
+    for(const request of rows){
+      const card=document.createElement('section');card.className='prompt';
+      const label=document.createElement('p');
+      label.textContent='Entrenador HF: '+request.trainer_id+' · Solicitud pendiente de verificar';
+      const allow=document.createElement('button');allow.textContent='Aceptar después de identificar al entrenador';
+      allow.onclick=()=>action('Aceptando enlace',async()=>{
+        await pairClient.accept(session(),request.id);
+        await findRequests();
+      });
+      const deny=document.createElement('button');deny.textContent='Rechazar';deny.className='secondary';
+      deny.onclick=()=>action('Rechazando enlace',async()=>{
+        await pairClient.revoke(session(),request.id);
+        await findRequests();
+      });
+      const actions=document.createElement('div');actions.className='actions';
+      actions.append(allow,deny);card.append(label,actions);parent.append(card);
+    }
+  }
+  $('findRequests').onclick=()=>action('Buscando solicitudes',findRequests);
+  let searchingClasses=false;
+  async function findAssignedClasses(){
+    if(searchingClasses || !isScreen || !auth.session)return;
+    searchingClasses=true;
+    try{
+      const rows=await liveClient.listMyScreenSessions(session());
+      const parent=$('classes');parent.replaceChildren();
+      if(!rows.length){parent.textContent='No hay clases activas asignadas.';return;}
+      // Auto-open when exactly one assigned class; never guess among multiple.
+      if(rows.length===1&&!watcher?.status.running){
+        watchClass(rows[0].id);
+        return;
+      }
+      for(const row of rows){
+        const button=document.createElement('button');
+        button.className='secondary';
+        button.textContent='Abrir '+row.title;
+        button.onclick=()=>watchClass(row.id);
+        parent.append(button);
+      }
+    }finally{searchingClasses=false;}
+  }
+  $('loadClasses').onclick=()=>action('Consultando clases',findAssignedClasses);
+  function renderScreen(record){
+    const {row}=record;
+    const at=new Date().toISOString();
+    const present=presentHFRuntime(row.runtime,row.public_plan,at);
+    const state=present.state,plan=row.public_plan;
+    $('screenDisplay').hidden=false;
+    $('screenPhase').textContent=state.paused?'EN PAUSA':state.phase.toUpperCase();
+    $('screenClock').textContent=((ms)=>{
+      const secs=Math.max(0,Math.ceil(ms/1000));
+      return String(Math.floor(secs/60)).padStart(2,'0')+':'+String(secs%60).padStart(2,'0');
+    })(present.remainingMs??present.phaseElapsedMs);
+    $('screenStations').replaceChildren();
+    $('screenStations').hidden=state.mode!=='stations';
+    if(state.mode==='guided'){
+      const step=plan.guided[Math.min(state.step,plan.guided.length-1)];
+      $('screenExercise').textContent=state.phase==='finished'?'Clase finalizada':step?.name||'';
+      $('screenTarget').textContent=step?.target||'';
+    }else{
+      $('screenExercise').textContent=state.phase==='change'?'Cambiar de estación':
+        state.phase==='finished'?'Circuito terminado':'Circuito híbrido';
+      $('screenTarget').textContent='Rotación '+(state.turn+1)+' de '+plan.stations.length*plan.rounds;
+      for(let i=0;i<plan.stations.length;i++){
+        const station=plan.stations[i],div=document.createElement('div');
+        div.className='group-card';
+        const group=String.fromCharCode(65+(i-(state.turn%plan.stations.length)+plan.stations.length)%plan.stations.length);
+        div.textContent='Estación '+(i+1)+' · Grupo '+group+' · '+station.name+' · '+station.target;
+        $('screenStations').append(div);
+      }
+    }
+  }
+  function watchClass(id){
+    watcher?.stop();
+    watcher=createHFScreenWatcher({
+      client:liveClient,session:session(),id,
+      onSnapshot:renderScreen,
+      onDisconnected:()=>{
+        watcher=null;
+        $('screenDisplay').hidden=true;
+        message('screenConnection','Sesión revocada, caducada o no autorizada.');
+      },
+      onStale:()=>{message('screenConnection','Sin sincronización confirmada. Comprueba la conexión.');},
+      onRecovered:()=>{message('screenConnection','Conexión HF recuperada');},
+      onError:()=>{message('screenConnection','Conexión interrumpida: sin confirmación.');}
+    });
+    $('screenDisplay').hidden=false;
+    message('screenConnection','Conectando a la clase HF…');
+    watcher.start();
+  }
+  // Presentation ticks are read-only. No browser can write without coach/RLS.
+  setInterval(()=>{
+    if(watcher?.latest&&!watcher.status.stale)renderScreen(watcher.latest);
+  },400);
+  // A screen with one authorized class discovers it automatically.
+  // This only runs after a permitted HF login; never bypasses RLS.
+  setInterval(()=>{
+    if(isScreen&&auth.session&&!busy&&!watcher?.status.running){
+      void findAssignedClasses().catch(()=>message('screenConnection',
+        'No se puede comprobar la clase; vuelve a consultar.'));
+    }
+  },5000);
+  // Recheck authorization after long-lived sessions; never persist tokens.
+  // Full token refresh and a new watcher are required before production release.
+}
+</script>
+</body></html>

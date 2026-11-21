@@ -723,8 +723,34 @@ function setupHF(){
  if(!isHF)return;
  document.title='HF v'+GG_APP_VERSION;
  document.querySelector('meta[name="theme-color"]').content='#1c1c1e';
+ const hfStyles=document.createElement('link');
+ hfStyles.rel='stylesheet';
+ hfStyles.href='assets/hf-association.css?v=1';
+ document.head.append(hfStyles);
  $('brandTitle').textContent='HF';
+ $('brandSubtitle').textContent='FUERZA · ERGÓMETROS · CARRERA · FUNCIONAL';
  $('brandSubtitle').classList.remove('hidden');
+ $('library').querySelector('.library-title').textContent='Clases y entrenamientos';
+ const intro=node('p','Diseña tus entrenamientos y preséntalos en la TV conectada al móvil o directamente en un iPad/tablet. Clases guiadas y circuitos comparten cronómetros y ejercicios.','hf-class-intro');
+ $('library').querySelector('.library-title').after(intro);
+ const demo=node('section','','hf-class-chooser');
+ demo.setAttribute('aria-label','Clases colectivas HF');
+ const demoTitle=node('h3','Impartir una clase en HF');
+ const demoNote=node('p','Elige el formato y, en la siguiente pantalla, selecciona «Móvil conectado a TV» o «Usar iPad o tablet». No necesitas emparejar dos dispositivos.','muted small');
+ const links=node('div','','hf-class-links');
+ for(const [label,mode] of [['Clase guiada','guided'],['Circuito por estaciones','stations']]){
+   const link=node('a',label,'hf-class-link');
+   link.href='hf-class-prototype.html?mode='+mode+'&view=mirror';
+   link.setAttribute('aria-label','Abrir '+label.toLowerCase()+' y elegir modo de pantalla');
+   links.append(link);
+ }
+ demo.append(demoTitle,demoNote,links);
+ intro.after(demo);
+ $('new').textContent='＋ Preparar una clase';
+ $('historyButton').textContent='Historial de sesiones';
+ $('editor').querySelector('.gold').textContent='EDITOR HF';
+ $('editor').querySelector('h2').textContent='Crear o modificar clase';
+ document.querySelectorAll('[data-tv-toggle]').forEach(button=>button.textContent='Pantalla de clase');
  $('updateBannerText').textContent='Hay una versión nueva de HF';
  $('restoreFile').setAttribute('aria-label','Seleccionar copia de seguridad HF');
 }
@@ -1736,7 +1762,7 @@ for(const button of tvToggles)button.addEventListener('click',()=>{
  if(enabled)$('sessionExtras').prepend(strength);
  else $('guided').querySelector('.guided-controls').before(strength);
  const tvToggle=$('guided').querySelector('[data-tv-toggle]');
- tvToggle.textContent=enabled?'Salir de modo TV':'Modo TV';
+ tvToggle.textContent=enabled?(isHF?'Salir de pantalla':'Salir de modo TV'):(isHF?'Pantalla de clase':'Modo TV');
  if(!enabled)clearTvExerciseGif();
  if(view==='guided'){renderRestUI();renderTvExercises()}
 });
