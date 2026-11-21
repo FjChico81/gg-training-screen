@@ -27,6 +27,18 @@ class MockElement{
   }
   append(...elements){for(const e of elements)this._attach(e,this.children.length)}
   prepend(...elements){for(let i=elements.length-1;i>=0;i--)this._attach(elements[i],0)}
+  after(...elements){
+    if(!this.parentElement)return;
+    const target=this.parentElement;
+    let index=target.children.indexOf(this)+1;
+    for(const element of elements)target._attach(element,index++);
+  }
+  remove(){
+    if(!this.parentElement)return;
+    const parent=this.parentElement;
+    parent.children.splice(parent.children.indexOf(this),1);
+    this.parentElement=null;
+  }
   querySelector(selector){
     const match=el=>selector.startsWith('.')?el.className.split(/\s+/).includes(selector.slice(1)):
       selector.startsWith('#')?el.id===selector.slice(1):el.tagName===selector.toUpperCase();
@@ -55,6 +67,10 @@ function makeApp(){
   };
   const header=doc.createElement('header'),settings=doc.createElement('div');
   settings.id='settingsPanel';header.append(settings);doc.body.append(header);
+  const closeSettings=doc.createElement('button');
+  closeSettings.id='closeSettings';settings.append(closeSettings);
+  const addProfile=doc.createElement('button');
+  addProfile.id='addLocalProfile';settings.append(addProfile);
   const library=doc.createElement('section');library.id='library';
   const panel=doc.createElement('div');panel.className='panel';
   library.append(panel);doc.body.append(library);
@@ -166,4 +182,24 @@ test('GG/VECTOR path never calls the HF navigation module',()=>{
   assert.ok(rules.length>15);
   assert.ok(rules.every(rule=>rule.includes('html[data-edition="hf"]')||rule.includes('@media')));
   assert.doesNotMatch(group,/innerHTML\s*:/);
+});
+
+test('extra HF profiles with no cloud still receive all three navigation tabs',()=>{
+  const app=makeApp();
+  app.cloud.remove(); // startup intentionally removes cloud UI for extra local profile
+  const nav=mountHFMobileNavigation(app.doc,{profileLabel:'Invitado'});
+  assert.equal(nav.activeTab(),'home');
+  assert.equal(app.profile.parentElement,app.settings);
+  assert.equal(app.exerciseLibrary.parentElement,app.settings);
+  assert.equal(byId(app,'ggCloudPanel'),null);
+});
+test('settings are placed near the top, and cloud and profile controls retain their IDs',()=>{
+  const app=makeApp();
+  mountHFMobileNavigation(app.doc);
+  const items=app.settings.children;
+  const ids=items.map(el=>el.id||el.className);
+  assert.ok(ids.indexOf('hf-settings-section-title')>ids.indexOf('closeSettings'));
+  assert.ok(ids.indexOf('localProfilePanel')<ids.indexOf('addLocalProfile'));
+  assert.ok(ids.indexOf('addLocalProfile')<ids.indexOf('ggCloudPanel'));
+  assert.ok(ids.indexOf('ggCloudPanel')<ids.indexOf('exerciseLibraryOpen'));
 });
