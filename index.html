@@ -741,7 +741,7 @@ function setupHF(){
  const links=node('div','','hf-class-links');
  for(const [text,mode] of [['Clase guiada','guided'],['Circuito por estaciones','stations']]){
   const link=node('a',text,'hf-class-link');
-  link.href='hf-class-display.html?mode='+mode+'&view=mirror';
+  link.href='hf-class-display.html?mode='+mode+'&view=mirror&hfProfile='+encodeURIComponent(localProfile.id);
   link.setAttribute('aria-label','Abrir '+text.toLowerCase()+' y elegir presentación');
   links.append(link);
  }
@@ -907,12 +907,12 @@ document.addEventListener('keydown',event=>{
   if(menu){setRoutineMenu(menu,false);menu.previousElementSibling.focus()}
 });
 let hfPresenting=false;
-async function presentSavedHFWorkout(id,mode='guided'){
- if(!isHF)return;
- if(hfPresenting)return;
+let hfClubTools=null,hfFavoritesOnly=false;
+let hfRefreshClub=()=>{},hfToggleFavorite=()=>{},hfSaveTemplate=()=>{};
+async function presentHFPreparedWorkout(workout,mode='guided'){
+ if(!isHF||hfPresenting)return;
  if(session){alert('Finaliza la sesión de entrenamiento en curso antes de presentar otra.');return;}
- const workout=workouts.find(w=>w.id===id);
- if(!workout){alert('Esta rutina ya no está disponible. Actualiza la biblioteca.');return;}
+ if(!workout){alert('No se ha encontrado la rutina.');return;}
  hfPresenting=true;
  try{
   const {createHFHandoff}=await import('./src/hf-workout-presenter.mjs');
@@ -920,13 +920,19 @@ async function presentSavedHFWorkout(id,mode='guided'){
   const url=new URL('hf-class-display.html',location.href);
   url.searchParams.set('mode',mode);
   url.searchParams.set('view','mirror');
+  url.searchParams.set('hfProfile',localProfile.id);
   url.searchParams.set('hfTransfer',transferId);
-  // Same-tab navigation preserves this tab's sessionStorage.
-  // Never modify the original saved workout or its revision.
+  // Short-lived transfer in the same tab. Neither saved routines nor cloud revisions change.
   location.assign(url.href);
  }catch(error){
   alert('No se puede presentar esta rutina: '+(error?.message||'Error desconocido'));
  }finally{hfPresenting=false;}
+}
+async function presentSavedHFWorkout(id,mode='guided'){
+ if(!isHF)return;
+ const workout=workouts.find(w=>w.id===id);
+ if(!workout){alert('Esta rutina ya no está disponible. Actualiza la biblioteca.');return;}
+ return presentHFPreparedWorkout(workout,mode);
 }
 function workoutCategory(w){const names=w.blocks.map(b=>b.name.toLowerCase()).join(' '),lines=w.blocks.flatMap(b=>b.items).join(' ').toLowerCase(),title=w.name.toLowerCase();if(/amrap/.test(names))return 'AMRAP';if(/emom/.test(names))return 'EMOM';if(/intervalos/.test(names))return 'Intervalos';if(/ronda|circuito|h[ií]brid/.test(names+' '+title))return 'Híbrido';if(/fuerza|torso|pierna|full body/.test(names+' '+title)||w.blocks.some(b=>b.items.some(line=>!!decode(line).strength)))return 'Fuerza';return 'Otros'}
 function renderLibrary(){
@@ -938,6 +944,7 @@ function renderLibrary(){
  }
  const target=$('saved'),search=$('librarySearch'),category=$('libraryCategory');
  target.replaceChildren();
+ if(isHF)hfRefreshClub();
  $('libraryFilters').classList.toggle('hidden',workouts.length===0);
  if(!workouts.length){
    search.value='';
@@ -960,7 +967,12 @@ function renderLibrary(){
  }
  const filter=search.value.trim().toLocaleLowerCase('es-ES');
  const type=category.value;
- const visible=workouts.filter(w=>(type==='Todos'||workoutCategory(w)===type)&&w.name.toLocaleLowerCase('es-ES').includes(filter)).slice().reverse();
+ let favoriteIds=[];
+ if(isHF&&hfClubTools){
+  try{favoriteIds=hfClubTools.listHFFavorites(appStorage);}
+  catch(error){/* Non-destructive error is displayed in the HF organizer. */}
+ }
+ const visible=workouts.filter(w=>(type==='Todos'||workoutCategory(w)===type)&&w.name.toLocaleLowerCase('es-ES').includes(filter)&&(!isHF||!hfFavoritesOnly||favoriteIds.includes(w.id))).slice().reverse();
  if(!visible.length)target.append(node('p','No hay entrenamientos que coincidan.','muted library-empty'));
  visible.forEach(w=>{const line=node('div','','workout-row'),info=node('div');info.style.flex='1';info.style.minWidth='0';info.append(node('strong',w.name),node('div',workoutCategory(w)+' · '+w.blocks.length+' bloques · '+w.blocks.reduce((n,b)=>n+b.items.length,0)+' ejercicios','muted small'));const actions=node('div','','routine-actions');const open=node('button','Abrir');open.onclick=()=>{if(vectorDays.has(sessionWorkout)&&session){openWorkout(w.id);return}active=w.id;show('board')};if(isHF){
  const present=node('button','Presentar','alt');
@@ -968,12 +980,25 @@ function renderLibrary(){
  present.setAttribute('aria-label','Presentar '+w.name+' en clase guiada');
  present.onclick=()=>void presentSavedHFWorkout(w.id,'guided');
  actions.append(present);
+ const star=node('button','☆','alt');
+ star.type='button';star.title='Añadir o quitar de favoritos';
+ star.setAttribute('aria-label','Cambiar favorito de '+w.name);
+ try{
+  const favorite=Boolean(hfClubTools?.listHFFavorites(appStorage).includes(w.id));
+  star.textContent=favorite?'★':'☆';star.setAttribute('aria-pressed',String(favorite));
+ }catch(error){star.disabled=true;star.title='Revisa el archivo de favoritos HF';}
+ star.onclick=()=>hfToggleFavorite(w.id);
+ actions.append(star);
 }
 const more=node('button','⋯','alt');more.type='button';more.setAttribute('aria-label','Opciones de '+w.name);more.setAttribute('aria-expanded','false');const options=node('div','','routine-options hidden');for(const [label,fn] of [['Duplicar',()=>duplicateWorkout(w.id)],['Renombrar',()=>renameWorkout(w.id)],['Eliminar',()=>deleteWorkout(w.id)]]){const button=node('button',label,label==='Eliminar'?'danger':'alt');button.type='button';button.onclick=()=>{setRoutineMenu(options,false);return fn()};options.append(button)}if(isHF){
  const stations=node('button','Adaptar a estaciones','alt');
  stations.type='button';
  stations.onclick=()=>{setRoutineMenu(options,false);void presentSavedHFWorkout(w.id,'stations');};
  options.append(stations);
+ const makeTemplate=node('button','Guardar como plantilla','alt');
+ makeTemplate.type='button';
+ makeTemplate.onclick=()=>{setRoutineMenu(options,false);hfSaveTemplate(w);};
+ options.append(makeTemplate);
 }
 more.onclick=()=>{const opening=options.classList.contains('hidden');for(const menu of target.querySelectorAll('.routine-options:not(.hidden)'))setRoutineMenu(menu,false);setRoutineMenu(options,opening)};actions.append(open,more,options);line.append(info,actions);target.append(line)})}
 function renderBoard(){ $('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':'▶ Iniciar entrenamiento';const w=findWorkout(active);if(!w){show('library');return}$('edit').classList.toggle('hidden',vectorDays.has(active));$('boardName').textContent=w.name;$('count').textContent=w.blocks.length+' bloques · '+w.blocks.reduce((n,b)=>n+b.items.length,0)+' ejercicios';$('blocks').replaceChildren();if(w.exercises){
