@@ -55,5 +55,6 @@ test('all exposed HF tables need explicit RLS, grants and allowed fields',()=>{
   assert.match(v2,/constraint hf_live_public_runtime_keys/);
   assert.match(v2,/constraint hf_live_public_plan_format/);
   assert.match(v2,/constraint hf_live_payload_limits/);
-  assert.doesNotMatch(v2,/security definer/i);
+  const sqlOnly=v2.split('\n').filter(line=>!line.trimStart().startsWith('--')).join('\n');
+  assert.doesNotMatch(sqlOnly,/\bsecurity\s+definer\b/i);
 });
