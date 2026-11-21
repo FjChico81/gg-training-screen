@@ -11,6 +11,11 @@
 @media(max-width:780px){.top,.screen,.config{padding-inline:12px}.guided-layout{grid-template-columns:1fr}.side-stack{grid-template-columns:1fr 1fr;grid-template-rows:auto}.clock{font-size:clamp(50px,10vw,88px)}.main-card{min-height:350px}.station-clock .clock{font-size:clamp(45px,9vw,90px)}.config .cols{grid-template-columns:1fr 1fr}.presentation .guided-layout{min-height:auto}.presentation .display{min-height:0}.presentation .screen{height:100vh;overflow-y:auto}.presentation .screen-head{padding-right:75px}}
 @media(max-width:520px){.side-stack{grid-template-columns:1fr}.config .cols{grid-template-columns:1fr}.brandname{font-size:14px}.station-clock{flex-wrap:wrap}.screen .screen-head h1{font-size:24px}.presentation .screen{height:100dvh}.presentation .main-card{min-height:270px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important}}
+
+.screen-only #exitPresentation{display:none!important}
+.screen-only .top,.screen-only .config,.screen-only .coach,.screen-only .coach-label,.screen-only .notice{display:none!important}
+#previewBanner{font-size:12px;font-weight:850;color:#ffba91}
+#unlockAudio{font-size:12px;padding:7px 11px;min-height:36px;background:#514038;color:#ffe1cd}
 </style>
 </head>
 <body>
@@ -57,6 +62,8 @@
     <div><div class="eyebrow" id="formatLabel">CLASE GUIADA</div><h1 id="screenTitle">HF · Clase del día</h1><div class="progress" id="progressText"></div></div>
     <div><span id="phaseTag" class="status" role="status">PREPARADO</span><div class="sub">TIEMPO TOTAL: <strong class="session-total" id="totalClock">00:00</strong></div></div>
   </div>
+  <div id="previewBanner" class="sub" hidden role="status"></div>
+  <button id="unlockAudio" type="button" hidden>🔊 Activar avisos en esta pantalla</button>
   <div id="display" class="display"></div>
   <div class="coach-label">CONTROLES DEL ENTRENADOR · SOLO EN ESTA PANTALLA</div>
   <div class="coach" id="coach">
@@ -68,6 +75,7 @@
   <p class="notice">Este prototipo funciona únicamente en este navegador. No publica clases, no sincroniza la televisión con el móvil y no guarda información personal.</p>
   <button id="exitPresentation" type="button">Salir de TV</button>
 </section>
+<script src="src/hf-preview-link.js"></script>
 <script>
 'use strict';
 (function(){
@@ -98,7 +106,11 @@
     rounds:3,work:60,change:20
   };
   let config=JSON.parse(JSON.stringify(defaults));
-  const requestedMode=new URLSearchParams(location.search).get('mode');
+  const params=new URLSearchParams(location.search);
+  const requestedMode=params.get('mode');
+  const previewPair=params.get('pair');
+  const screenPreview=params.get('role')==='screen'&&Boolean(window.HFPreviewLink?.isValidPair(previewPair));
+  let previewBridge=null;
   let state={mode:requestedMode==='stations'?'stations':'guided',phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0};
   let sound=true;
   const pad=n=>String(n).padStart(2,'0');
@@ -390,7 +402,44 @@
   el('exitPresentation').onclick=()=>presentation(false);
   document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&document.body.classList.contains('presentation')){document.body.classList.remove('presentation');el('togglePresentation').textContent='▣ Pantalla de clase';}});
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.body.classList.contains('presentation'))presentation(false);});
-  loadForms();render();setInterval(tick,160);
+  function previewSnapshot(){
+    return {state:{...state},config:JSON.parse(JSON.stringify(config))};
+  }
+  function setupScreenPreview(){
+    if(!screenPreview)return;
+    document.body.classList.add('presentation','screen-only');
+    const banner=el('previewBanner');
+    banner.hidden=false;
+    banner.textContent='SIMULACIÓN EN DOS PESTAÑAS · Solo el mismo navegador';
+    el('unlockAudio').hidden=false;
+    el('unlockAudio').onclick=()=>{
+      notify();el('unlockAudio').hidden=true;
+    };
+    try{
+      previewBridge=window.HFPreviewLink.create({
+        pair:previewPair,role:'screen',
+        onCommand({action}){
+          if(action==='snapshot'){previewBridge.publish(previewSnapshot());return true;}
+          let accepted=false;
+          const active=state.phase!=='ready'&&state.phase!=='finished';
+          if(action==='start'&&state.phase==='ready'){startSession();accepted=true;}
+          else if(action==='pause'&&active&&!state.paused){pauseSession();accepted=true;}
+          else if(action==='resume'&&active&&state.paused){startSession();accepted=true;}
+          else if(action==='next'&&active&&!state.paused){nextPhase();accepted=true;}
+          else if(action==='reset'){resetSession(true);accepted=true;}
+          previewBridge.publish(previewSnapshot());
+          return accepted;
+        }
+      });
+      banner.textContent='SIMULACIÓN DE PANTALLA · Sincronización entre pestañas del mismo navegador';
+      previewBridge.publish(previewSnapshot());
+      setInterval(()=>{if(previewBridge)previewBridge.publish(previewSnapshot());},1000);
+      window.addEventListener('pagehide',()=>previewBridge?.close(),{once:true});
+    }catch(e){
+      banner.textContent='El canal local de simulación no está disponible. Los controles remotos no funcionarán.';
+    }
+  }
+  loadForms();render();setInterval(tick,160);setupScreenPreview();
 })();
 </script>
 </body>
