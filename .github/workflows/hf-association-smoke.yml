@@ -44,4 +44,5 @@ jobs:
             tests/hf-live-client-smoke.mjs \
             tests/hf-pairing-client-smoke.mjs \
             tests/hf-rls-draft-static-guard.cjs \
-            tests/hf-screen-consent-smoke.cjs
+            tests/hf-screen-consent-smoke.cjs \
+            tests/hf-class-runtime-smoke.mjs
