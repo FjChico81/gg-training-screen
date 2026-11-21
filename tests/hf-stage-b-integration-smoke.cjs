@@ -10,8 +10,8 @@ assert.ok(src);
 const checkpointPromise=import(pathToFileURL(resolve(root,'src/hf-class-checkpoint.mjs')).href);
 const organizationPromise=import(pathToFileURL(resolve(root,'src/hf-class-organization.mjs')).href);
 const source=src
- .replace("await import('./src/hf-class-checkpoint.mjs')","await __mockCheckpoint()")
- .replace("import('./src/hf-class-organization.mjs')","__mockOrganization()");
+ .replace("await import('./src/hf-class-checkpoint.mjs?v=2.9.64')","await __mockCheckpoint()")
+ .replace("import('./src/hf-class-organization.mjs?v=2.9.64')","__mockOrganization()");
 const marker='  updateDeviceUI();\n  loadForms();render();setInterval(tick,160);\n  void bootstrapRecovery();';
 assert.ok(source.includes(marker),'Expected HF screen bootstrap');
 const instrument='  window.__test={state:()=>JSON.parse(JSON.stringify(state)),start:startSession,next:nextPhase,finish:finish,tick:tick,save:saveCollectiveOutcome};\n';
