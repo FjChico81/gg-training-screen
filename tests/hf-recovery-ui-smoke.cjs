@@ -9,7 +9,7 @@ const source=readFileSync(resolve(root,'hf-class-display.html'),'utf8')
   .match(/<script>([\s\S]*?)<\/script>/)?.[1];
 const modulePromise=import(pathToFileURL(resolve(root,'src/hf-class-checkpoint.mjs')).href);
 assert.ok(source);
-const file=source.replace("await import('./src/hf-class-checkpoint.mjs')","await __mockCheckpoint()");
+const file=source.replace("await import('./src/hf-class-checkpoint.mjs?v=2.9.64')","await __mockCheckpoint()");
 const marker='  updateDeviceUI();\n  loadForms();render();setInterval(tick,160);\n  void bootstrapRecovery();';
 assert.ok(file.includes(marker));
 const instrumented=file.replace(marker,[
