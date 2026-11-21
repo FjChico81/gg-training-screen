@@ -1,3 +1,6 @@
+-- SUPERADO POR class-access-v2-DRAFT-DO-NOT-APPLY.sql
+-- ARCHIVO CONSERVADO PARA HISTORIAL: NO EJECUTAR Y NO COMBINAR CON V2.
+-- V1 carece de consentimiento explícito y revocación de pantalla.
 -- HF TRAINING · BORRADOR TÉCNICO / NO EJECUTAR
 -- Propuesta independiente para sincronizar un entrenador autenticado con una
 -- cuenta de pantalla autenticada, sin compartir credenciales ni perfiles.
