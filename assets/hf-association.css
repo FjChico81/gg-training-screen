@@ -1,0 +1,127 @@
+/* HF Asociación · clases colectivas HDMI / tablet. Sólo html[data-edition=hf]. */
+html[data-edition="hf"] body{
+  --hf-strong:#ff671d;
+  --hf-focus:#ffb38e;
+}
+html[data-edition="hf"] #brandSubtitle{
+  color:#f6f1e9;
+  letter-spacing:.075em;
+  font-size:clamp(10px,1.2vw,14px);
+}
+html[data-edition="hf"] #library>.panel{
+  border:1px solid #424247;
+}
+html[data-edition="hf"] #library .library-title{
+  letter-spacing:-.025em;
+}
+html[data-edition="hf"] #library .hf-class-intro{
+  max-width:68ch;
+  margin:0 0 16px;
+  color:var(--muted);
+  font-size:clamp(14px,1.7vw,17px);
+  line-height:1.45;
+}
+html[data-edition="hf"] #library .home-actions #new{
+  background:var(--hf-strong);
+  color:#171311;
+  font-weight:850;
+}
+html[data-edition="hf"] #library .workout-row{
+  padding-block:16px;
+}
+html[data-edition="hf"] #library .workout-row strong{
+  font-size:clamp(17px,1.9vw,22px);
+}
+html[data-edition="hf"] .tv-mode.guided-active>header .header-settings{
+  display:none;
+}
+html[data-edition="hf"] .tv-mode.guided-active #guided .heart-rate-display{
+  display:none!important; /* Un pulsómetro personal no representa a toda la clase. */
+}
+html[data-edition="hf"] .tv-mode.guided-active #guided .tv-current{
+  border-color:#8f4b30;
+  background:linear-gradient(140deg,#2b2525,#1f1f22);
+}
+html[data-edition="hf"] .tv-mode.guided-active #guided #current.focus{
+  color:#fff9f4;
+  font-weight:950;
+}
+html[data-edition="hf"] .tv-mode.guided-active #guided .tv-upcoming{
+  border-color:#55555a;
+  background:#29292c;
+}
+html[data-edition="hf"] .tv-mode.guided-active #guided .tv-timing{
+  border-color:#a54a20;
+  background:#342720;
+}
+html[data-edition="hf"] .tv-mode.guided-active #guided .tv-caption{
+  color:var(--hf-focus);
+}
+html[data-edition="hf"] .tv-mode.guided-active #guided #tvExerciseGif{
+  background:#1b1b1e;
+}
+@media (orientation:landscape) and (min-width:760px){
+  html[data-edition="hf"] .tv-mode.guided-active #guided{
+    grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);
+    grid-template-rows:minmax(0,1fr) minmax(0,1fr) auto;
+  }
+  html[data-edition="hf"] .tv-mode.guided-active #guided .tv-current{
+    grid-area:1/1/3/2;
+  }
+  html[data-edition="hf"] .tv-mode.guided-active #guided .tv-timing,
+  html[data-edition="hf"] .tv-mode.guided-active #guided.tv-rest>#restCard{
+    grid-area:1/2/2/3;
+  }
+  html[data-edition="hf"] .tv-mode.guided-active #guided .tv-upcoming{
+    grid-area:2/2/3/3;
+  }
+  html[data-edition="hf"] .tv-mode.guided-active #guided .guided-controls{
+    grid-area:3/1/4/-1;
+  }
+  html[data-edition="hf"] .tv-mode.guided-active #guided .tv-current.has-gif{
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr);
+    align-items:stretch;
+    gap:clamp(6px,1.4vh,18px);
+  }
+  html[data-edition="hf"] .tv-mode.guided-active #guided .tv-current-copy{
+    max-height:none;
+    overflow:auto;
+  }
+  html[data-edition="hf"] .tv-mode.guided-active #guided #tvExerciseGif{
+    height:100%;
+    max-height:100%;
+  }
+}
+/* Mantener la composición original en tablet vertical y pantallas estrechas. */
+
+/* Accesos a prototipos de clase: exclusivamente HF. */
+html[data-edition="hf"] .hf-class-chooser{
+  margin:13px 0 20px;
+  padding:clamp(15px,2.5vw,22px);
+  border:1px solid #785243;
+  border-radius:15px;
+  background:linear-gradient(135deg,#312523,#28282c);
+}
+html[data-edition="hf"] .hf-class-chooser h3{
+  font-size:clamp(20px,2.8vw,27px);
+  margin:0 0 7px;
+  color:#fff4ed;
+}
+html[data-edition="hf"] .hf-class-chooser p{margin:0 0 13px;line-height:1.45}
+html[data-edition="hf"] .hf-class-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+html[data-edition="hf"] .hf-class-link{
+  min-height:58px;
+  display:flex;align-items:center;justify-content:center;
+  padding:12px 14px;border-radius:10px;
+  background:#ff671d;color:#161311;
+  font-weight:850;text-decoration:none;text-align:center;
+  border:2px solid transparent;
+}
+html[data-edition="hf"] .hf-class-link:hover{background:#ff874c}
+html[data-edition="hf"] .hf-class-link:focus-visible{outline:3px solid #fff;outline-offset:3px}
+@media(max-width:540px){html[data-edition="hf"] .hf-class-links{grid-template-columns:1fr}}
+
+html[data-edition="hf"] .hf-class-link-demo{grid-column:1/-1;background:#3d3d41;color:#ffe2cc;border-color:#725949}
+html[data-edition="hf"] .hf-class-link-demo:hover{background:#4c3c35}
