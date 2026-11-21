@@ -802,7 +802,7 @@ function setupHF(){
  void import('./src/hf-class-checkpoint.mjs').then(({readHFCheckpoint})=>{
    try{
      const saved=readHFCheckpoint(localStorage);
-     if(!saved)return;
+     if(!saved||(saved.profileId??'personal')!==localProfile.id)return;
      resumeTitle.textContent='Continuar: '+saved.title;
      resumeDescription.textContent='Guardada en este dispositivo. Al abrir se recuperará en pausa.';
      resumeLink.href='hf-class-display.html?recover=1&view='+saved.deviceMode;
