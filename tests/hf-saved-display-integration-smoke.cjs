@@ -70,6 +70,9 @@ async function boot(workout,mode='guided',{invalid=false}={}){
   const store=createStore();
   if(!invalid)bridge.createHFHandoff(workout,mode,{store,uuid:()=>token});
   const {document,el}=createDom();
+  // The real HTML marks the configuration section initially hidden.
+  el('config').hidden=true;
+  el('importNotice').hidden=true;
   const context={
     document,window:{},location:{search:'?mode='+mode+'&hfTransfer='+token+'&view=tablet'},
     URLSearchParams,sessionStorage:store,console,Date,
