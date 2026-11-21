@@ -723,8 +723,21 @@ function setupHF(){
  if(!isHF)return;
  document.title='HF v'+GG_APP_VERSION;
  document.querySelector('meta[name="theme-color"]').content='#1c1c1e';
+ const hfStyles=document.createElement('link');
+ hfStyles.rel='stylesheet';
+ hfStyles.href='assets/hf-association.css?v=1';
+ document.head.append(hfStyles);
  $('brandTitle').textContent='HF';
+ $('brandSubtitle').textContent='FUERZA · ERGÓMETROS · CARRERA · FUNCIONAL';
  $('brandSubtitle').classList.remove('hidden');
+ $('library').querySelector('.library-title').textContent='Clases y entrenamientos';
+ const intro=node('p','Prepara la sesión y abre su pizarra. Durante la clase, activa «Pantalla de clase» para que el grupo siga los ejercicios, los tiempos y el siguiente movimiento.','hf-class-intro');
+ $('library').querySelector('.library-title').after(intro);
+ $('new').textContent='＋ Preparar una clase';
+ $('historyButton').textContent='Historial de sesiones';
+ $('editor').querySelector('.gold').textContent='EDITOR HF';
+ $('editor').querySelector('h2').textContent='Crear o modificar clase';
+ document.querySelectorAll('[data-tv-toggle]').forEach(button=>button.textContent='Pantalla de clase');
  $('updateBannerText').textContent='Hay una versión nueva de HF';
  $('restoreFile').setAttribute('aria-label','Seleccionar copia de seguridad HF');
 }
@@ -1736,7 +1749,7 @@ for(const button of tvToggles)button.addEventListener('click',()=>{
  if(enabled)$('sessionExtras').prepend(strength);
  else $('guided').querySelector('.guided-controls').before(strength);
  const tvToggle=$('guided').querySelector('[data-tv-toggle]');
- tvToggle.textContent=enabled?'Salir de modo TV':'Modo TV';
+ tvToggle.textContent=enabled?(isHF?'Salir de pantalla':'Salir de modo TV'):(isHF?'Pantalla de clase':'Modo TV');
  if(!enabled)clearTvExerciseGif();
  if(view==='guided'){renderRestUI();renderTvExercises()}
 });
