@@ -25,7 +25,7 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal'}={}){
   const exerciseLibrary=doc.getElementById('exerciseLibraryOpen');
   const vectorRoutines=doc.getElementById('vectorRoutines');
   if(!title||!intro||!classChooser||!organizer||!resume||!actions||
-     !filters||!saved||!settings||!profile||!cloud||!exerciseLibrary)
+     !filters||!saved||!settings||!profile||!exerciseLibrary)
     throw Error('Falta algún componente de la pantalla HF. No se ha modificado la biblioteca.');
 
   const create=(tag,text,className)=>{
@@ -104,15 +104,30 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal'}={}){
   title.textContent='Mis entrenamientos';
   panels.workouts.append(title,actions,filters,saved);
   // Classes, templates, favorites and collective history are one destination.
-  intro.textContent='Presenta una clase desde el móvil conectado a TV o directamente en una tablet.';
+  intro.hidden=true; // The existing class chooser already explains the options.
+  const classHint=classChooser.querySelector('p');
+  if(classHint)classHint.textContent='Elige el formato y después el dispositivo.';
   panels.classes.append(classChooser,intro,organizer);
 
   // Secondary tools leave the main mobile screen; IDs and listeners survive.
-  const toolsHeading=create('h3','Perfil y herramientas','hf-settings-section-title');
-  const settingsLabel=create('p','Cuenta, dispositivos y biblioteca','hf-settings-section-caption');
-  settings.append(toolsHeading,profile,cloud,exerciseLibrary,settingsLabel);
+  const toolsHeading=create('h3','Perfil y sincronización','hf-settings-section-title');
+  const settingsLabel=create('p','Biblioteca y otras herramientas','hf-settings-section-caption');
+  const closeButton=doc.getElementById('closeSettings');
+  const addProfile=doc.getElementById('addLocalProfile');
+  // Additional local HF profiles deliberately have no cloud panel.
+  if(closeButton){
+    closeButton.after(toolsHeading,profile);
+    if(addProfile)profile.after(addProfile);
+    const anchor=addProfile||profile;
+    if(cloud)anchor.after(cloud);
+    (cloud||anchor).after(settingsLabel,exerciseLibrary);
+  }else{
+    settings.append(toolsHeading,profile);
+    if(cloud)settings.append(cloud);
+    settings.append(settingsLabel,exerciseLibrary);
+  }
   profile.classList.add('hf-settings-profile');
-  cloud.classList.add('hf-settings-cloud');
+  if(cloud)cloud.classList.add('hf-settings-cloud');
   exerciseLibrary.classList.add('hf-settings-exercise');
   if(vectorRoutines)vectorRoutines.classList.add('hf-hidden-vector-routines');
 
