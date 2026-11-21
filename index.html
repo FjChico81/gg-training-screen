@@ -1,10 +1,14 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v2.9.71</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#ffffff"><title>GG Mobile v2.9.71</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="VECTOR">
+<link id="appManifest" rel="manifest" href="vector.webmanifest">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
 if(new URLSearchParams(location.search).get('app')==='hf'){
   document.documentElement.dataset.edition='hf';
-  document.querySelector('meta[name="apple-mobile-web-app-title"]').remove();
+  document.querySelector('meta[name="apple-mobile-web-app-title"]').content='HF';
+  document.getElementById('appManifest').href='hf.webmanifest';
   document.getElementById('homeScreenIcon').href='assets/icons/hf-180.png';
 }else{
   document.title='VECTOR';
@@ -1914,6 +1918,14 @@ async function exitTVFullscreen(){
  try{await document.exitFullscreen()}
  catch(error){setTVFullscreenStatus('No se pudo salir de pantalla completa. Prueba la tecla Esc o el botón Atrás.')}
 }
+function tvFullscreenFallback(){
+ const installed=window.matchMedia?.('(display-mode: standalone)').matches||window.matchMedia?.('(display-mode: fullscreen)').matches||navigator.standalone===true;
+ if(installed)return 'La app ya está abierta sin barra de direcciones. Tu sistema no permite ocultar más controles desde la web.';
+ const apple=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ if(apple)return 'En iPhone o iPad: abre esta web en Safari, pulsa Compartir → Añadir a pantalla de inicio, activa «Abrir como app» si aparece y vuelve a entrar desde el icono.';
+ if(/Android/i.test(navigator.userAgent))return 'En Android: abre la web en Chrome o Samsung Internet, menú ⋮ → Instalar app o Añadir a pantalla de inicio. Luego abre VECTOR o HF desde el icono.';
+ return 'El navegador no permite la pantalla completa. Prueba F11 en ordenador o instala la web desde el menú del navegador para abrirla sin barras.';
+}
 tvFullscreenButton.addEventListener('click',async()=>{
  setTVFullscreenStatus('');
  if(document.fullscreenElement){
@@ -1921,11 +1933,11 @@ tvFullscreenButton.addEventListener('click',async()=>{
   return;
  }
  if(typeof document.documentElement.requestFullscreen!=='function'||document.fullscreenEnabled===false){
-  setTVFullscreenStatus('Este navegador no permite pantalla completa desde la web. Prueba abrir VECTOR o HF desde un icono instalado en la pantalla de inicio.');
+  setTVFullscreenStatus(tvFullscreenFallback());
   return;
  }
  try{await document.documentElement.requestFullscreen({navigationUI:'hide'})}
- catch(error){setTVFullscreenStatus('Chrome u otro navegador ha bloqueado la pantalla completa. Prueba de nuevo desde la página abierta directamente, o utiliza el acceso instalado en la pantalla de inicio.')}
+ catch(error){setTVFullscreenStatus('No se ha podido activar pantalla completa. '+tvFullscreenFallback())}
  syncTVFullscreenButton();
 });
 document.addEventListener('fullscreenchange',()=>{syncTVFullscreenButton();if(document.fullscreenElement)setTVFullscreenStatus('')});
