@@ -136,6 +136,10 @@
  .special-status{font-size:clamp(15px,2vw,24px);font-weight:900;color:#ffe0bd;
   background:#3d2c21;border:1px solid #89593a;border-radius:12px;padding:11px 15px;
   margin:9px 0 14px;font-variant-numeric:tabular-nums}
+.class-outcome{border:1px solid #6fa195;background:#1c3431;border-radius:12px;
+   margin:12px 0;padding:14px;line-height:1.55}
+ .class-outcome strong{font-size:clamp(18px,2.4vw,25px);color:#bdf5df}
+ .class-outcome p{color:#e8f6f1;margin:7px 0}
 .import-notice{margin:8px 0 14px;padding:12px 14px;border:1px solid #a1694c;border-radius:11px;background:#322824;color:#ffe5d4;line-height:1.45}
 .import-notice strong{color:#ffbd92}
 .import-notice.error{border-color:#a35a60;background:#392729}
@@ -209,13 +213,15 @@
   <div id="specialStatus" class="special-status" hidden role="status"></div>
   <div id="display" class="display"></div>
   <button id="coachToggle" class="coach-toggle" type="button" aria-controls="coach" aria-expanded="true" aria-label="Ocultar los controles de la clase">Ocultar mandos</button>
-  <div class="coach-label">CONTROLES DEL ENTRENADOR · SOLO EN ESTA PANTALLA</div>
+  <div class="coach-label">MANDOS DEL ENTRENADOR · VISIBLES TAMBIÉN AL DUPLICAR POR HDMI</div>
   <div class="coach" id="coach">
     <button id="start" type="button">▶ Iniciar</button>
     <button id="pause" type="button" class="secondary" disabled>Ⅱ Pausar</button>
     <button id="next" type="button" class="secondary" disabled>Avanzar ▶</button>
+    <button id="finishClass" type="button" class="secondary">✓ Finalizar</button>
     <button id="reset" type="button" class="danger">↺ Reiniciar</button>
   </div>
+  <section id="classOutcome" class="class-outcome" hidden aria-label="Resumen de la clase"></section>
   <p class="notice">Esta clase se ejecuta en el dispositivo actual. Por HDMI, la TV muestra lo mismo que el móvil. Esta versión de desarrollo no guarda el progreso si cierras la página.</p>
   <button id="exitPresentation" type="button">Salir de presentación</button>
 </section>
@@ -587,9 +593,26 @@
     el('start').textContent=ready?'▶ Iniciar clase':'▶ Reanudar';
     el('pause').disabled=ready||done;
     el('pause').textContent=state.paused?'▶ Reanudar':'Ⅱ Pausar';
-    el('next').disabled=ready||done||state.paused;
+    el('next').disabled=ready||done||state.paused||recoveryPending||importBlocked;
+    el('finishClass').disabled=ready||done||recoveryPending||importBlocked;
     el('next').textContent=isGuided?(activeSpecial()?.type==='amrap'&&state.step===activeSpecial().end
       ?'Completar ronda ▶':'Siguiente ejercicio ▶'):state.phase==='change'?'Iniciar siguiente estación ▶':'Terminar intervalo ▶';
+    const outcome=el('classOutcome');
+    outcome.hidden=!done;
+    if(done){
+      outcome.replaceChildren(node('strong','Clase finalizada · '+time(totalElapsed())));
+      if(state.results.length){
+        for(const result of state.results){
+          const detail=result.type==='amrap'
+            ?result.rounds+' rondas completas + '+result.partial+' ejercicios'
+            :result.type==='for-time'
+              ?result.steps+'/'+result.total+' ejercicios · '+(result.complete?'Completado':'Límite alcanzado o finalización manual')
+              :'Bloque terminado';
+          outcome.append(node('p',result.type.toUpperCase().replace('FOR-TIME','FOR TIME')+
+            ' · '+result.label+' · '+detail+' · '+time(result.seconds*1000)));
+        }
+      }else outcome.append(node('p','Entrenamiento colectivo terminado en este dispositivo.'));
+    }
     tick();
   }
   function parseGuided(raw){
@@ -640,6 +663,13 @@
   el('pause').onclick=pauseSession;
   el('next').onclick=()=>{if(!state.paused&&!recoveryPending&&!importBlocked)nextPhase();};
   el('reset').onclick=()=>resetSession();
+  el('finishClass').onclick=()=>{
+    if(state.phase==='ready'||state.phase==='finished'||recoveryPending||importBlocked)return;
+    if(!confirm('¿Finalizar la clase colectiva? Se cerrará la sesión y su copia temporal. Las rutinas guardadas no se modificarán.'))return;
+    const seg=activeSpecial();
+    if(seg&&seg.type!=='emom')recordSpecial(seg,false);
+    finish();render();
+  };
   el('toggleSound').onclick=()=>{
     sound=!sound;
     el('toggleSound').textContent=sound?'🔊 Sonido activado':'🔇 Sonido desactivado';
@@ -729,7 +759,15 @@
     }
   });
   document.addEventListener('keydown',event=>{
+    const tag=event.target?.tagName;
+    if(['INPUT','TEXTAREA','SELECT','BUTTON'].includes(tag)||event.altKey||event.metaKey||event.ctrlKey)return;
     if(event.key==='Escape'&&document.body.classList.contains('presentation'))presentation(false);
+    if(event.code==='Space'&&state.phase!=='ready'&&state.phase!=='finished'&&!importBlocked&&!recoveryPending){
+      event.preventDefault();pauseSession();
+    }
+    if(event.key==='ArrowRight'&&state.phase!=='ready'&&state.phase!=='finished'&&!state.paused&&!importBlocked&&!recoveryPending){
+      event.preventDefault();nextPhase();
+    }
   });
   function showImportNotice(message,error=false){
     const notice=el('importNotice');
