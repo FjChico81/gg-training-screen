@@ -74,9 +74,12 @@ button:disabled{opacity:.4;cursor:not-allowed}button:focus-visible,a:focus-visib
    el('progress').textContent=s.mode==='guided'?'Paso '+Math.min(s.step+1,cfg.guided.length)+' de '+cfg.guided.length:
      'Rotación '+Math.min(s.turn+1,cfg.stations.length*cfg.rounds)+' de '+cfg.stations.length*cfg.rounds;
    let ms=0;
+   const timed=s.mode==='stations'||Boolean(cfg.guided[s.step]?.seconds>0);
    if(s.phase==='finished')ms=0;
-   else if(s.deadline!==null)ms=Math.max(0,s.paused?s.remainingMs:s.deadline-Date.now());
-   else ms=s.phaseElapsedMs+(!s.paused&&s.phase!=='ready'?Math.max(0,Date.now()-s.phaseAnchor):0);
+   else if(s.paused&&timed&&s.remainingMs!==null)ms=s.remainingMs;
+   else if(s.deadline!==null)ms=Math.max(0,s.deadline-Date.now());
+   else if(s.phase==='ready')ms=timed?(s.mode==='stations'?cfg.work:cfg.guided[s.step].seconds)*1000:0;
+   else ms=s.phaseElapsedMs+(!s.paused?Math.max(0,Date.now()-s.phaseAnchor):0);
    el('clock').textContent=fmt(ms);
  }
  function send(action){
