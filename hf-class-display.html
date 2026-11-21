@@ -136,6 +136,7 @@
  .special-status{font-size:clamp(15px,2vw,24px);font-weight:900;color:#ffe0bd;
   background:#3d2c21;border:1px solid #89593a;border-radius:12px;padding:11px 15px;
   margin:9px 0 14px;font-variant-numeric:tabular-nums}
+.collective-archive-status{padding:10px 12px;margin:10px 0;background:#20302d;color:#c4f2e0;border-radius:9px;font-size:14px}
 .class-outcome{border:1px solid #6fa195;background:#1c3431;border-radius:12px;
    margin:12px 0;padding:14px;line-height:1.55}
  .class-outcome strong{font-size:clamp(18px,2.4vw,25px);color:#bdf5df}
@@ -222,7 +223,9 @@
     <button id="reset" type="button" class="danger">↺ Reiniciar</button>
   </div>
   <section id="classOutcome" class="class-outcome" hidden aria-label="Resumen de la clase"></section>
-  <p class="notice">Esta clase se ejecuta en el dispositivo actual. Por HDMI, la TV muestra lo mismo que el móvil. Esta versión de desarrollo no guarda el progreso si cierras la página.</p>
+  <div id="collectiveArchiveStatus" class="collective-archive-status" role="status" hidden></div>
+  <button id="retryCollectiveArchive" class="secondary" type="button" hidden>Reintentar guardar la clase</button>
+  <p class="notice">HF funciona en este dispositivo. Por HDMI, móvil y TV muestran la misma imagen. Las clases interrumpidas pueden recuperarse en este navegador y las finalizadas se registran en su historial colectivo local, si el almacenamiento está disponible.</p>
   <button id="exitPresentation" type="button">Salir de presentación</button>
 </section>
 <script>
@@ -265,6 +268,8 @@
   let checkpointTools=null,checkpointRunId=null,recoverySnapshot=null,checkpointError=null;
   let recoveryPending=typeof localStorage!=='undefined',lastCheckpointAt=0;
   let checkpointWarned=false;
+  const hfProfileId=params.get('hfProfile')||'personal';
+  let historyArchived=false,historySaving=false,historyOutcome='completed';
   const pad=n=>String(n).padStart(2,'0');
   function time(ms,countdown=false){
     const seconds=Math.max(0,countdown?Math.ceil(ms/1000):Math.floor(ms/1000));
@@ -343,11 +348,57 @@
       osc.start();osc.stop(ctx.currentTime+.19);
     }catch(e){}
   }
-  function finish(over=0){
+  function saveCollectiveOutcome(){
+    if(historyArchived||historySaving)return;
+    if(typeof localStorage==='undefined'||!checkpointRunId){
+      el('collectiveArchiveStatus').hidden=false;
+      el('collectiveArchiveStatus').textContent='⚠ El historial no se puede guardar sin almacenamiento local o identificador de sesión.';
+      el('retryCollectiveArchive').hidden=false;
+      return;
+    }
+    const total=state.mode==='guided'?config.guided.length:config.stations.length*config.rounds;
+    const progress=historyOutcome==='completed'?total:
+      state.mode==='guided'?Math.min(total,state.step):Math.min(total,state.turn);
+    const entry={
+      runId:checkpointRunId,
+      title:importedTitle||el('screenTitle').textContent,
+      mode:state.mode,deviceMode,outcome:historyOutcome,
+      endedAt:Date.now(),elapsedMs:Math.max(0,Math.floor(state.sessionElapsedMs)),
+      progress,total,
+      results:state.results.filter(r=>r&&['amrap','for-time','emom'].includes(r.type)).map(r=>({
+        type:r.type,label:r.label,seconds:r.seconds,complete:!!r.complete,
+        ...(Number.isSafeInteger(r.rounds)?{rounds:r.rounds}:{}),
+        ...(Number.isSafeInteger(r.partial)?{partial:r.partial}:{}),
+        ...(Number.isSafeInteger(r.steps)?{steps:r.steps}:{}),
+        ...(Number.isSafeInteger(r.total)?{total:r.total}:{})
+      }))
+    };
+    historySaving=true;
+    el('collectiveArchiveStatus').hidden=false;
+    el('collectiveArchiveStatus').textContent='Guardando el resultado colectivo en este dispositivo…';
+    el('retryCollectiveArchive').hidden=true;
+    void import('./src/hf-class-organization.mjs').then(({hfScopedStorage,appendHFCollectiveHistory})=>{
+      const store=hfScopedStorage(localStorage,hfProfileId);
+      return appendHFCollectiveHistory(store,entry);
+    }).then(()=>{
+      historyArchived=true;historySaving=false;
+      el('collectiveArchiveStatus').textContent='✓ Resultado guardado en el historial colectivo de HF de este dispositivo.';
+      el('retryCollectiveArchive').hidden=true;
+      clearCurrentCheckpoint();
+    }).catch(error=>{
+      historySaving=false;
+      el('collectiveArchiveStatus').textContent='⚠ Historial no guardado: '+
+        (error?.message||'No se ha podido escribir')+
+        '. Se mantiene la copia de recuperación para evitar perder información.';
+      el('retryCollectiveArchive').hidden=false;
+    });
+  }
+  function finish(over=0,outcome='completed'){
     state.sessionElapsedMs=Math.max(0,totalElapsed()-over);
     state.phase='finished';state.paused=false;state.deadline=null;state.remainingMs=0;state.sessionAnchor=0;
-    clearCurrentCheckpoint();
+    historyOutcome=outcome;
     notify();
+    saveCollectiveOutcome();
   }
   function nextPhase(over=0){
     if(state.phase==='ready'||state.phase==='finished')return;
@@ -461,11 +512,18 @@
     persistCheckpoint(true);
   }
   function resetSession(force=false){
+    if(state.phase==='finished'&&checkpointRunId&&!historyArchived){
+      alert('Primero guarda el resultado de la clase colectiva. Si falla, pulsa Reintentar guardar. No se descartará automáticamente la copia.');
+      return false;
+    }
     if(!force&&state.phase!=='ready'&&state.phase!=='finished'&&!confirm('¿Reiniciar esta clase? Se descartará el progreso local de esta sesión.'))return false;
     const mode=state.mode;
     state={mode,phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0,specialIndex:-1,specialElapsedMs:0,specialAnchor:0,amrapRounds:0,results:[]};
     clearCurrentCheckpoint();
+    historyArchived=false;historySaving=false;historyOutcome='completed';
     el('saveIndicator').hidden=true;
+    el('collectiveArchiveStatus').hidden=true;
+    el('retryCollectiveArchive').hidden=true;
     render();return true;
   }
   function tick(){
@@ -674,12 +732,13 @@
   el('pause').onclick=pauseSession;
   el('next').onclick=()=>{if(!state.paused&&!recoveryPending&&!importBlocked)nextPhase();};
   el('reset').onclick=()=>resetSession();
+  el('retryCollectiveArchive').onclick=()=>saveCollectiveOutcome();
   el('finishClass').onclick=()=>{
     if(state.phase==='ready'||state.phase==='finished'||recoveryPending||importBlocked)return;
     if(!confirm('¿Finalizar la clase colectiva? Se cerrará la sesión y su copia temporal. Las rutinas guardadas no se modificarán.'))return;
     const seg=activeSpecial();
     if(seg&&seg.type!=='emom')recordSpecial(seg,false);
-    finish();render();
+    finish(0,'stopped');render();
   };
   el('toggleSound').onclick=()=>{
     sound=!sound;
