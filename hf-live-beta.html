@@ -60,7 +60,7 @@ label{display:block;color:#ffaf84;font-weight:750;margin:12px 0 5px}
   <p class="privacy">Sesión en memoria. No se almacena la contraseña ni el token en el dispositivo.</p>
  </section>
  <section class="card" id="trainerTools" hidden>
-  <h2>Vincular pantalla</h2>
+  <div class="row"><h2>Vincular pantalla</h2><button type="button" id="trainerEnd" class="secondary">Cerrar sesión local</button></div>
   <label for="screenId">Identificador de la cuenta de pantalla HF</label><input id="screenId" placeholder="UUID proporcionado por la pantalla" autocomplete="off" spellcheck="false">
   <div class="actions"><button id="requestPair">Solicitar vínculo</button><button id="checkPair" class="secondary">Comprobar aceptación</button></div>
   <p class="status" id="pairStatus"></p>
@@ -100,7 +100,7 @@ label{display:block;color:#ffaf84;font-weight:750;margin:12px 0 5px}
   <div class="actions"><button id="screenLogin">Conectar pantalla</button><button id="screenLogout" class="secondary" hidden>Desconectar cuenta</button></div>
  </section>
  <section class="card" id="screenTools" hidden>
-  <h2>Pantalla de la asociación</h2>
+  <div class="row"><h2>Pantalla de la asociación</h2><button type="button" id="screenEnd" class="secondary">Cerrar sesión local</button></div>
   <p>Identificador público de la pantalla: <strong class="mono" id="myScreenId"></strong></p>
   <div class="actions"><button id="findRequests">Consultar solicitudes</button><button id="loadClasses" class="secondary">Ver clases asignadas</button></div>
   <div id="requests"></div>
@@ -182,7 +182,7 @@ if(!HF_LIVE_ROLLOUT_APPROVED){
   }
   $('trainerLogin').onclick=()=>action('Autenticando entrenador',()=>login('trainerEmail','trainerPassword'));
   $('screenLogin').onclick=()=>action('Autenticando pantalla',()=>login('screenEmail','screenPassword'));
-  $('trainerLogout').onclick=logout;$('screenLogout').onclick=logout;
+  for(const id of ['trainerLogout','screenLogout','trainerEnd','screenEnd'])$(id).onclick=logout;
   $('requestPair').onclick=()=>action('Solicitando vínculo',async()=>{
     const row=await pairClient.requestPairing(session(),$('screenId').value.trim());
     activePair=row.id;
