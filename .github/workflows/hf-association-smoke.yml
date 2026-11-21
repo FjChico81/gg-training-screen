@@ -8,6 +8,7 @@ on:
       - 'hf-class-prototype.html'
       - 'hf-coach-preview.html'
       - 'hf-pair-preview.html'
+      - 'hf-live-beta.html'
       - 'src/hf-*'
       - 'tests/hf-*'
       - 'db/hf-training/*DRAFT-DO-NOT-APPLY.sql'
@@ -17,6 +18,7 @@ on:
       - 'hf-class-prototype.html'
       - 'hf-coach-preview.html'
       - 'hf-pair-preview.html'
+      - 'hf-live-beta.html'
       - 'src/hf-*'
       - 'tests/hf-*'
       - 'db/hf-training/*DRAFT-DO-NOT-APPLY.sql'
@@ -47,4 +49,7 @@ jobs:
             tests/hf-screen-consent-smoke.cjs \
             tests/hf-class-runtime-smoke.mjs \
             tests/hf-screen-watcher-smoke.mjs \
-            tests/hf-two-device-contract-smoke.mjs
+            tests/hf-two-device-contract-smoke.mjs \
+            tests/hf-memory-auth-smoke.mjs \
+            tests/hf-coach-controller-smoke.mjs \
+            tests/hf-live-rollout-smoke.mjs
