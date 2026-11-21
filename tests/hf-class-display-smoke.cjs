@@ -11,7 +11,9 @@ const html=readFileSync(resolve(__dirname,'../hf-class-display.html'),'utf8');
 const source=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(source,'Expected one inline application script');
 assert.match(source,/loadForms\(\);render\(\);setInterval\(tick,160\);/);
-assert.doesNotMatch(source,/\b(localStorage|sessionStorage|WebSocket|supabase|fetch\s*\()\b/i);
+// sessionStorage is used solely for the short-lived same-tab presentation handoff.
+assert.doesNotMatch(source,/\b(localStorage|WebSocket|supabase|fetch\s*\()\b/i);
+assert.match(source,/consumeHFHandoff/);
 
 function makeNode(tagName,id=''){
   const attrs={};
