@@ -153,3 +153,74 @@ html[data-edition="hf"] .hf-resume-link{
   font-weight:850;text-decoration:none
 }
 html[data-edition="hf"] .hf-resume-link:focus-visible{outline:3px solid #ffc4a0;outline-offset:3px}
+
+
+/* HF Stage B · Club organization. Strictly edition-scoped. */
+html[data-edition="hf"] .hf-org-host{margin:16px 0 24px}
+html[data-edition="hf"] .hf-club-organizer{
+  display:grid;gap:15px;max-width:1100px
+}
+html[data-edition="hf"] .hf-org-caption{
+  color:#d4ccc7;font-size:13px;line-height:1.5;margin:5px 0 9px
+}
+html[data-edition="hf"] .hf-org-panel{
+  background:linear-gradient(150deg,#2b292d,#232326);
+  border:1px solid #65544a;border-radius:17px;
+  padding:clamp(14px,2.2vw,23px);min-width:0;
+}
+html[data-edition="hf"] .hf-org-panel h3{
+  color:#ffbd92;margin:0 0 12px;
+  font-size:clamp(19px,2.5vw,27px)
+}
+html[data-edition="hf"] .hf-org-actions{
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center
+}
+html[data-edition="hf"] .hf-org-actions button{
+  min-height:42px;padding:10px 13px;font-size:14px;
+  background:#51463f;color:#f9efe8;border:1px solid #856653;
+}
+html[data-edition="hf"] .hf-org-actions button:first-child{
+  background:#ff671d;color:#231710;border-color:#ff671d;font-weight:800
+}
+html[data-edition="hf"] .hf-org-actions button:focus-visible,
+html[data-edition="hf"] .hf-resume-link:focus-visible{
+  outline:3px solid #ffb78d;outline-offset:3px
+}
+html[data-edition="hf"] .hf-org-list{
+  display:grid;gap:10px;margin-top:10px
+}
+html[data-edition="hf"] .hf-org-line{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:12px;flex-wrap:wrap;border:1px solid #514a47;
+  border-radius:12px;background:#343033;padding:13px
+}
+html[data-edition="hf"] .hf-org-line strong{font-size:16px}
+html[data-edition="hf"] .hf-org-line>div:first-child{min-width:0;flex:1}
+html[data-edition="hf"] .hf-org-filters{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,220px);gap:9px
+}
+html[data-edition="hf"] .hf-org-filters input,
+html[data-edition="hf"] .hf-org-filters select{
+  min-width:0;background:#211f23;color:#f8f5f3;
+  border:1px solid #8b7e78;border-radius:11px;
+  padding:11px;font-size:16px
+}
+html[data-edition="hf"] .hf-org-history{
+  background:#343034;border:1px solid #61514a;border-radius:11px;padding:12px
+}
+html[data-edition="hf"] .hf-org-history summary{
+  cursor:pointer;font-weight:750;color:#f4e4d7
+}
+html[data-edition="hf"] .hf-org-empty{color:#ccc2bd;margin:5px 0 10px}
+html[data-edition="hf"] .hf-org-error{color:#ffd0b5;margin:0;font-size:14px;line-height:1.45}
+html[data-edition="hf"] #saved .routine-actions button[aria-pressed="true"]{
+  color:#292019;background:#ffbe73;border-color:#ffbe73
+}
+@media(max-width:580px){
+  html[data-edition="hf"] .hf-org-filters{grid-template-columns:1fr}
+  html[data-edition="hf"] .hf-org-line{align-items:flex-start}
+  html[data-edition="hf"] .hf-org-line .hf-org-actions{width:100%}
+  html[data-edition="hf"] .hf-org-line .hf-org-actions button{
+    flex:1;min-width:115px
+  }
+}
