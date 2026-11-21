@@ -48,6 +48,7 @@ function validatePlan(mode,config){
 function validate(data,now){
   if(!data||data.version!==1||!UUID.test(data.runId)||!str(data.title,120)||
     !['mirror','tablet'].includes(data.deviceMode)||
+    (data.profileId!==undefined&&!/^(personal|[a-f0-9]{32})$/.test(data.profileId))||
     !int(data.savedAt,0,Number.MAX_SAFE_INTEGER)||data.savedAt>now+300000||
     now-data.savedAt>TTL||now<data.savedAt-300000)
     bad('copia antigua o incompatible');
@@ -81,9 +82,9 @@ function validate(data,now){
  * Creates a safe, already-paused snapshot at an explicit timestamp. The caller
  * must calculate elapsed and remaining time at that timestamp.
  */
-export function makeHFCheckpoint({runId,title,deviceMode,config,state,now=Date.now()}){
+export function makeHFCheckpoint({runId,title,deviceMode,profileId='personal',config,state,now=Date.now()}){
   if(!int(now,0,Number.MAX_SAFE_INTEGER))bad('reloj inválido');
-  const snap={version:1,runId,title,deviceMode,mode:state?.mode,config,state,savedAt:now};
+  const snap={version:1,runId,title,deviceMode,profileId,mode:state?.mode,config,state,savedAt:now};
   return validate(JSON.parse(JSON.stringify(snap)),now);
 }
 export function writeHFCheckpoint(store,snapshot,{now=Date.now(),allowReplace=false}={}){
