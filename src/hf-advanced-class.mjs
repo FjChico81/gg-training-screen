@@ -108,3 +108,40 @@ export function getHFSegment(segments,index){
   if(!Array.isArray(segments))return null;
   return segments.find(s=>index>=s.start&&index<=s.end)||null;
 }
+
+
+/**
+ * Validate advanced segments loaded from ephemeral browser storage.
+ * Never trust caller-provided indices or time caps.
+ */
+export function validateHFAdvancedSegments(guided,segments){
+  if(!Array.isArray(guided)||!Array.isArray(segments)||segments.length>80)
+    reject('Segmentos colectivos dañados.');
+  let last=-1;
+  for(const seg of segments){
+    if(!seg||!['amrap','emom','for-time'].includes(seg.type)||
+      !Number.isSafeInteger(seg.start)||!Number.isSafeInteger(seg.end)||
+      seg.start<=last||seg.start<0||seg.end<seg.start||seg.end>=guided.length||
+      !seg.label||typeof seg.label!=='string'||seg.label.length>85||
+      !Number.isSafeInteger(seg.limitSeconds)||seg.limitSeconds<(seg.type==='for-time'?0:1)||
+      seg.limitSeconds>7200)reject('Segmento avanzado inválido.');
+    if(seg.type==='emom'){
+      if(!Number.isSafeInteger(seg.rounds)||seg.rounds<1||seg.rounds>50||
+        seg.end-seg.start+1!==seg.rounds*2||
+        !Number.isSafeInteger(seg.workSeconds)||!Number.isSafeInteger(seg.restSeconds)||
+        seg.workSeconds<1||seg.restSeconds<1||
+        seg.workSeconds+seg.restSeconds!==60||
+        seg.limitSeconds!==60*seg.rounds)reject('EMOM incompatible.');
+      for(let i=0;i<seg.rounds;i++){
+        const work=guided[seg.start+i*2],rest=guided[seg.start+i*2+1];
+        if(work?.seconds!==seg.workSeconds||rest?.seconds!==seg.restSeconds||
+          rest?.kind!=='rest')reject('El descanso EMOM se ha modificado.');
+      }
+    }
+    if(seg.type==='for-time'&&
+      (!Number.isSafeInteger(seg.rounds)||seg.rounds<1||seg.rounds>20))
+      reject('FOR TIME sin rondas válidas.');
+    last=seg.end;
+  }
+  return segments;
+}
