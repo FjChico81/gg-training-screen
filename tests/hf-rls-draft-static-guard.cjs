@@ -58,3 +58,19 @@ test('all exposed HF tables need explicit RLS, grants and allowed fields',()=>{
   const sqlOnly=v2.split('\n').filter(line=>!line.trimStart().startsWith('--')).join('\n');
   assert.doesNotMatch(sqlOnly,/\bsecurity\s+definer\b/i);
 });
+
+
+test('live session RLS always matches the exact pair trainer and screen (draft only)',()=>{
+  const policies=v2.slice(v2.indexOf('create policy hf_live_insert_trainer'));
+  const trainerLinks=policies.match(/p\.trainer_id=hf_class_live_sessions\.trainer_id/g)||[];
+  const screenLinks=policies.match(/p\.screen_user_id=hf_class_live_sessions\.screen_user_id/g)||[];
+  assert.ok(trainerLinks.length>=3,'INSERT and both UPDATE checks must correlate trainer');
+  assert.ok(screenLinks.length>=3,'INSERT and both UPDATE checks must correlate screen');
+  assert.doesNotMatch(policies,/p\.trainer_id=trainer_id\b|p\.screen_user_id=screen_user_id\b/);
+});
+test('UTC pause/recovery keys are allowlisted in pending SQL without secret fields',()=>{
+  assert.match(v2,/constraint hf_live_public_runtime_keys/);
+  assert.match(v2,/runningSinceUtc/);
+  assert.match(v2,/remainingMs/);
+  assert.doesNotMatch(v2,/runtime - array\[[^\]]*email/);
+});
