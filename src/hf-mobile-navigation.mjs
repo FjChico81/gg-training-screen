@@ -5,7 +5,7 @@
  * IDs, handlers, data and originals. Never reads or writes workout storage.
  * It is mounted exclusively inside setupHF() after checking isHF.
  */
-export function mountHFMobileNavigation(doc,{profileLabel='Principal'}={}){
+export function mountHFMobileNavigation(doc,{profileLabel='Principal',onTabChange=()=>{}}={}){
   const library=doc.getElementById('library');
   const panel=library?.querySelector('.panel');
   if(!panel)throw Error('No se ha encontrado la biblioteca HF.');
@@ -66,6 +66,7 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal'}={}){
       tab.setAttribute('aria-selected',String(active));
       tab.tabIndex=active?0:-1;
     }
+    onTabChange(key);
     if(focus)tabs.get(key).focus();
   }
   nav.onkeydown=event=>{
@@ -80,27 +81,43 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal'}={}){
     selectTab(keys[next],{focus:true});
   };
 
-  // Short home: no list of classes, workouts, history, profile or cloud.
-  const heading=create('h2','¿Qué quieres hacer hoy?','hf-home-heading');
   const profileName=String(profileLabel||'').trim().slice(0,50);
   const context=create('p','Perfil: '+profileName,'hf-home-profile');
   context.hidden=!profileName||profileName==='Principal';
-  const shortcuts=create('div',undefined,'hf-home-shortcuts');
-  function shortcut(symbol,label,description,target){
-    const button=create('button',undefined,'hf-home-shortcut');
-    button.type='button';
-    button.setAttribute('aria-label',label);
-    const icon=create('span',symbol,'hf-home-shortcut-icon');
-    icon.setAttribute('aria-hidden','true');
-    button.append(icon,create('strong',label),create('small',description));
-    button.onclick=()=>selectTab(target,{focus:true});
-    return button;
+  const card=create('div',undefined,'hf-home-card');
+  const status=create('p',undefined,'hf-home-status');
+  const heading=create('h2',undefined,'hf-home-heading');
+  const action=create('button',undefined,'hf-home-action');
+  action.type='button';
+  card.append(status,heading,action);
+  const recent=create('p',undefined,'hf-home-recent');
+  const createWorkout=doc.getElementById('new');
+  function updateHome({activeWorkout,routine,recentSession,resumeWorkout,openWorkout}={}){
+    const classPending=!resume.classList.contains('hidden');
+    resume.hidden=Boolean(activeWorkout);
+    card.hidden=!activeWorkout&&classPending;
+    if(activeWorkout){
+      status.textContent='Sesión en curso';
+      heading.textContent=activeWorkout.name;
+      action.textContent='Continuar sesión';
+      action.onclick=resumeWorkout;
+    }else if(routine){
+      status.textContent='Rutina guardada';
+      heading.textContent=routine.name;
+      action.textContent='Abrir rutina';
+      action.onclick=()=>openWorkout(routine.id);
+    }else{
+      status.textContent='';
+      heading.textContent='Aún no tienes rutinas';
+      action.textContent=recentSession?'Crear entrenamiento':'Crear mi primer entrenamiento';
+      action.onclick=()=>createWorkout?.click();
+    }
+    status.hidden=!status.textContent;
+    recent.hidden=!recentSession;
+    if(recentSession)recent.textContent='Última sesión: '+recentSession.name+' · '+recentSession.date;
   }
-  shortcuts.append(
-    shortcut('▤','Mis entrenamientos','Rutinas y sesiones personales','workouts'),
-    shortcut('▶','Impartir una clase','Clase guiada o circuito','classes')
-  );
-  panels.home.append(heading,context,resume,shortcuts);
+  panels.home.append(context,resume,card,recent);
+  updateHome();
 
   // Saved workouts and the individual history are together and nowhere else.
   title.textContent='Mis entrenamientos';
@@ -137,5 +154,5 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal'}={}){
   panel.prepend(nav);
   panel.append(panels.home,panels.workouts,panels.classes);
   selectTab('home');
-  return Object.freeze({selectTab,activeTab:()=>Object.keys(panels).find(k=>!panels[k].hidden)});
+  return Object.freeze({selectTab,updateHome,activeTab:()=>Object.keys(panels).find(k=>!panels[k].hidden)});
 }
