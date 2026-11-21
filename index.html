@@ -748,7 +748,11 @@ function setupHF(){
  pairDemo.href='hf-pair-preview.html';
  pairDemo.setAttribute('aria-label','Abrir simulación de mando y pantalla en dos pestañas del mismo navegador');
  links.append(pairDemo);
- demoNote.textContent='Dos formatos de clase y una simulación de mando en dos pestañas del mismo navegador; sin sincronización real entre dispositivos.';
+ const liveBeta=node('a','Conexión móvil y pantalla · Pendiente de autorización','hf-class-link hf-class-link-demo');
+ liveBeta.href='hf-live-beta.html?role=trainer';
+ liveBeta.setAttribute('aria-label','Ver el desarrollo de sincronización HF, bloqueado hasta acreditar independencia de HPS');
+ links.append(liveBeta);
+ demoNote.textContent='Clase guiada, estaciones y simulación local. La conexión entre dispositivos está preparada en beta y bloqueada hasta verificar el servidor exclusivo de HF.';
  demo.append(demoTitle,demoNote,links);
  intro.after(demo);
  $('new').textContent='＋ Preparar una clase';
