@@ -122,3 +122,17 @@ html[data-edition="hf"] .hf-class-link{
 html[data-edition="hf"] .hf-class-link:hover{background:#ff874c}
 html[data-edition="hf"] .hf-class-link:focus-visible{outline:3px solid #fff;outline-offset:3px}
 @media(max-width:540px){html[data-edition="hf"] .hf-class-links{grid-template-columns:1fr}}
+
+/* Presentación de rutinas guardadas: accesos táctiles legibles solo en HF. */
+html[data-edition="hf"] #saved .workout-row{flex-wrap:wrap}
+html[data-edition="hf"] #saved .routine-actions{
+  gap:7px;flex-wrap:wrap;justify-content:flex-end
+}
+html[data-edition="hf"] #saved .routine-actions>button{
+  min-height:44px;min-width:66px
+}
+html[data-edition="hf"] #saved .routine-options{min-width:195px}
+@media(max-width:560px){
+  html[data-edition="hf"] #saved .workout-row>div:first-child{flex-basis:100%}
+  html[data-edition="hf"] #saved .routine-actions{width:100%;justify-content:flex-start}
+}
