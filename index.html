@@ -461,7 +461,7 @@ html:not([data-edition="hf"]) body:has(.vector-home:not(.hidden)) .header-settin
 }
 #vectorEditorLibrary{margin:12px 0}
 #vectorEditorLibrary #exerciseLibrary{margin:8px 0 0}
-</style></head><body>
+</style><link rel="stylesheet" href="src/vector-experience.css?v=20261121"></head><body>
 <header class="row" style="margin-bottom:18px"><div><h1 id="brandTitle" class="gold"><span class="gg-brand-mark"><img class="gg-brand-wordmark" src="assets/icons/gg-vector-wordmark.png" width="969" height="168" alt="Vector Fitness"></span></h1><span id="brandSubtitle" class="muted small hidden">GO ALL OUT</span></div><div class="header-settings"><button id="settingsToggle" type="button" aria-label="Abrir ajustes" aria-expanded="false" aria-controls="settingsPanel" class="settings-gear">⚙</button><div id="settingsPanel" class="tools-inner hidden"><button id="closeSettings" class="alt" type="button" style="grid-column:1/-1">✕ Cerrar ajustes</button><button id="soundToggle" class="alt">🔊 Avisos activados</button><button id="soundTest" class="alt">♪ Probar sonido</button><button id="wakeToggle" class="alt" type="button" style="grid-column:1/-1">☀ Mantener pantalla activa: activado</button><span id="wakeStatus" class="muted small" style="grid-column:1/-1" aria-live="polite">Pendiente de iniciar sesión</span><button id="connectHr" class="alt" type="button" style="grid-column:1/-1">♥ Conectar pulsómetro Bluetooth</button><button id="disconnectHr" class="alt hidden" type="button" style="grid-column:1/-1">Desconectar pulsómetro</button><span id="hrConnectionStatus" class="muted small" style="grid-column:1/-1" aria-live="polite">Sensor no conectado</span><button id="checkUpdates" class="alt" type="button" style="grid-column:1/-1">↻ Buscar actualizaciones</button><span id="updateStatus" class="muted small" style="grid-column:1/-1" aria-live="polite"></span><span id="audioStatus" class="muted small" aria-live="polite">Audio sin comprobar</span><details class="settings-data"><summary>Datos</summary><div class="settings-data-actions"><button id="backupButton" class="alt">↓ Copia de seguridad</button><button id="restoreButton" class="alt" type="button">↑ Restaurar copia</button><input id="restoreFile" class="hidden" type="file" accept=".json,application/json" aria-label="Seleccionar copia de seguridad GG Mobile"></div></details><button id="addLocalProfile" type="button" class="alt settings-wide">Añadir perfil</button><p id="appVersion" class="muted small settings-wide"></p></div></div></header><div id="updateBanner" class="panel hidden" style="border:1px solid var(--accent,#dbc396)"><div class="row"><span id="updateBannerText">Hay una versión nueva de GG Mobile</span><button id="applyUpdate" type="button">Actualizar ahora</button></div></div>
 <section id="library"><div class="panel"><h2 class="library-title">Mis entrenamientos</h2><div id="localProfilePanel">
 <label for="localProfileSelect">Perfil<select id="localProfileSelect"></select></label>
@@ -673,6 +673,7 @@ function setupVectorHome(){
  home.classList.add('vector-home');
  $('settingsToggle').textContent='⚙︎';
  home.querySelector('.library-title').remove();
+ $('editor').querySelector('.gold').textContent='EDITOR VECTOR';
 
  const profile=$('localProfilePanel');
  const profileRow=node('div','','vector-profile-row');
@@ -853,6 +854,7 @@ document.addEventListener('keydown',event=>{
 function workoutCategory(w){const names=w.blocks.map(b=>b.name.toLowerCase()).join(' '),lines=w.blocks.flatMap(b=>b.items).join(' ').toLowerCase(),title=w.name.toLowerCase();if(/amrap/.test(names))return 'AMRAP';if(/emom/.test(names))return 'EMOM';if(/intervalos/.test(names))return 'Intervalos';if(/ronda|circuito|h[ií]brid/.test(names+' '+title))return 'Híbrido';if(/fuerza|torso|pierna|full body/.test(names+' '+title)||w.blocks.some(b=>b.items.some(line=>!!decode(line).strength)))return 'Fuerza';return 'Otros'}
 function renderLibrary(){
  renderVectorRoutines();
+ globalThis.vectorDashboard?.refresh();
  if(!isHF){
    const count=workouts.length;
    $('vectorSavedCount').textContent=count===0?'Aún no tienes entrenamientos guardados':
@@ -1753,7 +1755,7 @@ setupLocalProfiles();
 $('appVersion').textContent='Versión '+GG_APP_VERSION;
 for(const id of ['v2Name','ftLines','circuitLines','amrapLines','emomExercises','visualName','timerName'])setupExercisePicker(id);
 setupExerciseLibrary();setupVectorHome();setupCompactGuided();load();try{const saved=JSON.parse(appStorage.getItem('gg-active-session-v1'));if(saved&&saved.session&&findWorkout(saved.active)){active=saved.active;sessionWorkout=saved.active;step=Math.max(0,Math.min(saved.step,findWorkout(active).blocks.reduce((n,b)=>n+b.items.length,0)-1));paused=true;elapsed=saved.elapsed||0;stepElapsed=saved.stepElapsed||0;seriesLog=saved.seriesLog||{};restRemaining=saved.restRemaining||0;restRunning=!!saved.restRunning;transitionTo=Number.isInteger(saved.transitionTo)&&saved.transitionTo===step+1? saved.transitionTo:null;draftSets=saved.draftSets||{};vectorTargets=saved.vectorTargets||{};amrapElapsed=saved.amrapElapsed||0;amrapRounds=saved.amrapRounds||0;amrapResults=saved.amrapResults||[];ftElapsed=saved.ftElapsed||0;ftResults=saved.ftResults||[];actualResults=saved.actualResults||{};session=true}}catch(e){}show('library');void checkForUpdates();
-</script><script type="module">
+</script><script src="src/vector-experience.js?v=20261121"></script><script type="module">
 if(usesWorkoutCloud){
   if(isHF){
     $('cloudSummaryLabel').textContent='☁ Sincronización HF';
