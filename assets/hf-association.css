@@ -136,3 +136,20 @@ html[data-edition="hf"] #saved .routine-options{min-width:195px}
   html[data-edition="hf"] #saved .workout-row>div:first-child{flex-basis:100%}
   html[data-edition="hf"] #saved .routine-actions{width:100%;justify-content:flex-start}
 }
+
+/* HF only: quickly resume an interrupted collective class. */
+html[data-edition="hf"] .hf-resume-card{
+  display:flex;flex-direction:column;gap:6px;
+  margin:11px 0 18px;padding:15px;
+  border:1px solid #d48752;border-radius:14px;
+  background:linear-gradient(125deg,#3e2a21,#29272b)
+}
+html[data-edition="hf"] .hf-resume-card.hidden{display:none!important}
+html[data-edition="hf"] .hf-resume-card strong{font-size:clamp(18px,2.5vw,24px)}
+html[data-edition="hf"] .hf-resume-card p{margin:0 0 6px}
+html[data-edition="hf"] .hf-resume-link{
+  background:#ff671d;color:#241812;padding:12px 15px;
+  border-radius:11px;min-height:48px;text-align:center;
+  font-weight:850;text-decoration:none
+}
+html[data-edition="hf"] .hf-resume-link:focus-visible{outline:3px solid #ffc4a0;outline-offset:3px}
