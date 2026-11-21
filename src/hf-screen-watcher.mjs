@@ -23,23 +23,22 @@ export function createHFScreenWatcher({
   if(typeof onSnapshot!=='function'||typeof onDisconnected!=='function')throw Error('Callbacks obligatorios');
   if(!Number.isInteger(periodMs)||periodMs<500||periodMs>30000)throw Error('Intervalo inválido');
   if(!Number.isInteger(staleAfter)||staleAfter<1||staleAfter>10)throw Error('Umbral de desconexión inválido');
-  let running=false, busy=false, task=null,revision=-1,failures=0,stale=false,latest=null;
+  let running=false, busy=false, task=null,revision=-1,failures=0,stale=false,latest=null,epoch=0;
   function next(){
     if(!running||busy||task!==null)return;
     task=schedule(()=>{task=null;void poll();},periodMs);
   }
   function disconnect(reason){
-    running=false;
-    if(task!==null){cancel(task);task=null;}
-    latest=null;
+    stop();
     onDisconnected(reason);
   }
   async function poll(){
     if(!running||busy)return;
     busy=true;
+    const thisEpoch=epoch;
     try{
       const row=await client.getSession(session,id);
-      if(!running)return;
+      if(!running||epoch!==thisEpoch)return;
       if(!row){
         disconnect('revoked_expired_or_unavailable');
         return;
@@ -53,12 +52,12 @@ export function createHFScreenWatcher({
       const wasStale=stale;
       stale=false;failures=0;latest={row,presentation};
       if(wasStale)onRecovered();
-      if(number>revision){
+      if(number>revision||wasStale){
         revision=number;
         onSnapshot({row,presentation,revision:number});
       }
     }catch(error){
-      if(!running)return;
+      if(!running||epoch!==thisEpoch)return;
       failures++;
       onError(error);
       if(failures>=staleAfter&&!stale){
@@ -66,7 +65,7 @@ export function createHFScreenWatcher({
         onStale(); // UI must not claim live synchronization when stale.
       }
     }finally{
-      busy=false;next();
+      if(epoch===thisEpoch){busy=false;next();}
     }
   }
   function start(){
@@ -78,6 +77,9 @@ export function createHFScreenWatcher({
   function refresh(){if(!running||busy)return false;void poll();return true;}
   function stop(){
     running=false;
+    epoch++;
+    busy=false;
+    revision=-1;failures=0;stale=false;
     if(task!==null){cancel(task);task=null;}
     latest=null;
   }
