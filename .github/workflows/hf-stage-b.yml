@@ -9,6 +9,7 @@ on:
       - 'hf-class-display.html'
       - 'index.html'
       - 'assets/hf-association.css'
+      - 'docs/HF-ETAPA-B-ORGANIZACION.md'
       - 'tests/hf-*'
       - '.github/workflows/hf-stage-b.yml'
   pull_request:
@@ -17,6 +18,7 @@ on:
       - 'hf-class-display.html'
       - 'index.html'
       - 'assets/hf-association.css'
+      - 'docs/HF-ETAPA-B-ORGANIZACION.md'
       - 'tests/hf-*'
       - '.github/workflows/hf-stage-b.yml'
 
