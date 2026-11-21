@@ -441,7 +441,7 @@
     };
     return checkpointTools.makeHFCheckpoint({
       runId:checkpointRunId,title:importedTitle||el('screenTitle').textContent,
-      deviceMode,config,state:savedState,now
+      deviceMode,profileId:hfProfileId,config,state:savedState,now
     });
   }
   function persistCheckpoint(force=false){
@@ -902,6 +902,17 @@
         recoveryPending=false;render();
         await loadSavedHFPresentation();return;
       }
+      // A shared device may contain an interrupted session from another HF
+      // local profile. Never reveal that profile's workout title or discard it.
+      if((recoverySnapshot.profileId??'personal')!==hfProfileId){
+        recoverySnapshot=null;
+        el('recoveryTitle').textContent='Hay una clase pendiente de otro perfil HF';
+        el('recoveryMessage').textContent='La copia pertenece a otro perfil. Regresa a HF y selecciona el perfil que inició la clase para poder recuperarla.';
+        el('resumeRecovery').disabled=true;
+        el('discardRecovery').disabled=true;
+        importBlocked=true;recoveryPending=true;
+        el('recoveryPanel').hidden=false;render();return;
+      }
       const saved=new Date(recoverySnapshot.savedAt).toLocaleString('es-ES');
       el('recoveryTitle').textContent='Hay una clase interrumpida';
       el('recoveryMessage').textContent='“'+recoverySnapshot.title+'” · Copia del '+saved+
@@ -922,7 +933,8 @@
     if(!recoverySnapshot||!checkpointTools)return;
     try{
       const data=checkpointTools.readHFCheckpoint(localStorage,{now:Date.now()});
-      if(!data||data.runId!==recoverySnapshot.runId)
+      if(!data||data.runId!==recoverySnapshot.runId||
+        (data.profileId??'personal')!==hfProfileId)
         throw Error('La copia ha cambiado. Vuelve a abrir la pantalla.');
       config=JSON.parse(JSON.stringify(data.config));
       state={...data.state,paused:true,deadline:null,
@@ -943,7 +955,7 @@
     }
   };
   el('discardRecovery').onclick=()=>{
-    if(!checkpointTools||typeof localStorage==='undefined')return;
+    if(!checkpointTools||typeof localStorage==='undefined'||el('discardRecovery').disabled)return;
     if(!confirm('¿Descartar la copia de clase interrumpida? Solo se eliminará esta copia local de HF, nunca las rutinas guardadas.'))return;
     try{
       checkpointTools.clearHFCheckpoint(localStorage);
