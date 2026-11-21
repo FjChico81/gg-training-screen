@@ -780,6 +780,10 @@ function setupHF(){
      categoryForWorkout:w=>workoutCategory(w)
    });
    hfRefreshClub=()=>panel.refresh();
+   hfShowClub=key=>{
+     panel.openTab(key);
+     organizer.scrollIntoView?.({behavior:'smooth',block:'start'});
+   };
    hfToggleFavorite=id=>{
      try{tools.toggleHFFavorite(appStorage,id);renderLibrary();}
      catch(error){alert(error?.message||'No se pudo guardar el favorito');}
@@ -792,6 +796,7 @@ function setupHF(){
        const category=tools.HF_CATEGORIES.includes(rawCategory)?rawCategory:'Otros';
        tools.saveHFTemplate(appStorage,workout,{name,category});
        renderLibrary();
+       hfShowClub('templates');
      }catch(error){alert(error?.message||'No se pudo guardar la plantilla');}
    };
    renderLibrary();
@@ -952,7 +957,7 @@ document.addEventListener('keydown',event=>{
 });
 let hfPresenting=false;
 let hfClubTools=null,hfFavoritesOnly=false;
-let hfRefreshClub=()=>{},hfToggleFavorite=()=>alert('Favoritos HF todavía no disponibles'),hfSaveTemplate=()=>alert('Plantillas HF todavía no disponibles');
+let hfRefreshClub=()=>{},hfShowClub=()=>{},hfToggleFavorite=()=>alert('Favoritos HF todavía no disponibles'),hfSaveTemplate=()=>alert('Plantillas HF todavía no disponibles');
 async function presentHFPreparedWorkout(workout,mode='guided'){
  if(!isHF||hfPresenting)return;
  if(session){alert('Finaliza la sesión de entrenamiento en curso antes de presentar otra.');return;}
