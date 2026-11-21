@@ -27,7 +27,7 @@ Rama exclusiva: \`feature/hf-local-presentation-v1\`, creada desde \`main\` para
 ## Limitaciones honestas
 
 - Esta página de clase es todavía un **prototipo local**: al cerrarla o recargarla, la sesión no conserva el progreso. No confundirlo con el historial de entrenamientos guardados de la app.
-- No se ha conectado aún el editor de rutinas guardadas de HF a la nueva pantalla colectiva. Es el siguiente paso de producto.
+- Los entrenamientos guardados de HF pueden abrirse desde la biblioteca y su pizarra mediante una **copia temporal de solo lectura**. No se cambia su contenido, identificador ni revisión de sincronización. Si cierras la pantalla colectiva, el progreso de esa clase todavía no se conserva.
 - No se ha probado la salida HDMI físicamente, ni tamaños de TV, orientación, Safari iPhone, iPadOS o tablet Android en dispositivos reales.
 - Una pantalla conectada puede añadir bordes por la relación de aspecto del iPhone; la aplicación no controla el escalado del televisor.
 - En iPhone Safari, \`Element.requestFullscreen()\` para elementos arbitrarios sigue sin estar plenamente disponible según WebKit. La vista CSS es el fallback; no afirmamos ausencia total de barras.
@@ -62,3 +62,37 @@ Rama exclusiva: \`feature/hf-local-presentation-v1\`, creada desde \`main\` para
 - Apple, conexión de iPhone a HDMI por USB-C: https://support.apple.com/en-gb/105099
 - Apple, adaptador HDMI con duplicación del dispositivo: https://www.apple.com/shop/product/mw5m3am/a/usb-c-digital-av-multiport-adapter
 - WebKit, estado de Fullscreen API para elementos en iPhone: https://bugs.webkit.org/show_bug.cgi?id=fullscreen-ios
+
+
+## Integración con la biblioteca de HF · 21/11/2026
+
+**Implementado en la rama, sin publicar.**
+
+- En cada rutina guardada aparecen **Presentar** (clase guiada) y, dentro de opciones, **Adaptar a estaciones**.
+- Desde la pizarra completa se añade «▶ Presentar en TV / tablet».
+- La biblioteca y su sistema original de edición/sincronización **no se reescriben**. Se transforma una copia de los bloques mediante \`src/hf-workout-presenter.mjs\`.
+- Se transfiere solo título y plan de clase, no datos privados de usuario, FC ni información de sincronización. La copia se deposita temporalmente en \`sessionStorage\` y se abre en **la misma pestaña** mediante un identificador aleatorio. Caduca a los 10 minutos y no altera ni sobrescribe \`localStorage\` ni Supabase.
+- Las rutinas con \`@segundos\` mantienen cronómetro y avance programado. Las distancias/repeticiones conservan el avance manual.
+- La fuerza se desglosa por series. Solo se insertan descansos cronometrados entre series cuando el tiempo estaba **expresamente** incluido en la rutina.
+- Los GIFs vinculados mediante \`| GIF identificador\` apuntan a copias existentes de \`assets/technique/\`, sin leer ni modificar Drive.
+- Para estaciones se admiten de 2 a 8 ejercicios de un solo bloque y no temporizados. La adaptación propone 3 vueltas, 60 s de trabajo y 20 s de cambio; **el entrenador debe revisar y aceptar los valores antes de comenzar**. Es una nueva programación, nunca se atribuyen esos tiempos a la rutina fuente.
+- **AMRAP, EMOM y FOR TIME quedan expresamente excluidos** de este conversor hasta que la presentación respete su funcionamiento original. La aplicación original sigue pudiendo ejecutarlos en el motor existente; no se silencian ni se convierten incorrectamente.
+- Las rutinas que superen 200 pasos tras expandir fuerza/descansos se rechazan con mensaje, sin modificar los datos.
+- Una sesión individual activa no se sustituye por la presentación colectiva de otra rutina.
+- Si el navegador impide \`sessionStorage\` o la copia caduca, se informa del error y se bloquea el inicio para evitar mostrar por error los ejercicios de ejemplo.
+- Cambiar el formato de una rutina importada requiere volver a HF y elegir otra adaptación; evita alterar inadvertidamente el plan original.
+
+### Pruebas nuevas
+
+- \`tests/hf-saved-workout-presenter-smoke.mjs\`: ejercicios de fuerza, cardio, GIF, descansos, límites, rechazo de formatos complejos, no mutación y transferencia temporal.
+- \`tests/hf-saved-display-integration-smoke.cjs\`: carga de rutina guardada en la pantalla, bloqueo de inicio antes de confirmar circuito, ausencia de modificación de la biblioteca, error sin transferencia y protección al cambiar formato.
+- Ambas se incorporan al workflow \`hf-local-presentation.yml\`, junto con pruebas previas de cronómetros y modos HDMI/tablet.
+- Estas pruebas son de código y entorno simulado; falta probar navegadores y salida HDMI físicamente.
+
+### Pendientes antes de publicar
+
+1. Validación en iPhone con adaptador real y TV, y en iPad/tablet directamente.
+2. Comprobar qué rutinas concretas de HF usan AMRAP/EMOM/FOR TIME y planificar su representación sin pérdida de semántica.
+3. Revisar legibilidad de estaciones y audio con participantes reales.
+4. Confirmar que el progreso de las clases colectivas puede guardarse/reanudarse sin interferir con el historial personal.
+5. Acordar publicación y comprobar GG/VECTOR independientemente; no fusionar ni modificar producción sin autorización.
