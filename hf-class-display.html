@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1c1c1e">
+<title>HF · Clases colectivas</title>
+<style>
+:root{--bg:#171719;--panel:#28282c;--panel2:#323237;--ink:#f8f6f4;--muted:#bbb7b6;--hot:#ff671d;--hot2:#ffad78;--line:#55545a;--work:#ff671d;--rest:#55c1c4}
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:var(--bg);color:var(--ink);font:16px system-ui,-apple-system,"Segoe UI",sans-serif}button,input,textarea{font:inherit}button{min-height:44px;padding:11px 17px;border:1px solid transparent;border-radius:12px;background:var(--hot);color:#1e1714;font-weight:800;cursor:pointer}button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid #ffb188;outline-offset:2px}button:hover:not(:disabled){filter:brightness(1.1)}button:disabled{opacity:.45;cursor:not-allowed}.secondary{background:#424248;color:var(--ink);border-color:#646369}.outline{background:transparent;color:var(--ink);border-color:#66646a}.danger{background:#633b40;color:#fff}.top{max-width:1700px;margin:0 auto;padding:18px 20px 12px}.topline{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}.identity{display:flex;align-items:center;gap:16px}.brand{font-size:clamp(40px,5vw,70px);line-height:1;font-weight:1000;font-style:italic;letter-spacing:-.1em;color:var(--hot);padding-right:10px}.brandname{font-size:clamp(14px,2vw,19px);font-weight:800;line-height:1.2}.eyebrow{font-size:12px;color:var(--hot2);font-weight:850;letter-spacing:.12em}.sub{color:var(--muted);font-size:13px}.prototype{border:1px solid #84644c;border-radius:100px;padding:7px 11px;color:var(--hot2);font-weight:800;font-size:12px}.switcher{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.switcher button[aria-pressed="true"]{background:var(--hot);color:#191513}.switcher button[aria-pressed="false"]{background:#34343a;color:#f4f0ee}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}.config{max-width:1700px;margin:8px auto 0;padding:12px 20px}.config form{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:16px}.config h2{margin:0 0 8px;font-size:22px}.config label{display:block;margin:12px 0 6px;font-weight:800;color:#ffb38e}.config textarea{width:100%;height:150px;background:#1b1b1e;color:#fff;border:1px solid #73737a;border-radius:10px;padding:11px;resize:vertical}.config input{width:100%;background:#1b1b1e;color:#fff;border:1px solid #73737a;border-radius:9px;padding:10px}.config .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.config .hint{font-size:13px;color:#c1bcba;margin:5px 0 0}.config .error{color:#ffab9c;min-height:20px}.config-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.screen{max-width:1700px;margin:12px auto 0;padding:14px 20px 22px;min-height:65vh}.screen-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.screen h1{margin:0;font-size:clamp(21px,3vw,39px);letter-spacing:-.035em}.screen .status{display:inline-block;border:1px solid #82654e;border-radius:100px;padding:8px 13px;font-size:13px;font-weight:850;color:var(--hot2)}.display{min-height:390px}.card{border-radius:17px;border:1px solid var(--line);background:var(--panel);padding:clamp(14px,2vw,26px)}.guided-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:12px;min-height:min(61vh,610px)}.main-card{display:flex;flex-direction:column;border-color:#8c533c;background:linear-gradient(145deg,#312523,#242329)}.main-card .exercise-name{font-size:clamp(36px,5.8vw,86px);font-weight:1000;line-height:1.04;letter-spacing:-.048em;margin:12px 0}.main-card .exercise-target{font-size:clamp(25px,3.8vw,57px);color:var(--hot2);font-weight:900}.main-card .media{flex:1;display:flex;align-items:center;justify-content:center;min-height:150px;margin-top:10px}.media img{display:block;max-width:100%;max-height:min(26vh,265px);object-fit:contain;border-radius:10px}.media .placeholder{display:grid;place-items:center;font-size:clamp(54px,9vw,115px);opacity:.74}.side-stack{display:grid;grid-template-rows:minmax(0,1.15fr) minmax(0,1fr);gap:12px}.time-card{border-color:#994e2c;background:#35271f;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}.clock{font-variant-numeric:tabular-nums;letter-spacing:-.055em;font-size:clamp(56px,10vw,148px);line-height:1.05;font-weight:1000}.next-card{display:flex;flex-direction:column;justify-content:center;gap:8px}.next-card .exercise-name{font-size:clamp(27px,3.4vw,54px);line-height:1.1;font-weight:900}.next-card .exercise-target{font-size:clamp(18px,2.3vw,32px);font-weight:850;color:var(--hot2)}.stations-layout{display:flex;flex-direction:column;gap:12px}.station-clock{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#35271f;border-color:#9b5934}.station-clock .clock{font-size:clamp(55px,7.2vw,114px)}.station-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}.station{min-height:270px;display:flex;flex-direction:column;gap:7px;background:#27272b}.station .number{font-size:12px;color:var(--hot2);font-weight:850;letter-spacing:.1em}.station .group{background:#4a3a30;color:#ffdbbf;border-radius:100px;padding:5px 11px;font-size:14px;font-weight:850;align-self:start}.station .exercise-name{font-size:clamp(21px,2.7vw,38px);font-weight:950;line-height:1.06;margin:5px 0}.station .exercise-target{font-size:clamp(19px,2.3vw,30px);font-weight:850;color:var(--hot2)}.station .media{flex:1;display:grid;place-items:center;min-height:70px}.station .media img{max-height:min(12vh,138px)}.station .placeholder{font-size:62px;opacity:.6}.progress{color:var(--muted);font-size:clamp(13px,1.5vw,18px);font-weight:800}.coach{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px;padding:13px;border-radius:14px;background:#242428;border:1px solid #4a4a50}.coach button{flex:1;min-width:130px} .nav-back{min-height:44px;display:inline-flex;align-items:center;text-decoration:none;color:#fff;padding:10px 12px;border-radius:12px;border:1px solid #66646a;background:#424248;font-weight:800}.nav-back:focus-visible{outline:3px solid #ffb188;outline-offset:2px}.coach-label{margin:15px 2px 0;color:#ffb38e;font-weight:900;font-size:12px;letter-spacing:.11em}.notice{color:#bbb8b6;font-size:13px;margin:10px 4px 0;line-height:1.45}.session-total{font-variant-numeric:tabular-nums;color:var(--hot2)}#exitPresentation{display:none}.presentation .top,.presentation .config,.presentation .coach,.presentation .coach-label,.presentation .notice{display:none}.presentation .screen{margin:0;max-width:none;min-height:100vh;padding:clamp(10px,1.6vw,25px)}.presentation .display{min-height:calc(100vh - 105px)}.presentation .guided-layout{min-height:calc(100vh - 120px)}.presentation #exitPresentation{display:block;position:fixed;right:18px;bottom:16px;z-index:2;background:#3f3f43ed;color:#fff;opacity:.78;font-size:13px;min-height:38px}.presentation .screen-head{padding-right:90px}.presentation .station{min-height:clamp(170px,27vh,360px)}.presentation .station-grid{flex:1}.presentation .stations-layout{min-height:calc(100vh - 125px)}.presentation .station .media img{max-height:min(15vh,160px)}.presentation .main-card .media img{max-height:36vh}.presentation .main-card .exercise-name{font-size:clamp(42px,6vw,98px)}.presentation .next-card .exercise-name{font-size:clamp(30px,3.6vw,65px)}.work-phase .status{color:#ffb38e;border-color:#a45b39}.change-phase .status{color:#7cf0e1;border-color:#509d98}.change-phase .station-clock{background:#20383a;border-color:#4c9d9b}.change-phase .station .group{background:#244243;color:#9bf3e8}.rest-phase .time-card{background:#20383a;border-color:#4c9d9b}.rest-phase .main-card{border-color:#4c9d9b}.rest-phase .main-card .exercise-target{color:#98ece5}
+@media(max-width:780px){.top,.screen,.config{padding-inline:12px}.guided-layout{grid-template-columns:1fr}.side-stack{grid-template-columns:1fr 1fr;grid-template-rows:auto}.clock{font-size:clamp(50px,10vw,88px)}.main-card{min-height:350px}.station-clock .clock{font-size:clamp(45px,9vw,90px)}.config .cols{grid-template-columns:1fr 1fr}.presentation .guided-layout{min-height:auto}.presentation .display{min-height:0}.presentation .screen{height:100vh;overflow-y:auto}.presentation .screen-head{padding-right:75px}}
+@media(max-width:520px){.side-stack{grid-template-columns:1fr}.config .cols{grid-template-columns:1fr}.brandname{font-size:14px}.station-clock{flex-wrap:wrap}.screen .screen-head h1{font-size:24px}.presentation .screen{height:100dvh}.presentation .main-card{min-height:270px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important}}
+
+/* Presentación HF desde móvil por HDMI o uso directo en tablet.
+   El espejo por cable siempre muestra la misma imagen en ambas pantallas. */
+.device-choice{max-width:1700px;margin:10px auto 0;padding:0 20px}
+.presentation .device-choice{display:none}
+.presentation.session-mode-mirror #exitPresentation,
+.presentation.session-mode-tablet #exitPresentation{
+  top:calc(9px + env(safe-area-inset-top));bottom:auto;right:12px;
+  font-size:11px;min-height:33px;padding:6px 9px
+}
+.device-choice-inner{border:1px solid #765044;border-radius:14px;padding:15px;background:linear-gradient(145deg,#302623,#28282c)}
+.device-choice h2{margin:0 0 7px;font-size:clamp(18px,2vw,24px)}
+.device-choice p{margin:8px 0 0;color:#d1c8c2;font-size:14px;line-height:1.4}
+.device-options{display:flex;flex-wrap:wrap;gap:8px}
+.device-options button{flex:1;min-width:185px;border:2px solid #6b5751;background:#3a3535;color:#f7f0eb}
+.device-options button[aria-pressed="true"]{background:#ff671d;color:#211611;border-color:#ff671d}
+.coach-toggle{display:none}
+.presentation-info{font-size:12px;color:#ffe1c9;background:#352922;border:1px solid #84563c;border-radius:10px;padding:8px 10px;max-width:58ch}
+.presentation.session-mode-mirror .coach,
+.presentation.session-mode-tablet .coach{
+  display:flex;position:fixed;z-index:20;
+  left:calc(10px + env(safe-area-inset-left));right:calc(10px + env(safe-area-inset-right));
+  bottom:calc(9px + env(safe-area-inset-bottom));
+  gap:8px;margin:0;padding:8px;
+  border-radius:13px;background:rgba(20,20,23,.94);
+  border:1px solid #76635a;box-shadow:0 9px 36px #0008;
+}
+.presentation.session-mode-mirror .coach{max-width:530px;right:auto}
+.presentation.session-mode-mirror .coach button{
+  min-width:0;min-height:40px;padding:8px 10px;font-size:12px;border-radius:8px
+}
+.presentation.session-mode-tablet .coach{max-width:790px;margin-inline:auto}
+.presentation.session-mode-tablet .coach button{min-width:0;min-height:58px;font-size:16px}
+.presentation.session-mode-mirror .coach #reset,
+.presentation.session-mode-tablet .coach #reset{display:none}
+.presentation .coach-toggle{
+  display:block;position:fixed;z-index:24;left:12px;
+  bottom:calc(12px + env(safe-area-inset-bottom));
+  background:#37383de8;color:#fff;padding:6px 10px;
+  min-height:37px;font-size:12px;border:1px solid #766a64
+}
+.presentation.session-mode-mirror .coach-toggle,
+.presentation.session-mode-tablet .coach-toggle{
+  bottom:calc(82px + env(safe-area-inset-bottom))
+}
+.presentation.session-mode-mirror.controls-collapsed .coach,
+.presentation.session-mode-tablet.controls-collapsed .coach{display:none}
+.presentation.session-mode-mirror.controls-collapsed .coach-toggle,
+.presentation.session-mode-tablet.controls-collapsed .coach-toggle{
+  bottom:calc(12px + env(safe-area-inset-bottom))
+}
+.presentation.session-mode-mirror .screen,
+.presentation.session-mode-tablet .screen{
+  height:100dvh;min-height:100dvh;overflow-y:auto;
+  padding-bottom:calc(112px + env(safe-area-inset-bottom))
+}
+.presentation.session-mode-mirror.controls-collapsed .screen,
+.presentation.session-mode-tablet.controls-collapsed .screen{
+  padding-bottom:calc(60px + env(safe-area-inset-bottom))
+}
+.presentation.session-mode-mirror .screen-head,
+.presentation.session-mode-tablet .screen-head{padding-right:90px}
+.presentation.session-mode-mirror .station-grid{
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,185px),1fr))
+}
+.presentation.session-mode-tablet .station-grid{
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,225px),1fr))
+}
+.presentation.session-mode-tablet .main-card .media img{max-height:30vh}
+.presentation.session-mode-tablet .main-card{min-height:350px}
+@media (max-width:780px){
+ .device-choice{padding-inline:12px}
+ .presentation.session-mode-tablet .guided-layout{min-height:auto}
+ .presentation.session-mode-tablet .main-card{min-height:350px}
+}
+@media (orientation:landscape) and (max-height:560px){
+ .presentation.session-mode-mirror .screen{padding-top:8px}
+ .presentation.session-mode-mirror .screen-head{margin-bottom:6px}
+ .presentation.session-mode-mirror .screen h1{font-size:clamp(16px,3vw,26px)}
+ .presentation.session-mode-mirror .screen-head .eyebrow,
+ .presentation.session-mode-mirror .screen-head .progress{font-size:11px}
+ .presentation.session-mode-mirror .guided-layout{
+   display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);
+   min-height:max(185px,calc(100dvh - 144px));gap:7px
+ }
+ .presentation.session-mode-mirror .main-card{min-height:0;padding:11px}
+ .presentation.session-mode-mirror .main-card .exercise-name{
+   font-size:clamp(22px,4.6vw,42px);margin:7px 0
+ }
+ .presentation.session-mode-mirror .main-card .exercise-target{font-size:clamp(16px,2.6vw,24px)}
+ .presentation.session-mode-mirror .main-card .media{min-height:28px;margin-top:4px}
+ .presentation.session-mode-mirror .main-card .media img{max-height:23dvh}
+ .presentation.session-mode-mirror .side-stack{
+   display:grid;grid-template-columns:1fr;grid-template-rows:1.1fr 1fr;gap:7px
+ }
+ .presentation.session-mode-mirror .side-stack .card{padding:9px}
+ .presentation.session-mode-mirror .clock{font-size:clamp(42px,6.5vw,80px)}
+ .presentation.session-mode-mirror .next-card .exercise-name{font-size:clamp(16px,2.5vw,24px)}
+ .presentation.session-mode-mirror .next-card .exercise-target{font-size:clamp(13px,2vw,18px)}
+ .presentation.session-mode-mirror .station-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+ .presentation.session-mode-mirror .station{min-height:0;padding:9px;gap:3px}
+ .presentation.session-mode-mirror .station .exercise-name{font-size:clamp(14px,2.1vw,23px)}
+ .presentation.session-mode-mirror .station .exercise-target{font-size:clamp(13px,1.7vw,20px)}
+ .presentation.session-mode-mirror .station .media{min-height:12px}
+ .presentation.session-mode-mirror .station .media img{max-height:12dvh}
+ .presentation.session-mode-mirror .station-clock{padding:7px 14px}
+ .presentation.session-mode-mirror .station-clock .clock{font-size:clamp(40px,7vw,67px)}
+ .presentation.session-mode-mirror .station .placeholder{font-size:33px}
+ .presentation.session-mode-mirror .coach{max-width:440px}
+}
+@media (max-width:390px) and (orientation:portrait){
+ .presentation.session-mode-tablet .coach{flex-wrap:wrap}
+ .presentation.session-mode-tablet .coach button{min-height:46px;font-size:14px}
+}
+
+.import-notice{margin:8px 0 14px;padding:12px 14px;border:1px solid #a1694c;border-radius:11px;background:#322824;color:#ffe5d4;line-height:1.45}
+.import-notice strong{color:#ffbd92}
+.import-notice.error{border-color:#a35a60;background:#392729}
+.import-notice p{margin:0 0 6px}.import-notice p:last-child{margin-bottom:0}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="topline">
+    <div class="identity"><div class="brand" aria-label="HF">HF</div><div><div class="brandname">ENTRENAMIENTO HÍBRIDO</div><div class="sub">Fuerza · Ergómetros · Carrera · Funcional</div></div></div>
+    <span class="prototype">DESARROLLO · NO PUBLICADO</span>
+  </div>
+  <nav class="switcher" aria-label="Formato de clase">
+    <button id="guidedMode" type="button" aria-pressed="true">01 · Clase guiada</button>
+    <button id="stationsMode" type="button" aria-pressed="false">02 · Circuito por estaciones</button>
+  </nav>
+  <div class="toolbar">
+    <a href="index.html?app=hf" class="nav-back" aria-label="Volver al inicio de HF">← Volver a HF</a>
+    <button id="toggleConfig" type="button" class="secondary" aria-expanded="false">⚙ Configurar sesión</button>
+    <button id="togglePresentation" type="button" class="outline">▣ Presentar clase</button>
+    <button id="toggleSound" type="button" class="outline" aria-pressed="true">🔊 Sonido activado</button>
+  </div>
+</header>
+<section id="deviceChoice" class="device-choice" aria-label="Elegir cómo mostrar el entrenamiento">
+ <div class="device-choice-inner">
+  <h2>¿Cómo vas a impartir la clase?</h2>
+  <div class="device-options" role="group" aria-label="Modo de pantalla">
+   <button id="mirrorMode" type="button" aria-pressed="true">📱 Móvil conectado a TV</button>
+   <button id="tabletMode" type="button" aria-pressed="false">▣ Usar iPad o tablet</button>
+  </div>
+  <p id="deviceHint" role="status">La TV duplica lo que aparece en el móvil. Gira el teléfono en horizontal; los controles aparecerán también en la TV, pero podrás recogerlos.</p>
+ </div>
+</section>
+<section id="config" class="config" hidden>
+  <form id="configForm">
+    <h2>Configuración del entrenador</h2>
+    <div id="guidedConfig">
+      <p class="hint">Una línea por ejercicio: nombre | objetivo | segundos. Escribe 0 si el entrenador debe avanzar manualmente. Añade DESCANSO como ejercicio independiente únicamente cuando esté programado.</p>
+      <label for="guidedLines">Secuencia de la clase</label>
+      <textarea id="guidedLines" spellcheck="false"></textarea>
+    </div>
+    <div id="stationConfig" hidden>
+      <p class="hint">Una línea por estación: nombre | objetivo. Cada estación tendrá un grupo; todos comparten el mismo intervalo de trabajo.</p>
+      <label for="stationLines">Estaciones</label>
+      <textarea id="stationLines" spellcheck="false"></textarea>
+      <div class="cols">
+        <div><label for="rounds">Vueltas</label><input id="rounds" type="number" min="1" max="12" step="1"></div>
+        <div><label for="workTime">Trabajo por estación (s)</label><input id="workTime" type="number" min="10" max="1800" step="1"></div>
+        <div><label for="changeTime">Cambio de estación (s)</label><input id="changeTime" type="number" min="0" max="300" step="1"></div>
+      </div>
+    </div>
+    <p class="error" id="configError" role="alert"></p>
+    <div class="config-actions"><button type="submit">Aplicar configuración</button><button id="cancelConfig" type="button" class="secondary">Cerrar</button></div>
+  </form>
+</section>
+<section id="screen" class="screen" aria-label="Pizarra de entrenamiento">
+  <div class="screen-head">
+    <div><div class="eyebrow" id="formatLabel">CLASE GUIADA</div><h1 id="screenTitle">HF · Clase del día</h1><div class="progress" id="progressText"></div></div>
+    <div><span id="phaseTag" class="status" role="status">PREPARADO</span><div class="sub">TIEMPO TOTAL: <strong class="session-total" id="totalClock">00:00</strong></div></div>
+  </div>
+  <div id="importNotice" class="import-notice" hidden role="status" aria-live="polite"></div>
+  <div id="display" class="display"></div>
+  <button id="coachToggle" class="coach-toggle" type="button" aria-controls="coach" aria-expanded="true" aria-label="Ocultar los controles de la clase">Ocultar mandos</button>
+  <div class="coach-label">CONTROLES DEL ENTRENADOR · SOLO EN ESTA PANTALLA</div>
+  <div class="coach" id="coach">
+    <button id="start" type="button">▶ Iniciar</button>
+    <button id="pause" type="button" class="secondary" disabled>Ⅱ Pausar</button>
+    <button id="next" type="button" class="secondary" disabled>Avanzar ▶</button>
+    <button id="reset" type="button" class="danger">↺ Reiniciar</button>
+  </div>
+  <p class="notice">Esta clase se ejecuta en el dispositivo actual. Por HDMI, la TV muestra lo mismo que el móvil. Esta versión de desarrollo no guarda el progreso si cierras la página.</p>
+  <button id="exitPresentation" type="button">Salir de presentación</button>
+</section>
+<script>
+'use strict';
+(function(){
+  const el=id=>document.getElementById(id);
+  const assetBase='assets/technique/';
+  const mediaCatalog=[
+    [/burpee/i,'burpee-con-salto.gif','🏃'],
+    [/sentadilla.goblet|goblet/i,'sentadilla-goblet.gif','🏋️'],
+    [/carrera/i,'carrera-continua.gif','🏃'],
+    [/bicicleta|bike|bici/i,'cardio-bici.gif','🚴'],
+    [/remo erg|remoerg/i,'cardio-remo.gif','🚣']
+  ];
+  const defaults={
+    guided:[
+      {name:'Movilidad dinámica',target:'Activación · 90 segundos',seconds:90},
+      {name:'Carrera',target:'400 metros',seconds:0},
+      {name:'Sentadilla goblet',target:'15 repeticiones',seconds:0},
+      {name:'DESCANSO',target:'30 segundos · hidratación',seconds:30},
+      {name:'SkiErg',target:'250 metros',seconds:0},
+      {name:'Burpees',target:'12 repeticiones',seconds:0}
+    ],
+    stations:[
+      {name:'SkiErg',target:'250 metros'},
+      {name:'Sentadilla goblet',target:'12 repeticiones'},
+      {name:'Burpees',target:'10 repeticiones'},
+      {name:'Carrera',target:'150 metros'}
+    ],
+    rounds:3,work:60,change:20
+  };
+  let config=JSON.parse(JSON.stringify(defaults));
+  let importedTitle='', importedMode='', importReviewPending=false, importBlocked=false;
+  const params=new URLSearchParams(location.search);
+  const requestedMode=params.get('mode');
+  let deviceMode=params.get('view')==='tablet'?'tablet':'mirror';
+  let state={mode:requestedMode==='stations'?'stations':'guided',phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0};
+  let sound=true;
+  const pad=n=>String(n).padStart(2,'0');
+  function time(ms,countdown=false){
+    const seconds=Math.max(0,countdown?Math.ceil(ms/1000):Math.floor(ms/1000));
+    return pad(Math.floor(seconds/60))+':'+pad(seconds%60);
+  }
+  function totalElapsed(){
+    return state.sessionElapsedMs+(state.phase!=='ready'&&state.phase!=='finished'&&!state.paused?Math.max(0,Date.now()-state.sessionAnchor):0);
+  }
+  function currentElapsed(){
+    return state.phaseElapsedMs+(state.phase!=='ready'&&state.phase!=='finished'&&!state.paused?Math.max(0,Date.now()-state.phaseAnchor):0);
+  }
+  function durationSeconds(){
+    if(state.mode==='guided')return config.guided[state.step]?.seconds||0;
+    return state.phase==='change'?config.change:config.work;
+  }
+  function phaseStart(over=0){
+    const now=Date.now();
+    state.phaseElapsedMs=0;
+    state.phaseAnchor=now-over;
+    const seconds=durationSeconds();
+    state.remainingMs=seconds>0?seconds*1000:null;
+    state.deadline=seconds>0?now+seconds*1000-over:null;
+  }
+  function notify(){
+    if(!sound)return;
+    try{
+      const Audio=window.AudioContext||window.webkitAudioContext;
+      if(!Audio)return;
+      const ctx=window.__hfAudioCtx||(window.__hfAudioCtx=new Audio());
+      if(ctx.state==='suspended')ctx.resume().catch(()=>{});
+      const osc=ctx.createOscillator(),gain=ctx.createGain();
+      osc.type='sine';osc.frequency.value=870;
+      gain.gain.setValueAtTime(.0001,ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(.13,ctx.currentTime+.015);
+      gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.18);
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.start();osc.stop(ctx.currentTime+.19);
+    }catch(e){}
+  }
+  function finish(over=0){
+    state.sessionElapsedMs=Math.max(0,totalElapsed()-over);
+    state.phase='finished';state.paused=false;state.deadline=null;state.remainingMs=0;state.sessionAnchor=0;
+    notify();
+  }
+  function nextPhase(over=0){
+    if(state.phase==='ready'||state.phase==='finished')return;
+    if(state.mode==='guided'){
+      state.step++;
+      if(state.step>=config.guided.length)finish(over);
+      else phaseStart(over);
+    }else if(state.phase==='work'){
+      if(state.turn>=config.stations.length*config.rounds-1)finish(over);
+      else if(config.change>0){state.phase='change';phaseStart(over);}
+      else{state.turn++;phaseStart(over);}
+    }else if(state.phase==='change'){
+      state.turn++;state.phase='work';phaseStart(over);
+    }
+    notify();render();
+  }
+  function startSession(){
+    if(state.phase==='finished')return;
+    if(state.phase==='ready'){
+      state.phase='work';
+      state.sessionElapsedMs=0;
+      state.sessionAnchor=Date.now();
+      state.paused=false;
+      phaseStart();
+    }else if(state.paused){
+      const now=Date.now();
+      state.sessionAnchor=now;
+      state.phaseAnchor=now;
+      state.paused=false;
+      if(state.remainingMs!==null)state.deadline=now+state.remainingMs;
+    }
+    notify();render();
+  }
+  function pauseSession(){
+    if(state.phase==='ready'||state.phase==='finished')return;
+    if(state.paused){startSession();return;}
+    state.sessionElapsedMs=totalElapsed();
+    state.phaseElapsedMs=currentElapsed();
+    state.remainingMs=state.deadline===null?null:Math.max(0,state.deadline-Date.now());
+    state.deadline=null;
+    state.paused=true;
+    render();
+  }
+  function resetSession(force=false){
+    if(!force&&state.phase!=='ready'&&state.phase!=='finished'&&!confirm('¿Reiniciar la sesión actual? Se perderá el progreso del prototipo.'))return false;
+    const mode=state.mode;
+    state={mode,phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0};
+    render();return true;
+  }
+  function tick(){
+    let count=0,now=Date.now();
+    while(!state.paused&&state.deadline!==null&&now>=state.deadline&&count++<200&&state.phase!=='finished'){
+      const over=now-state.deadline;
+      nextPhase(over);
+      now=Date.now();
+    }
+    if(count>=200){pauseSession();}
+    const main=el('mainClock');
+    if(main){
+      const timed=durationSeconds()>0;
+      let shown;
+      if(state.phase==='ready')shown=timed?durationSeconds()*1000:0;
+      else if(state.phase==='finished')shown=0;
+      else shown=timed?(state.paused?state.remainingMs:state.deadline-Date.now()):currentElapsed();
+      main.textContent=time(shown,timed);
+    }
+    el('totalClock').textContent=time(totalElapsed());
+  }
+  function node(tag,className,txt){
+    const n=document.createElement(tag);
+    if(className)n.className=className;
+    if(txt!==undefined)n.textContent=String(txt);
+    return n;
+  }
+  function media(name,gifId=null){
+    const area=node('div','media');
+    const found=mediaCatalog.find(item=>item[0].test(name));
+    const explicit=typeof gifId==='string'&&/^[a-z0-9-]+$/.test(gifId)?gifId+'.gif':null;
+    const fallback=node('div','placeholder',found?found[2]:'⚡');
+    fallback.setAttribute('aria-hidden','true');area.append(fallback);
+    if(found||explicit){
+      const img=document.createElement('img');
+      img.alt='Demostración: '+name;
+      img.loading='lazy';
+      img.decoding='async';
+      img.hidden=true;
+      img.addEventListener('load',()=>{img.hidden=false;fallback.hidden=true;});
+      img.addEventListener('error',()=>{img.remove();fallback.hidden=false;});
+      img.src=assetBase+(explicit||found[1]);
+      area.append(img);
+    }
+    return area;
+  }
+  function guidedView(){
+    const list=config.guided;
+    const ended=state.phase==='finished',step=state.step;
+    const current=ended?null:list[Math.min(step,list.length-1)];
+    const next=current?list[step+1]:null;
+    const rest=current&&/^descanso$/i.test(current.name.trim());
+    const layout=node('div','guided-layout');
+    const main=node('section','card main-card');
+    main.append(node('div','eyebrow',ended?'SESIÓN COMPLETADA':rest?'DESCANSO PROGRAMADO':current?.block?'EJERCICIO ACTUAL · '+current.block:'EJERCICIO ACTUAL'));
+    main.append(node('div','exercise-name',ended?'¡BUEN TRABAJO!':current.name));
+    main.append(node('div','exercise-target',ended?'Entrenamiento finalizado':current.target));
+    if(!ended&&!rest)main.append(media(current.name,current.gifId));
+    const side=node('div','side-stack'),clock=node('div','card time-card');
+    clock.append(node('div','eyebrow',ended?'FIN':current&&current.seconds>0?'CUENTA ATRÁS':'TIEMPO EN EJERCICIO'));
+    const counter=node('div','clock','00:00');counter.id='mainClock';clock.append(counter);
+    clock.append(node('div','progress',ended?'Clase terminada':state.paused?'PAUSADO':rest?'RECUPERACIÓN':current.seconds>0?'AVANCE AUTOMÁTICO':'AVANCE MANUAL'));
+    const following=node('div','card next-card');
+    following.append(node('div','eyebrow','SIGUIENTE'));
+    following.append(node('div','exercise-name',next?next.name:'Fin del entrenamiento'));
+    following.append(node('div','exercise-target',next?next.target:''));
+    side.append(clock,following);layout.append(main,side);
+    return layout;
+  }
+  function stationView(){
+    const ended=state.phase==='finished',turn=state.turn,n=config.stations.length;
+    const changing=state.phase==='change',displayTurn=changing?turn+1:turn;
+    const layout=node('div','stations-layout');
+    const top=node('div','card station-clock');
+    const left=node('div');
+    left.append(node('div','eyebrow',ended?'CIRCUITO COMPLETADO':changing?'CAMBIO DE ESTACIÓN':'TRABAJO SIMULTÁNEO'));
+    left.append(node('div','progress',ended?'Todas las vueltas finalizadas':changing?'Cada grupo pasa a la estación siguiente':'Todos los grupos trabajan a la vez'));
+    const right=node('div','clock','00:00');right.id='mainClock';
+    top.append(left,right);
+    const grid=node('div','station-grid');
+    config.stations.forEach((item,i)=>{
+      const card=node('article','card station');
+      const groupIndex=(i-(displayTurn%n)+n)%n;
+      card.append(node('div','number','ESTACIÓN '+(i+1)));
+      card.append(node('div','group',(changing?'LLEGA GRUPO ':'GRUPO ')+String.fromCharCode(65+groupIndex)));
+      card.append(node('div','exercise-name',item.name));
+      card.append(node('div','exercise-target',item.target));
+      card.append(media(item.name,item.gifId));
+      grid.append(card);
+    });
+    layout.append(top,grid);
+    return layout;
+  }
+  function render(){
+    const isGuided=state.mode==='guided',done=state.phase==='finished';
+    el('guidedMode').setAttribute('aria-pressed',String(isGuided));
+    el('stationsMode').setAttribute('aria-pressed',String(!isGuided));
+    el('guidedConfig').hidden=!isGuided;el('stationConfig').hidden=isGuided;
+    el('formatLabel').textContent=isGuided?'01 · CLASE GUIADA':'02 · CIRCUITO POR ESTACIONES';
+    el('screenTitle').textContent=importedTitle|| (isGuided?'HF · Clase guiada':'HF · Circuito híbrido');
+    el('screen').className='screen '+(state.phase==='change'?'change-phase':isGuided&&state.phase!=='finished'&&/^descanso$/i.test(config.guided[state.step]?.name||'')?'rest-phase':'work-phase');
+    const phase=state.phase==='ready'?'PREPARADO':done?'FINALIZADO':state.paused?'EN PAUSA':state.phase==='change'?'CAMBIO DE ESTACIÓN':isGuided&&/^descanso$/i.test(config.guided[state.step]?.name||'')?'DESCANSO':'EN MARCHA';
+    el('phaseTag').textContent=phase;
+    const current=state.step+1,turn=state.turn+1;
+    el('progressText').textContent=isGuided?'Ejercicio '+Math.min(current,config.guided.length)+' de '+config.guided.length:
+      'Vuelta '+Math.min(config.rounds,Math.floor(state.turn/config.stations.length)+1)+' de '+config.rounds+' · Rotación '+Math.min(turn,config.stations.length*config.rounds)+' de '+config.stations.length*config.rounds;
+    const display=el('display');display.replaceChildren(isGuided?guidedView():stationView());
+    const ready=state.phase==='ready';
+    el('start').disabled=done||(!ready&&!state.paused)||importReviewPending||importBlocked;
+    el('start').textContent=ready?'▶ Iniciar clase':'▶ Reanudar';
+    el('pause').disabled=ready||done;
+    el('pause').textContent=state.paused?'▶ Reanudar':'Ⅱ Pausar';
+    el('next').disabled=ready||done||state.paused;
+    el('next').textContent=isGuided?'Siguiente ejercicio ▶':state.phase==='change'?'Iniciar siguiente estación ▶':'Terminar intervalo ▶';
+    tick();
+  }
+  function parseGuided(raw){
+    const lines=raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+    if(lines.length<1||lines.length>200)throw Error('La clase debe incluir entre 1 y 200 pasos.');
+    return lines.map((line,i)=>{
+      const p=line.split('|').map(x=>x.trim());
+      if(p.length!==3||!p[0]||!p[1])throw Error('Línea '+(i+1)+': escribe nombre | objetivo | segundos.');
+      const secs=Number(p[2]);
+      if(!/^\d+$/.test(p[2])||secs>7200)throw Error('Línea '+(i+1)+': segundos enteros de 0 a 7200.');
+      if(p[0].length>60||p[1].length>85)throw Error('Línea '+(i+1)+': nombre u objetivo demasiado largo.');
+      if(/^descanso$/i.test(p[0])&&secs===0)throw Error('Línea '+(i+1)+': el descanso debe tener una duración programada.');
+      return {name:p[0],target:p[1],seconds:secs};
+    });
+  }
+  function parseStations(raw){
+    const lines=raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+    if(lines.length<2||lines.length>8)throw Error('El circuito debe tener entre 2 y 8 estaciones.');
+    return lines.map((line,i)=>{
+      const p=line.split('|').map(x=>x.trim());
+      if(p.length!==2||!p[0]||!p[1])throw Error('Estación '+(i+1)+': escribe nombre | objetivo.');
+      if(p[0].length>60||p[1].length>85)throw Error('Estación '+(i+1)+': texto demasiado largo.');
+      return {name:p[0],target:p[1]};
+    });
+  }
+  function intVal(id,min,max){
+    const raw=el(id).value.trim(),num=Number(raw);
+    if(!/^\d+$/.test(raw)||num<min||num>max)throw Error(el(id).previousElementSibling.textContent+': valor entre '+min+' y '+max+'.');
+    return num;
+  }
+  function loadForms(){
+    el('guidedLines').value=config.guided.map(s=>s.name+' | '+s.target+' | '+s.seconds).join('\n');
+    el('stationLines').value=config.stations.map(s=>s.name+' | '+s.target).join('\n');
+    el('rounds').value=config.rounds;el('workTime').value=config.work;el('changeTime').value=config.change;
+  }
+  function switchMode(mode){
+    if(mode===state.mode)return;
+    if(importedMode){
+      alert('La rutina guardada se ha preparado para un formato concreto. Vuelve a HF y elige otra adaptación sin modificar la rutina original.');
+      return;
+    }
+    if(state.phase!=='ready'&&state.phase!=='finished'&&!confirm('¿Cambiar de formato y reiniciar la sesión actual?'))return;
+    state.mode=mode;resetSession(true);loadForms();
+  }
+  el('guidedMode').onclick=()=>switchMode('guided');
+  el('stationsMode').onclick=()=>switchMode('stations');
+  el('start').onclick=startSession;
+  el('pause').onclick=pauseSession;
+  el('next').onclick=()=>{if(!state.paused)nextPhase();};
+  el('reset').onclick=()=>resetSession();
+  el('toggleSound').onclick=()=>{
+    sound=!sound;
+    el('toggleSound').textContent=sound?'🔊 Sonido activado':'🔇 Sonido desactivado';
+    el('toggleSound').setAttribute('aria-pressed',String(sound));
+    if(sound)notify();
+  };
+  el('toggleConfig').onclick=()=>{
+    const open=el('config').hidden;
+    el('config').hidden=!open;
+    el('toggleConfig').setAttribute('aria-expanded',String(open));
+    if(open)loadForms();
+  };
+  el('cancelConfig').onclick=()=>{el('config').hidden=true;el('toggleConfig').setAttribute('aria-expanded','false');};
+  el('configForm').onsubmit=event=>{
+    event.preventDefault();
+    try{
+      const next=JSON.parse(JSON.stringify(config));
+      if(state.mode==='guided'){
+        next.guided=parseGuided(el('guidedLines').value).map((entry,i)=>{
+          const previous=config.guided[i];
+          return previous&&entry.name===previous.name&&entry.target===previous.target&&entry.seconds===previous.seconds
+            ?{...entry,gifId:previous.gifId,block:previous.block,kind:previous.kind}:entry;
+        });
+      }else{
+        next.stations=parseStations(el('stationLines').value).map((entry,i)=>{
+          const previous=config.stations[i];
+          return previous&&entry.name===previous.name&&entry.target===previous.target
+            ?{...entry,gifId:previous.gifId}:entry;
+        });
+        next.rounds=intVal('rounds',1,12);
+        next.work=intVal('workTime',10,1800);
+        next.change=intVal('changeTime',0,300);
+      }
+      if(state.phase!=='ready'&&state.phase!=='finished'&&!confirm('¿Aplicar y reiniciar la sesión actual?'))return;
+      config=next;el('configError').textContent='';
+      importReviewPending=false;
+      resetSession(true);
+      el('config').hidden=true;el('toggleConfig').setAttribute('aria-expanded','false');
+    }catch(e){el('configError').textContent=e.message;}
+  };
+  function updateDeviceUI(){
+    document.body.classList.toggle('session-mode-mirror',deviceMode==='mirror');
+    document.body.classList.toggle('session-mode-tablet',deviceMode==='tablet');
+    el('mirrorMode').setAttribute('aria-pressed',String(deviceMode==='mirror'));
+    el('tabletMode').setAttribute('aria-pressed',String(deviceMode==='tablet'));
+    el('deviceHint').textContent=deviceMode==='mirror'
+      ?'La TV duplica la pantalla del móvil por HDMI. Gira el móvil en horizontal. Los mandos se ven en ambos dispositivos y se pueden recoger.'
+      :'Abre HF directamente en el iPad o la tablet: los controles táctiles permanecen en la parte inferior. No hace falta enlazar otro dispositivo.';
+  }
+  function chooseDevice(next){
+    if(!['mirror','tablet'].includes(next))return false;
+    deviceMode=next;
+    updateDeviceUI();
+    return true;
+  }
+  function setDockCollapsed(collapse){
+    document.body.classList.toggle('controls-collapsed',Boolean(collapse));
+    el('coachToggle').textContent=collapse?'Mostrar mandos':'Ocultar mandos';
+    el('coachToggle').setAttribute('aria-expanded',String(!collapse));
+    el('coachToggle').setAttribute('aria-label',collapse?'Mostrar los controles de la clase':'Ocultar los controles de la clase');
+  }
+  function presentation(on){
+    document.body.classList.toggle('presentation',on);
+    if(on){
+      updateDeviceUI();
+      setDockCollapsed(false);
+    }
+    el('togglePresentation').textContent=on?'Salir de presentación':'▣ Presentar clase';
+    if(on&&el('screen').requestFullscreen){
+      // iPhone Safari may not expose Element.requestFullscreen; CSS is the fallback.
+      try{Promise.resolve(el('screen').requestFullscreen()).catch(()=>{});}catch(e){}
+    }
+    if(!on&&document.fullscreenElement&&document.exitFullscreen){
+      try{Promise.resolve(document.exitFullscreen()).catch(()=>{});}catch(e){}
+    }
+  }
+  el('mirrorMode').onclick=()=>chooseDevice('mirror');
+  el('tabletMode').onclick=()=>chooseDevice('tablet');
+  el('coachToggle').onclick=()=>setDockCollapsed(!document.body.classList.contains('controls-collapsed'));
+  el('togglePresentation').onclick=()=>presentation(!document.body.classList.contains('presentation'));
+  el('exitPresentation').onclick=()=>presentation(false);
+  document.addEventListener('fullscreenchange',()=>{
+    if(!document.fullscreenElement&&document.body.classList.contains('presentation')){
+      // Do not discard the CSS presentation when Fullscreen API is unavailable.
+      if(document.fullscreenEnabled===true) presentation(false);
+    }
+  });
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&document.body.classList.contains('presentation'))presentation(false);
+  });
+  function showImportNotice(message,error=false){
+    const notice=el('importNotice');
+    notice.hidden=false;
+    notice.classList.toggle('error',Boolean(error));
+    notice.textContent=message;
+  }
+  async function loadSavedHFPresentation(){
+    const transfer=params.get('hfTransfer');
+    if(!transfer)return;
+    importBlocked=true;
+    render();
+    showImportNotice('Abriendo la rutina guardada de HF…');
+    try{
+      const {consumeHFHandoff}=await import('./src/hf-workout-presenter.mjs');
+      const payload=consumeHFHandoff(transfer,{store:sessionStorage});
+      importedTitle=payload.title;
+      importedMode=payload.mode;
+      state.mode=payload.mode;
+      if(payload.mode==='guided')config.guided=payload.plan.guided.map(e=>({...e}));
+      else config={...config,stations:payload.plan.stations.map(e=>({...e})),
+        rounds:payload.plan.rounds,work:payload.plan.work,change:payload.plan.change};
+      importReviewPending=payload.requiresReview;
+      importBlocked=false;
+      resetSession(true);
+      loadForms();
+      showImportNotice('Rutina guardada: '+payload.title+'. '+payload.warnings.join(' ')+
+        (importReviewPending?' Confirma los tiempos en Configurar sesión para poder iniciarla.':' Los datos originales permanecen intactos.'));
+      if(importReviewPending){
+        el('config').hidden=false;
+        el('toggleConfig').setAttribute('aria-expanded','true');
+      }
+    }catch(error){
+      importBlocked=true;
+      el('start').disabled=true;
+      showImportNotice('No se ha podido abrir esta rutina: '+(error?.message||'Error desconocido')+
+        '. Regresa a HF y vuelve a seleccionar el entrenamiento.',true);
+      render();
+    }
+  }
+  updateDeviceUI();
+  loadForms();render();setInterval(tick,160);
+  void loadSavedHFPresentation();
+})();
+</script>
+</body>
+</html>
