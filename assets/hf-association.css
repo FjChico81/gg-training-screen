@@ -404,3 +404,6 @@ html[data-edition="hf"] #settingsPanel .hf-settings-exercise{
   html[data-edition="hf"] .hf-home-shortcut{min-height:104px}
   html[data-edition="hf"] #hfPrimaryPageworkouts .home-actions{grid-template-columns:1fr}
 }
+
+/* VECTOR-only preset library must never reappear beneath the HF tabs. */
+html[data-edition="hf"] #vectorRoutines{display:none!important}
