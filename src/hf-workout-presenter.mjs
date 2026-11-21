@@ -171,7 +171,7 @@ export function toHFPresentation(workout,mode='guided') {
   fail('Formato de presentación desconocido.');
 }
 const KEY='hf-presentation-handoff-v1:';
-const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TTL=10*60*1000;
 export function createHFHandoff(workout,mode,{store,now=()=>Date.now(),uuid=()=>crypto.randomUUID()}){
   if(!store||typeof store.setItem!=='function')fail('El navegador no permite transferir esta clase.');
