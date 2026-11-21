@@ -125,6 +125,11 @@
  .presentation.session-mode-tablet .coach{flex-wrap:wrap}
  .presentation.session-mode-tablet .coach button{min-height:46px;font-size:14px}
 }
+
+.import-notice{margin:8px 0 14px;padding:12px 14px;border:1px solid #a1694c;border-radius:11px;background:#322824;color:#ffe5d4;line-height:1.45}
+.import-notice strong{color:#ffbd92}
+.import-notice.error{border-color:#a35a60;background:#392729}
+.import-notice p{margin:0 0 6px}.import-notice p:last-child{margin-bottom:0}
 </style>
 </head>
 <body>
@@ -181,6 +186,7 @@
     <div><div class="eyebrow" id="formatLabel">CLASE GUIADA</div><h1 id="screenTitle">HF · Clase del día</h1><div class="progress" id="progressText"></div></div>
     <div><span id="phaseTag" class="status" role="status">PREPARADO</span><div class="sub">TIEMPO TOTAL: <strong class="session-total" id="totalClock">00:00</strong></div></div>
   </div>
+  <div id="importNotice" class="import-notice" hidden role="status" aria-live="polite"></div>
   <div id="display" class="display"></div>
   <button id="coachToggle" class="coach-toggle" type="button" aria-controls="coach" aria-expanded="true" aria-label="Ocultar los controles de la clase">Ocultar mandos</button>
   <div class="coach-label">CONTROLES DEL ENTRENADOR · SOLO EN ESTA PANTALLA</div>
@@ -223,6 +229,7 @@
     rounds:3,work:60,change:20
   };
   let config=JSON.parse(JSON.stringify(defaults));
+  let importedTitle='', importedMode='', importReviewPending=false, importBlocked=false;
   const params=new URLSearchParams(location.search);
   const requestedMode=params.get('mode');
   let deviceMode=params.get('view')==='tablet'?'tablet':'mirror';
@@ -345,12 +352,13 @@
     if(txt!==undefined)n.textContent=String(txt);
     return n;
   }
-  function media(name){
+  function media(name,gifId=null){
     const area=node('div','media');
     const found=mediaCatalog.find(item=>item[0].test(name));
+    const explicit=typeof gifId==='string'&&/^[a-z0-9-]+$/.test(gifId)?gifId+'.gif':null;
     const fallback=node('div','placeholder',found?found[2]:'⚡');
     fallback.setAttribute('aria-hidden','true');area.append(fallback);
-    if(found){
+    if(found||explicit){
       const img=document.createElement('img');
       img.alt='Demostración: '+name;
       img.loading='lazy';
@@ -358,7 +366,7 @@
       img.hidden=true;
       img.addEventListener('load',()=>{img.hidden=false;fallback.hidden=true;});
       img.addEventListener('error',()=>{img.remove();fallback.hidden=false;});
-      img.src=assetBase+found[1];
+      img.src=assetBase+(explicit||found[1]);
       area.append(img);
     }
     return area;
@@ -371,10 +379,10 @@
     const rest=current&&/^descanso$/i.test(current.name.trim());
     const layout=node('div','guided-layout');
     const main=node('section','card main-card');
-    main.append(node('div','eyebrow',ended?'SESIÓN COMPLETADA':rest?'DESCANSO PROGRAMADO':'EJERCICIO ACTUAL'));
+    main.append(node('div','eyebrow',ended?'SESIÓN COMPLETADA':rest?'DESCANSO PROGRAMADO':current?.block?'EJERCICIO ACTUAL · '+current.block:'EJERCICIO ACTUAL'));
     main.append(node('div','exercise-name',ended?'¡BUEN TRABAJO!':current.name));
     main.append(node('div','exercise-target',ended?'Entrenamiento finalizado':current.target));
-    if(!ended&&!rest)main.append(media(current.name));
+    if(!ended&&!rest)main.append(media(current.name,current.gifId));
     const side=node('div','side-stack'),clock=node('div','card time-card');
     clock.append(node('div','eyebrow',ended?'FIN':current&&current.seconds>0?'CUENTA ATRÁS':'TIEMPO EN EJERCICIO'));
     const counter=node('div','clock','00:00');counter.id='mainClock';clock.append(counter);
@@ -404,7 +412,7 @@
       card.append(node('div','group',(changing?'LLEGA GRUPO ':'GRUPO ')+String.fromCharCode(65+groupIndex)));
       card.append(node('div','exercise-name',item.name));
       card.append(node('div','exercise-target',item.target));
-      card.append(media(item.name));
+      card.append(media(item.name,item.gifId));
       grid.append(card);
     });
     layout.append(top,grid);
@@ -416,7 +424,7 @@
     el('stationsMode').setAttribute('aria-pressed',String(!isGuided));
     el('guidedConfig').hidden=!isGuided;el('stationConfig').hidden=isGuided;
     el('formatLabel').textContent=isGuided?'01 · CLASE GUIADA':'02 · CIRCUITO POR ESTACIONES';
-    el('screenTitle').textContent=isGuided?'HF · Clase guiada':'HF · Circuito híbrido';
+    el('screenTitle').textContent=importedTitle|| (isGuided?'HF · Clase guiada':'HF · Circuito híbrido');
     el('screen').className='screen '+(state.phase==='change'?'change-phase':isGuided&&state.phase!=='finished'&&/^descanso$/i.test(config.guided[state.step]?.name||'')?'rest-phase':'work-phase');
     const phase=state.phase==='ready'?'PREPARADO':done?'FINALIZADO':state.paused?'EN PAUSA':state.phase==='change'?'CAMBIO DE ESTACIÓN':isGuided&&/^descanso$/i.test(config.guided[state.step]?.name||'')?'DESCANSO':'EN MARCHA';
     el('phaseTag').textContent=phase;
@@ -425,7 +433,7 @@
       'Vuelta '+Math.min(config.rounds,Math.floor(state.turn/config.stations.length)+1)+' de '+config.rounds+' · Rotación '+Math.min(turn,config.stations.length*config.rounds)+' de '+config.stations.length*config.rounds;
     const display=el('display');display.replaceChildren(isGuided?guidedView():stationView());
     const ready=state.phase==='ready';
-    el('start').disabled=done||(!ready&&!state.paused);
+    el('start').disabled=done||(!ready&&!state.paused)||importReviewPending||importBlocked;
     el('start').textContent=ready?'▶ Iniciar clase':'▶ Reanudar';
     el('pause').disabled=ready||done;
     el('pause').textContent=state.paused?'▶ Reanudar':'Ⅱ Pausar';
@@ -435,7 +443,7 @@
   }
   function parseGuided(raw){
     const lines=raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-    if(lines.length<1||lines.length>24)throw Error('La clase debe incluir entre 1 y 24 pasos.');
+    if(lines.length<1||lines.length>200)throw Error('La clase debe incluir entre 1 y 200 pasos.');
     return lines.map((line,i)=>{
       const p=line.split('|').map(x=>x.trim());
       if(p.length!==3||!p[0]||!p[1])throw Error('Línea '+(i+1)+': escribe nombre | objetivo | segundos.');
@@ -468,6 +476,10 @@
   }
   function switchMode(mode){
     if(mode===state.mode)return;
+    if(importedMode){
+      alert('La rutina guardada se ha preparado para un formato concreto. Vuelve a HF y elige otra adaptación sin modificar la rutina original.');
+      return;
+    }
     if(state.phase!=='ready'&&state.phase!=='finished'&&!confirm('¿Cambiar de formato y reiniciar la sesión actual?'))return;
     state.mode=mode;resetSession(true);loadForms();
   }
@@ -503,6 +515,7 @@
       }
       if(state.phase!=='ready'&&state.phase!=='finished'&&!confirm('¿Aplicar y reiniciar la sesión actual?'))return;
       config=next;el('configError').textContent='';
+      importReviewPending=false;
       resetSession(true);
       el('config').hidden=true;el('toggleConfig').setAttribute('aria-expanded','false');
     }catch(e){el('configError').textContent=e.message;}
@@ -557,8 +570,48 @@
   document.addEventListener('keydown',event=>{
     if(event.key==='Escape'&&document.body.classList.contains('presentation'))presentation(false);
   });
+  function showImportNotice(message,error=false){
+    const notice=el('importNotice');
+    notice.hidden=false;
+    notice.classList.toggle('error',Boolean(error));
+    notice.textContent=message;
+  }
+  async function loadSavedHFPresentation(){
+    const transfer=params.get('hfTransfer');
+    if(!transfer)return;
+    importBlocked=true;
+    render();
+    showImportNotice('Abriendo la rutina guardada de HF…');
+    try{
+      const {consumeHFHandoff}=await import('./src/hf-workout-presenter.mjs');
+      const payload=consumeHFHandoff(transfer,{store:sessionStorage});
+      importedTitle=payload.title;
+      importedMode=payload.mode;
+      state.mode=payload.mode;
+      if(payload.mode==='guided')config.guided=payload.plan.guided.map(e=>({...e}));
+      else config={...config,stations:payload.plan.stations.map(e=>({...e})),
+        rounds:payload.plan.rounds,work:payload.plan.work,change:payload.plan.change};
+      importReviewPending=payload.requiresReview;
+      importBlocked=false;
+      resetSession(true);
+      loadForms();
+      showImportNotice('Rutina guardada: '+payload.title+'. '+payload.warnings.join(' ')+
+        (importReviewPending?' Confirma los tiempos en Configurar sesión para poder iniciarla.':' Los datos originales permanecen intactos.'));
+      if(importReviewPending){
+        el('config').hidden=false;
+        el('toggleConfig').setAttribute('aria-expanded','true');
+      }
+    }catch(error){
+      importBlocked=true;
+      el('start').disabled=true;
+      showImportNotice('No se ha podido abrir esta rutina: '+(error?.message||'Error desconocido')+
+        '. Regresa a HF y vuelve a seleccionar el entrenamiento.',true);
+      render();
+    }
+  }
   updateDeviceUI();
   loadForms();render();setInterval(tick,160);
+  void loadSavedHFPresentation();
 })();
 </script>
 </body>
