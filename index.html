@@ -754,6 +754,50 @@ function setupHF(){
  resume.append(resumeTitle,resumeDescription,resumeLink);
  section.append(title,resume,note,links);
  intro.after(section);
+ const organizer=node('div','','hf-org-host');
+ organizer.id='hfClubOrganizer';
+ section.after(organizer);
+ organizer.append(node('p','Cargando favoritos, plantillas e historial colectivo HF…','muted small'));
+ // Organization uses the current HF profile's existing namespaced local storage.
+ // It never mutates source workouts or personal training histories.
+ void Promise.all([
+   import('./src/hf-class-organization.mjs'),
+   import('./src/hf-organization-ui.mjs')
+ ]).then(([tools,ui])=>{
+   hfClubTools=tools;
+   const panel=ui.mountHFOrganization({
+     host:organizer,store:appStorage,tools,
+     getWorkouts:()=>workouts,
+     getFavoriteFilter:()=>hfFavoritesOnly,
+     onFavoriteFilter:value=>{hfFavoritesOnly=Boolean(value);renderLibrary();},
+     onPresent:(workout,mode)=>{void presentHFPreparedWorkout(workout,mode);},
+     onDraft:tmpl=>{
+       if(session){alert('Finaliza primero el entrenamiento activo.');return;}
+       edit({name:tmpl.name,blocks:JSON.parse(JSON.stringify(tmpl.workout.blocks))});
+     },
+     onOpen:id=>openWorkout(id),
+     onRefreshLibrary:()=>renderLibrary(),
+     categoryForWorkout:w=>workoutCategory(w)
+   });
+   hfRefreshClub=()=>panel.refresh();
+   hfToggleFavorite=id=>{
+     try{tools.toggleHFFavorite(appStorage,id);renderLibrary();}
+     catch(error){alert(error?.message||'No se pudo guardar el favorito');}
+   };
+   hfSaveTemplate=workout=>{
+     try{
+       const name=prompt('Nombre de la nueva plantilla',workout.name);
+       if(name===null)return;
+       const rawCategory=workoutCategory(workout);
+       const category=tools.HF_CATEGORIES.includes(rawCategory)?rawCategory:'Otros';
+       tools.saveHFTemplate(appStorage,workout,{name,category});
+       renderLibrary();
+     }catch(error){alert(error?.message||'No se pudo guardar la plantilla');}
+   };
+   renderLibrary();
+ }).catch(error=>{
+   organizer.replaceChildren(node('p','Organización HF no disponible: '+(error?.message||'Error'),'muted small'));
+ });
  // Only this browser and only the HF collective checkpoint: never access GG data.
  void import('./src/hf-class-checkpoint.mjs').then(({readHFCheckpoint})=>{
    try{
