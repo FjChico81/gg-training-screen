@@ -126,6 +126,20 @@
  .presentation.session-mode-tablet .coach button{min-height:46px;font-size:14px}
 }
 
+ .recovery-panel{border:2px solid #fa9a62;background:#302823;border-radius:14px;
+   padding:clamp(14px,2vw,24px);margin:12px 0 18px}
+ .recovery-panel strong{font-size:clamp(18px,2.5vw,27px);color:#ffcfaf}
+ .recovery-panel p{line-height:1.5;color:#f5dfd0}
+ .recovery-actions{display:flex;gap:10px;flex-wrap:wrap}
+ .recovery-actions button{min-height:52px;flex:1;min-width:200px}
+ .save-indicator{font-size:13px;color:#bbded0;margin:8px 0}
+ .special-status{font-size:clamp(15px,2vw,24px);font-weight:900;color:#ffe0bd;
+  background:#3d2c21;border:1px solid #89593a;border-radius:12px;padding:11px 15px;
+  margin:9px 0 14px;font-variant-numeric:tabular-nums}
+.class-outcome{border:1px solid #6fa195;background:#1c3431;border-radius:12px;
+   margin:12px 0;padding:14px;line-height:1.55}
+ .class-outcome strong{font-size:clamp(18px,2.4vw,25px);color:#bdf5df}
+ .class-outcome p{color:#e8f6f1;margin:7px 0}
 .import-notice{margin:8px 0 14px;padding:12px 14px;border:1px solid #a1694c;border-radius:11px;background:#322824;color:#ffe5d4;line-height:1.45}
 .import-notice strong{color:#ffbd92}
 .import-notice.error{border-color:#a35a60;background:#392729}
@@ -187,15 +201,27 @@
     <div><span id="phaseTag" class="status" role="status">PREPARADO</span><div class="sub">TIEMPO TOTAL: <strong class="session-total" id="totalClock">00:00</strong></div></div>
   </div>
   <div id="importNotice" class="import-notice" hidden role="status" aria-live="polite"></div>
+  <section id="recoveryPanel" class="recovery-panel" hidden aria-label="Recuperar clase anterior">
+    <strong id="recoveryTitle">Recuperación de clase</strong>
+    <p id="recoveryMessage" role="status"></p>
+    <div class="recovery-actions">
+      <button id="resumeRecovery" type="button">▶ Continuar clase en pausa</button>
+      <button id="discardRecovery" class="secondary" type="button">Descartar copia y abrir clase nueva</button>
+    </div>
+  </section>
+  <div id="saveIndicator" class="save-indicator" role="status" hidden></div>
+  <div id="specialStatus" class="special-status" hidden role="status"></div>
   <div id="display" class="display"></div>
   <button id="coachToggle" class="coach-toggle" type="button" aria-controls="coach" aria-expanded="true" aria-label="Ocultar los controles de la clase">Ocultar mandos</button>
-  <div class="coach-label">CONTROLES DEL ENTRENADOR · SOLO EN ESTA PANTALLA</div>
+  <div class="coach-label">MANDOS DEL ENTRENADOR · VISIBLES TAMBIÉN AL DUPLICAR POR HDMI</div>
   <div class="coach" id="coach">
     <button id="start" type="button">▶ Iniciar</button>
     <button id="pause" type="button" class="secondary" disabled>Ⅱ Pausar</button>
     <button id="next" type="button" class="secondary" disabled>Avanzar ▶</button>
+    <button id="finishClass" type="button" class="secondary">✓ Finalizar</button>
     <button id="reset" type="button" class="danger">↺ Reiniciar</button>
   </div>
+  <section id="classOutcome" class="class-outcome" hidden aria-label="Resumen de la clase"></section>
   <p class="notice">Esta clase se ejecuta en el dispositivo actual. Por HDMI, la TV muestra lo mismo que el móvil. Esta versión de desarrollo no guarda el progreso si cierras la página.</p>
   <button id="exitPresentation" type="button">Salir de presentación</button>
 </section>
@@ -226,15 +252,19 @@
       {name:'Burpees',target:'10 repeticiones'},
       {name:'Carrera',target:'150 metros'}
     ],
-    rounds:3,work:60,change:20
+    rounds:3,work:60,change:20,segments:[]
   };
   let config=JSON.parse(JSON.stringify(defaults));
   let importedTitle='', importedMode='', importReviewPending=false, importBlocked=false;
   const params=new URLSearchParams(location.search);
   const requestedMode=params.get('mode');
   let deviceMode=params.get('view')==='tablet'?'tablet':'mirror';
-  let state={mode:requestedMode==='stations'?'stations':'guided',phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0};
+  let state={mode:requestedMode==='stations'?'stations':'guided',phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0,specialIndex:-1,specialElapsedMs:0,specialAnchor:0,amrapRounds:0,results:[]};
   let sound=true;
+  // Independent, device-local HF checkpoint; never reads or writes GG storage.
+  let checkpointTools=null,checkpointRunId=null,recoverySnapshot=null,checkpointError=null;
+  let recoveryPending=typeof localStorage!=='undefined',lastCheckpointAt=0;
+  let checkpointWarned=false;
   const pad=n=>String(n).padStart(2,'0');
   function time(ms,countdown=false){
     const seconds=Math.max(0,countdown?Math.ceil(ms/1000):Math.floor(ms/1000));
@@ -249,6 +279,45 @@
   function durationSeconds(){
     if(state.mode==='guided')return config.guided[state.step]?.seconds||0;
     return state.phase==='change'?config.change:config.work;
+  }
+  function specialIndexAt(index){
+    return (config.segments||[]).findIndex(seg=>index>=seg.start&&index<=seg.end);
+  }
+  function activeSpecial(){return (config.segments||[])[state.specialIndex]||null;}
+  function activeSpecialElapsed(){
+    if(state.specialIndex<0)return 0;
+    return state.specialElapsedMs+(state.paused||state.phase==='ready'||state.phase==='finished'
+      ?0:Math.max(0,Date.now()-state.specialAnchor));
+  }
+  function syncSpecialForStep(over=0){
+    const index=state.mode==='guided'?specialIndexAt(state.step):-1;
+    if(index===state.specialIndex)return;
+    state.specialIndex=index;
+    state.specialElapsedMs=0;
+    state.specialAnchor=index<0?0:Date.now()-over;
+    state.amrapRounds=0;
+  }
+  function recordSpecial(seg,complete){
+    if(!seg||seg.type==='emom')return;
+    state.results.push({
+      type:seg.type,label:seg.label,
+      seconds:Math.min(7200,Math.floor(activeSpecialElapsed()/1000)),
+      complete,
+      ...(seg.type==='amrap'?{rounds:state.amrapRounds,partial:state.step-seg.start}:{}),
+      ...(seg.type==='for-time'?{steps:complete?seg.end-seg.start+1:state.step-seg.start,
+        total:seg.end-seg.start+1}:{})
+    });
+  }
+  function finishSpecialByLimit(over=0){
+    const seg=activeSpecial();
+    if(!seg||seg.type==='emom')return;
+    state.specialElapsedMs=seg.limitSeconds*1000;
+    state.specialAnchor=Date.now();
+    recordSpecial(seg,false);
+    state.step=seg.end+1;
+    if(state.step>=config.guided.length){finish(over);}
+    else{state.phase='work';phaseStart(over);syncSpecialForStep(over);}
+    notify();render();
   }
   function phaseStart(over=0){
     const now=Date.now();
@@ -277,14 +346,30 @@
   function finish(over=0){
     state.sessionElapsedMs=Math.max(0,totalElapsed()-over);
     state.phase='finished';state.paused=false;state.deadline=null;state.remainingMs=0;state.sessionAnchor=0;
+    clearCurrentCheckpoint();
     notify();
   }
   function nextPhase(over=0){
     if(state.phase==='ready'||state.phase==='finished')return;
+    const current=activeSpecial();
+    // Manual actions cannot mark FOR TIME completed after its global deadline.
+    // Automated transitions carry over>0 and are ordered by their real deadlines in tick().
+    if(over===0&&current&&current.type!=='emom'&&current.limitSeconds>0&&
+      activeSpecialElapsed()>=current.limitSeconds*1000){
+      finishSpecialByLimit(Math.max(0,activeSpecialElapsed()-current.limitSeconds*1000));
+      return;
+    }
     if(state.mode==='guided'){
-      state.step++;
-      if(state.step>=config.guided.length)finish(over);
-      else phaseStart(over);
+      const seg=activeSpecial();
+      if(seg?.type==='amrap'&&state.step===seg.end){
+        state.amrapRounds++;
+        state.step=seg.start;phaseStart(over);
+      }else{
+        if(seg?.type==='for-time'&&state.step===seg.end)recordSpecial(seg,true);
+        state.step++;
+        if(state.step>=config.guided.length)finish(over);
+        else{phaseStart(over);syncSpecialForStep(over);}
+      }
     }else if(state.phase==='work'){
       if(state.turn>=config.stations.length*config.rounds-1)finish(over);
       else if(config.change>0){state.phase='change';phaseStart(over);}
@@ -294,44 +379,108 @@
     }
     notify();render();
   }
+  function makeCheckpoint(now=Date.now()){
+    const remaining=state.deadline===null?state.remainingMs:
+      Math.max(0,state.deadline-now);
+    const savedState={
+      ...state,paused:true,deadline:null,sessionAnchor:0,phaseAnchor:0,specialAnchor:0,
+      remainingMs:remaining,sessionElapsedMs:totalElapsed(),
+      phaseElapsedMs:currentElapsed(),specialElapsedMs:activeSpecialElapsed(),
+      results:state.results.slice()
+    };
+    return checkpointTools.makeHFCheckpoint({
+      runId:checkpointRunId,title:importedTitle||el('screenTitle').textContent,
+      deviceMode,config,state:savedState,now
+    });
+  }
+  function persistCheckpoint(force=false){
+    if(typeof localStorage==='undefined'||!checkpointTools||!checkpointRunId||
+      recoveryPending||importBlocked||!['work','change'].includes(state.phase))return;
+    const now=Date.now();
+    if(!force&&now-lastCheckpointAt<2000)return;
+    lastCheckpointAt=now;
+    try{
+      checkpointTools.writeHFCheckpoint(localStorage,makeCheckpoint(now),{now});
+      el('saveIndicator').hidden=false;
+      el('saveIndicator').textContent='✓ Clase protegida en este dispositivo · Última copia '+
+        new Date(now).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+      checkpointWarned=false;
+    }catch(error){
+      if(!checkpointWarned){
+        checkpointWarned=true;
+        el('saveIndicator').hidden=false;
+        el('saveIndicator').textContent='⚠ Sin copia recuperable: '+
+          (error?.message||'error de almacenamiento');
+      }
+    }
+  }
+  function clearCurrentCheckpoint(){
+    if(!checkpointTools||!checkpointRunId||typeof localStorage==='undefined')return;
+    try{
+      const saved=checkpointTools.readHFCheckpoint(localStorage,{now:Date.now()});
+      if(saved?.runId===checkpointRunId)checkpointTools.clearHFCheckpoint(localStorage);
+    }catch(error){
+      // Never remove an unknown/corrupted record implicitly.
+      el('saveIndicator').hidden=false;
+      el('saveIndicator').textContent='⚠ Comprueba la copia local antes de descartarla.';
+    }
+    checkpointRunId=null;
+  }
   function startSession(){
-    if(state.phase==='finished')return;
+    if(state.phase==='finished'||importBlocked||importReviewPending||recoveryPending)return;
     if(state.phase==='ready'){
       state.phase='work';
       state.sessionElapsedMs=0;
       state.sessionAnchor=Date.now();
       state.paused=false;
       phaseStart();
+      syncSpecialForStep();
     }else if(state.paused){
       const now=Date.now();
       state.sessionAnchor=now;
       state.phaseAnchor=now;
+      if(state.specialIndex>=0)state.specialAnchor=now;
       state.paused=false;
       if(state.remainingMs!==null)state.deadline=now+state.remainingMs;
     }
+    if(!checkpointRunId&&typeof crypto!=='undefined'&&crypto.randomUUID)
+      checkpointRunId=crypto.randomUUID();
     notify();render();
+    persistCheckpoint(true);
   }
   function pauseSession(){
     if(state.phase==='ready'||state.phase==='finished')return;
     if(state.paused){startSession();return;}
     state.sessionElapsedMs=totalElapsed();
     state.phaseElapsedMs=currentElapsed();
+    if(state.specialIndex>=0)state.specialElapsedMs=activeSpecialElapsed();
     state.remainingMs=state.deadline===null?null:Math.max(0,state.deadline-Date.now());
     state.deadline=null;
     state.paused=true;
     render();
+    persistCheckpoint(true);
   }
   function resetSession(force=false){
-    if(!force&&state.phase!=='ready'&&state.phase!=='finished'&&!confirm('¿Reiniciar la sesión actual? Se perderá el progreso del prototipo.'))return false;
+    if(!force&&state.phase!=='ready'&&state.phase!=='finished'&&!confirm('¿Reiniciar esta clase? Se descartará el progreso local de esta sesión.'))return false;
     const mode=state.mode;
-    state={mode,phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0};
+    state={mode,phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0,specialIndex:-1,specialElapsedMs:0,specialAnchor:0,amrapRounds:0,results:[]};
+    clearCurrentCheckpoint();
+    el('saveIndicator').hidden=true;
     render();return true;
   }
   function tick(){
     let count=0,now=Date.now();
-    while(!state.paused&&state.deadline!==null&&now>=state.deadline&&count++<200&&state.phase!=='finished'){
-      const over=now-state.deadline;
-      nextPhase(over);
+    while(!state.paused&&state.phase!=='ready'&&state.phase!=='finished'&&count++<200){
+      const seg=activeSpecial();
+      const globalDeadline=seg&&seg.type!=='emom'&&seg.limitSeconds>0
+        ?state.specialAnchor+seg.limitSeconds*1000-state.specialElapsedMs:null;
+      const exerciseDeadline=state.deadline;
+      if(globalDeadline!==null&&now>=globalDeadline&&
+        (exerciseDeadline===null||globalDeadline<=exerciseDeadline)){
+        finishSpecialByLimit(now-globalDeadline);
+      }else if(exerciseDeadline!==null&&now>=exerciseDeadline){
+        nextPhase(now-exerciseDeadline);
+      }else break;
       now=Date.now();
     }
     if(count>=200){pauseSession();}
@@ -345,6 +494,19 @@
       main.textContent=time(shown,timed);
     }
     el('totalClock').textContent=time(totalElapsed());
+    persistCheckpoint(false);
+    const seg=activeSpecial(),label=el('specialStatus');
+    label.hidden=!seg;
+    if(seg){
+      const elapsed=activeSpecialElapsed();
+      const remaining=Math.max(0,seg.limitSeconds*1000-elapsed);
+      const type=seg.type==='amrap'?'AMRAP':seg.type==='emom'?'EMOM':'FOR TIME';
+      const detail=seg.type==='amrap'?' · '+state.amrapRounds+' rondas completas'
+        :seg.type==='emom'?' · Ronda '+(Math.floor((state.step-seg.start)/2)+1)+'/'+seg.rounds
+        :' · '+(state.step-seg.start+1)+'/'+(seg.end-seg.start+1)+' ejercicios';
+      label.textContent=type+' · '+seg.label+detail+' · '+
+        (seg.limitSeconds===0?'Tiempo '+time(elapsed):'Restante '+time(remaining,true));
+    }
   }
   function node(tag,className,txt){
     const n=document.createElement(tag);
@@ -423,7 +585,12 @@
     el('guidedMode').setAttribute('aria-pressed',String(isGuided));
     el('stationsMode').setAttribute('aria-pressed',String(!isGuided));
     el('guidedConfig').hidden=!isGuided;el('stationConfig').hidden=isGuided;
-    el('formatLabel').textContent=isGuided?'01 · CLASE GUIADA':'02 · CIRCUITO POR ESTACIONES';
+    el('toggleConfig').disabled=Boolean(config.segments?.length);
+    el('toggleConfig').title=config.segments?.length?
+      'Los formatos avanzados se editan en la rutina HF original.':'Configurar clase';
+    el('formatLabel').textContent=isGuided?(activeSpecial()?
+      activeSpecial().type.toUpperCase().replace('FOR-TIME','FOR TIME')+' · CLASE COLECTIVA':'01 · CLASE GUIADA')
+      :'02 · CIRCUITO POR ESTACIONES';
     el('screenTitle').textContent=importedTitle|| (isGuided?'HF · Clase guiada':'HF · Circuito híbrido');
     el('screen').className='screen '+(state.phase==='change'?'change-phase':isGuided&&state.phase!=='finished'&&/^descanso$/i.test(config.guided[state.step]?.name||'')?'rest-phase':'work-phase');
     const phase=state.phase==='ready'?'PREPARADO':done?'FINALIZADO':state.paused?'EN PAUSA':state.phase==='change'?'CAMBIO DE ESTACIÓN':isGuided&&/^descanso$/i.test(config.guided[state.step]?.name||'')?'DESCANSO':'EN MARCHA';
@@ -433,12 +600,30 @@
       'Vuelta '+Math.min(config.rounds,Math.floor(state.turn/config.stations.length)+1)+' de '+config.rounds+' · Rotación '+Math.min(turn,config.stations.length*config.rounds)+' de '+config.stations.length*config.rounds;
     const display=el('display');display.replaceChildren(isGuided?guidedView():stationView());
     const ready=state.phase==='ready';
-    el('start').disabled=done||(!ready&&!state.paused)||importReviewPending||importBlocked;
+    el('start').disabled=done||(!ready&&!state.paused)||importReviewPending||importBlocked||recoveryPending;
     el('start').textContent=ready?'▶ Iniciar clase':'▶ Reanudar';
     el('pause').disabled=ready||done;
     el('pause').textContent=state.paused?'▶ Reanudar':'Ⅱ Pausar';
-    el('next').disabled=ready||done||state.paused;
-    el('next').textContent=isGuided?'Siguiente ejercicio ▶':state.phase==='change'?'Iniciar siguiente estación ▶':'Terminar intervalo ▶';
+    el('next').disabled=ready||done||state.paused||recoveryPending||importBlocked;
+    el('finishClass').disabled=ready||done||recoveryPending||importBlocked;
+    el('next').textContent=isGuided?(activeSpecial()?.type==='amrap'&&state.step===activeSpecial().end
+      ?'Completar ronda ▶':'Siguiente ejercicio ▶'):state.phase==='change'?'Iniciar siguiente estación ▶':'Terminar intervalo ▶';
+    const outcome=el('classOutcome');
+    outcome.hidden=!done;
+    if(done){
+      outcome.replaceChildren(node('strong','Clase finalizada · '+time(totalElapsed())));
+      if(state.results.length){
+        for(const result of state.results){
+          const detail=result.type==='amrap'
+            ?result.rounds+' rondas completas + '+result.partial+' ejercicios'
+            :result.type==='for-time'
+              ?result.steps+'/'+result.total+' ejercicios · '+(result.complete?'Completado':'Límite alcanzado o finalización manual')
+              :'Bloque terminado';
+          outcome.append(node('p',result.type.toUpperCase().replace('FOR-TIME','FOR TIME')+
+            ' · '+result.label+' · '+detail+' · '+time(result.seconds*1000)));
+        }
+      }else outcome.append(node('p','Entrenamiento colectivo terminado en este dispositivo.'));
+    }
     tick();
   }
   function parseGuided(raw){
@@ -487,8 +672,15 @@
   el('stationsMode').onclick=()=>switchMode('stations');
   el('start').onclick=startSession;
   el('pause').onclick=pauseSession;
-  el('next').onclick=()=>{if(!state.paused)nextPhase();};
+  el('next').onclick=()=>{if(!state.paused&&!recoveryPending&&!importBlocked)nextPhase();};
   el('reset').onclick=()=>resetSession();
+  el('finishClass').onclick=()=>{
+    if(state.phase==='ready'||state.phase==='finished'||recoveryPending||importBlocked)return;
+    if(!confirm('¿Finalizar la clase colectiva? Se cerrará la sesión y su copia temporal. Las rutinas guardadas no se modificarán.'))return;
+    const seg=activeSpecial();
+    if(seg&&seg.type!=='emom')recordSpecial(seg,false);
+    finish();render();
+  };
   el('toggleSound').onclick=()=>{
     sound=!sound;
     el('toggleSound').textContent=sound?'🔊 Sonido activado':'🔇 Sonido desactivado';
@@ -507,6 +699,7 @@
     try{
       const next=JSON.parse(JSON.stringify(config));
       if(state.mode==='guided'){
+        if(config.segments?.length)throw Error('Los bloques AMRAP, EMOM y FOR TIME se editan desde el editor original de HF; abre la rutina allí.');
         next.guided=parseGuided(el('guidedLines').value).map((entry,i)=>{
           const previous=config.guided[i];
           return previous&&entry.name===previous.name&&entry.target===previous.target&&entry.seconds===previous.seconds
@@ -577,7 +770,15 @@
     }
   });
   document.addEventListener('keydown',event=>{
+    const tag=event.target?.tagName;
+    if(['INPUT','TEXTAREA','SELECT','BUTTON'].includes(tag)||event.altKey||event.metaKey||event.ctrlKey)return;
     if(event.key==='Escape'&&document.body.classList.contains('presentation'))presentation(false);
+    if(event.code==='Space'&&state.phase!=='ready'&&state.phase!=='finished'&&!importBlocked&&!recoveryPending){
+      event.preventDefault();pauseSession();
+    }
+    if(event.key==='ArrowRight'&&state.phase!=='ready'&&state.phase!=='finished'&&!state.paused&&!importBlocked&&!recoveryPending){
+      event.preventDefault();nextPhase();
+    }
   });
   function showImportNotice(message,error=false){
     const notice=el('importNotice');
@@ -597,7 +798,10 @@
       importedTitle=payload.title;
       importedMode=payload.mode;
       state.mode=payload.mode;
-      if(payload.mode==='guided')config.guided=payload.plan.guided.map(e=>({...e}));
+      if(payload.mode==='guided'){
+        config.guided=payload.plan.guided.map(e=>({...e}));
+        config.segments=(payload.plan.segments||[]).map(e=>({...e}));
+      }
       else config={...config,stations:payload.plan.stations.map(e=>({...e})),
         rounds:payload.plan.rounds,work:payload.plan.work,change:payload.plan.change};
       importReviewPending=payload.requiresReview;
@@ -618,9 +822,89 @@
       render();
     }
   }
+  async function bootstrapRecovery(){
+    if(typeof localStorage==='undefined'){
+      recoveryPending=false;
+      el('saveIndicator').hidden=false;
+      el('saveIndicator').textContent='⚠ Este navegador no admite recuperación local.';
+      render();await loadSavedHFPresentation();return;
+    }
+    try{
+      checkpointTools=await import('./src/hf-class-checkpoint.mjs');
+    }catch(error){
+      checkpointTools=null;recoveryPending=false;
+      el('saveIndicator').hidden=false;
+      el('saveIndicator').textContent='⚠ Recuperación no disponible. La clase puede perderse al cerrar.';
+      render();await loadSavedHFPresentation();return;
+    }
+    try{
+      recoverySnapshot=checkpointTools.readHFCheckpoint(localStorage,{now:Date.now()});
+      if(!recoverySnapshot){
+        recoveryPending=false;render();
+        await loadSavedHFPresentation();return;
+      }
+      const saved=new Date(recoverySnapshot.savedAt).toLocaleString('es-ES');
+      el('recoveryTitle').textContent='Hay una clase interrumpida';
+      el('recoveryMessage').textContent='“'+recoverySnapshot.title+'” · Copia del '+saved+
+        '. Puedes recuperar el ejercicio, las rondas y los tiempos guardados. La sesión se abrirá en pausa y no contará el tiempo desde que cerraste la página.';
+      el('resumeRecovery').disabled=false;
+    }catch(error){
+      checkpointError=error;
+      el('recoveryTitle').textContent='No se puede validar la copia anterior';
+      el('recoveryMessage').textContent=(error?.message||'Error de lectura')+
+        '. No se eliminará sin que elijas expresamente descartarla.';
+      el('resumeRecovery').disabled=true;
+    }
+    importBlocked=true;recoveryPending=true;
+    el('recoveryPanel').hidden=false;
+    render();
+  }
+  el('resumeRecovery').onclick=()=>{
+    if(!recoverySnapshot||!checkpointTools)return;
+    try{
+      const data=checkpointTools.readHFCheckpoint(localStorage,{now:Date.now()});
+      if(!data||data.runId!==recoverySnapshot.runId)
+        throw Error('La copia ha cambiado. Vuelve a abrir la pantalla.');
+      config=JSON.parse(JSON.stringify(data.config));
+      state={...data.state,paused:true,deadline:null,
+        sessionAnchor:0,phaseAnchor:0,specialAnchor:0};
+      importedTitle=data.title;
+      importedMode=data.mode;
+      deviceMode=data.deviceMode;
+      checkpointRunId=data.runId;
+      recoveryPending=false;importBlocked=false;importReviewPending=false;
+      el('recoveryPanel').hidden=true;
+      el('saveIndicator').hidden=false;
+      el('saveIndicator').textContent='✓ Clase recuperada en pausa. Pulsa Reanudar para continuar.';
+      updateDeviceUI();loadForms();render();
+    }catch(error){
+      el('recoveryMessage').textContent='No se ha podido restaurar la clase: '+
+        (error?.message||'Error desconocido');
+      el('resumeRecovery').disabled=true;
+    }
+  };
+  el('discardRecovery').onclick=()=>{
+    if(!checkpointTools||typeof localStorage==='undefined')return;
+    if(!confirm('¿Descartar la copia de clase interrumpida? Solo se eliminará esta copia local de HF, nunca las rutinas guardadas.'))return;
+    try{
+      checkpointTools.clearHFCheckpoint(localStorage);
+      recoverySnapshot=null;checkpointRunId=null;checkpointError=null;
+      recoveryPending=false;importBlocked=false;
+      el('recoveryPanel').hidden=true;
+      el('saveIndicator').hidden=true;
+      render();
+      void loadSavedHFPresentation();
+    }catch(error){
+      el('recoveryMessage').textContent='No se pudo descartar la copia: '+(error?.message||'Error');
+    }
+  };
+  if(document.addEventListener)document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden')persistCheckpoint(true);
+  });
+  if(window.addEventListener)window.addEventListener('pagehide',()=>persistCheckpoint(true));
   updateDeviceUI();
   loadForms();render();setInterval(tick,160);
-  void loadSavedHFPresentation();
+  void bootstrapRecovery();
 })();
 </script>
 </body>
