@@ -37,6 +37,20 @@
     }
     return safePlan(snapshot.config,s.mode);
   }
+  function publicSnapshot(snapshot){
+    const s=snapshot.state,p=snapshot.config;
+    const state={
+      mode:s.mode,phase:s.phase,step:s.step,turn:s.turn,paused:s.paused,
+      deadline:s.deadline,remainingMs:s.remainingMs,
+      sessionElapsedMs:s.sessionElapsedMs,sessionAnchor:s.sessionAnchor,
+      phaseElapsedMs:s.phaseElapsedMs,phaseAnchor:s.phaseAnchor
+    };
+    const config=s.mode==='guided'?
+      {guided:p.guided.map(e=>({name:e.name,target:e.target,seconds:e.seconds}))}:
+      {stations:p.stations.map(e=>({name:e.name,target:e.target})),
+        rounds:p.rounds,work:p.work,change:p.change};
+    return {state,config};
+  }
   function create({pair,role,onCommand=()=>false,onState=()=>{},onAck=()=>{},Channel=root.BroadcastChannel,uuid=()=>root.crypto.randomUUID()}){
     if(!isValidPair(pair))throw Error('Identificador de prueba inválido');
     if(!['coach','screen'].includes(role))throw Error('Rol de prueba inválido');
@@ -53,7 +67,7 @@
     function publish(snapshot){
       if(role!=='screen'||!safeSnapshot(snapshot))return false;
       revision++;
-      return post('state',{revision,payload:snapshot});
+      return post('state',{revision,payload:publicSnapshot(snapshot)});
     }
     function requestState(){return role==='coach'&&post('hello');}
     function send(action){
