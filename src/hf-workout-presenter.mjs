@@ -59,7 +59,7 @@ function targetOf(label){
   if(amountFirst){
     return {name:amountFirst[3].trim(),target:amountFirst[1]+' '+amountFirst[2]};
   }
-  const amountLast=trimmed.match(new RegExp('^(.+?)\\s*[·,]\\s*('+number.source+')\\s*('+units+')$','i'));
+  const amountLast=trimmed.match(new RegExp('^(.+?)\\s*[·,|]\\s*('+number.source+')\\s*('+units+')$','i'));
   if(amountLast){
     return {name:amountLast[1].trim(),target:amountLast[2]+' '+amountLast[3]};
   }
@@ -73,6 +73,8 @@ function strengthOf(label){
   let name=parts[0],sets=0,reps=0,weight='',rir='',rest=null;
   const legacy=name.match(/^(\d+)\s*[x×]\s*(\d+)\s+(.+)$/i);
   if(legacy){sets=Number(legacy[1]);reps=Number(legacy[2]);name=legacy[3];}
+  // Cardio also uses pipes: Carrera | 400 m.
+  if(!legacy&&!parts.slice(1).some(part=>/^\d+\s*[x×]\s*\d+$/i.test(part)))return null;
   for(const part of parts.slice(1)){
     let m=part.match(/^(\d+)\s*[x×]\s*(\d+)$/i);
     if(m){sets=Number(m[1]);reps=Number(m[2]);continue;}
@@ -169,12 +171,13 @@ export function toHFPresentation(workout,mode='guided') {
   fail('Formato de presentación desconocido.');
 }
 const KEY='hf-presentation-handoff-v1:';
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TTL=10*60*1000;
 export function createHFHandoff(workout,mode,{store,now=()=>Date.now(),uuid=()=>crypto.randomUUID()}){
   if(!store||typeof store.setItem!=='function')fail('El navegador no permite transferir esta clase.');
   const payload=toHFPresentation(workout,mode);
   const id=uuid();
-  if(typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(id))
+  if(typeof id!=='string'||!UUID.test(id))
     fail('Identificador temporal no válido.');
   const createdAt=now();
   if(!Number.isSafeInteger(createdAt)||createdAt<0)fail('Hora de transferencia inválida.');
@@ -185,7 +188,7 @@ export function createHFHandoff(workout,mode,{store,now=()=>Date.now(),uuid=()=>
   return id;
 }
 export function consumeHFHandoff(id,{store,now=()=>Date.now()}={}){
-  if(typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(id))
+  if(typeof id!=='string'||!UUID.test(id))
     fail('Identificador temporal de clase inválido.');
   if(!store||typeof store.getItem!=='function')fail('Almacenamiento temporal no disponible.');
   const key=KEY+id;
