@@ -203,3 +203,12 @@ test('settings are placed near the top, and cloud and profile controls retain th
   assert.ok(ids.indexOf('addLocalProfile')<ids.indexOf('ggCloudPanel'));
   assert.ok(ids.indexOf('ggCloudPanel')<ids.indexOf('exerciseLibraryOpen'));
 });
+
+test('the default home hides redundant Principal label but clearly shows additional profiles',()=>{
+  const main=makeApp();mountHFMobileNavigation(main.doc,{profileLabel:'Principal'});
+  assert.equal(main.panel.querySelector('.hf-home-profile').hidden,true);
+  const guest=makeApp();mountHFMobileNavigation(guest.doc,{profileLabel:'Cliente 2'});
+  const label=guest.panel.querySelector('.hf-home-profile');
+  assert.equal(label.hidden,false);
+  assert.equal(label.textContent,'Perfil: Cliente 2');
+});
