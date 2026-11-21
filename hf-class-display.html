@@ -351,6 +351,14 @@
   }
   function nextPhase(over=0){
     if(state.phase==='ready'||state.phase==='finished')return;
+    const current=activeSpecial();
+    // Manual actions cannot mark FOR TIME completed after its global deadline.
+    // Automated transitions carry over>0 and are ordered by their real deadlines in tick().
+    if(over===0&&current&&current.type!=='emom'&&current.limitSeconds>0&&
+      activeSpecialElapsed()>=current.limitSeconds*1000){
+      finishSpecialByLimit(Math.max(0,activeSpecialElapsed()-current.limitSeconds*1000));
+      return;
+    }
     if(state.mode==='guided'){
       const seg=activeSpecial();
       if(seg?.type==='amrap'&&state.step===seg.end){
@@ -577,6 +585,9 @@
     el('guidedMode').setAttribute('aria-pressed',String(isGuided));
     el('stationsMode').setAttribute('aria-pressed',String(!isGuided));
     el('guidedConfig').hidden=!isGuided;el('stationConfig').hidden=isGuided;
+    el('toggleConfig').disabled=Boolean(config.segments?.length);
+    el('toggleConfig').title=config.segments?.length?
+      'Los formatos avanzados se editan en la rutina HF original.':'Configurar clase';
     el('formatLabel').textContent=isGuided?(activeSpecial()?
       activeSpecial().type.toUpperCase().replace('FOR-TIME','FOR TIME')+' · CLASE COLECTIVA':'01 · CLASE GUIADA')
       :'02 · CIRCUITO POR ESTACIONES';
