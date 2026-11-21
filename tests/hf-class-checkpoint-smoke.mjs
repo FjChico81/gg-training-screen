@@ -55,7 +55,7 @@ test('reject impossible running states, invalid indices and forged advanced segm
   {...src.state,paused:false},
   {...src.state,step:999},
   {...src.state,phase:'finished'},
-  {...src.state,mode:'stations'}
+  {...src.state,phase:'change'}
  ]){
   assert.throws(()=>makeHFCheckpoint({...src,state,now}));
  }
