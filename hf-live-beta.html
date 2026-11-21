@@ -264,18 +264,29 @@ if(!HF_LIVE_ROLLOUT_APPROVED){
     }
   }
   $('findRequests').onclick=()=>action('Buscando solicitudes',findRequests);
-  $('loadClasses').onclick=()=>action('Consultando clases',async()=>{
-    const rows=await liveClient.listMyScreenSessions(session());
-    const parent=$('classes');parent.replaceChildren();
-    if(!rows.length){parent.textContent='No hay clases activas asignadas.';return;}
-    for(const row of rows){
-      const button=document.createElement('button');
-      button.className='secondary';
-      button.textContent='Abrir '+row.title;
-      button.onclick=()=>watchClass(row.id);
-      parent.append(button);
-    }
-  });
+  let searchingClasses=false;
+  async function findAssignedClasses(){
+    if(searchingClasses || !isScreen || !auth.session)return;
+    searchingClasses=true;
+    try{
+      const rows=await liveClient.listMyScreenSessions(session());
+      const parent=$('classes');parent.replaceChildren();
+      if(!rows.length){parent.textContent='No hay clases activas asignadas.';return;}
+      // Auto-open when exactly one assigned class; never guess among multiple.
+      if(rows.length===1&&!watcher?.status.running){
+        watchClass(rows[0].id);
+        return;
+      }
+      for(const row of rows){
+        const button=document.createElement('button');
+        button.className='secondary';
+        button.textContent='Abrir '+row.title;
+        button.onclick=()=>watchClass(row.id);
+        parent.append(button);
+      }
+    }finally{searchingClasses=false;}
+  }
+  $('loadClasses').onclick=()=>action('Consultando clases',findAssignedClasses);
   function renderScreen(record){
     const {row}=record;
     const at=new Date().toISOString();
@@ -311,7 +322,11 @@ if(!HF_LIVE_ROLLOUT_APPROVED){
     watcher=createHFScreenWatcher({
       client:liveClient,session:session(),id,
       onSnapshot:renderScreen,
-      onDisconnected:()=>{message('screenConnection','Sesión revocada, caducada o no autorizada.');},
+      onDisconnected:()=>{
+        watcher=null;
+        $('screenDisplay').hidden=true;
+        message('screenConnection','Sesión revocada, caducada o no autorizada.');
+      },
       onStale:()=>{message('screenConnection','Sin sincronización confirmada. Comprueba la conexión.');},
       onRecovered:()=>{message('screenConnection','Conexión HF recuperada');},
       onError:()=>{message('screenConnection','Conexión interrumpida: sin confirmación.');}
@@ -324,6 +339,14 @@ if(!HF_LIVE_ROLLOUT_APPROVED){
   setInterval(()=>{
     if(watcher?.latest&&!watcher.status.stale)renderScreen(watcher.latest);
   },400);
+  // A screen with one authorized class discovers it automatically.
+  // This only runs after a permitted HF login; never bypasses RLS.
+  setInterval(()=>{
+    if(isScreen&&auth.session&&!busy&&!watcher?.status.running){
+      void findAssignedClasses().catch(()=>message('screenConnection',
+        'No se puede comprobar la clase; vuelve a consultar.'));
+    }
+  },5000);
   // Recheck authorization after long-lived sessions; never persist tokens.
   // Full token refresh and a new watcher are required before production release.
 }
