@@ -27,6 +27,12 @@
 /* Presentación HF desde móvil por HDMI o uso directo en tablet.
    El espejo por cable siempre muestra la misma imagen en ambas pantallas. */
 .device-choice{max-width:1700px;margin:10px auto 0;padding:0 20px}
+.presentation .device-choice{display:none}
+.presentation.session-mode-mirror #exitPresentation,
+.presentation.session-mode-tablet #exitPresentation{
+  top:calc(9px + env(safe-area-inset-top));bottom:auto;right:12px;
+  font-size:11px;min-height:33px;padding:6px 9px
+}
 .device-choice-inner{border:1px solid #765044;border-radius:14px;padding:15px;background:linear-gradient(145deg,#302623,#28282c)}
 .device-choice h2{margin:0 0 7px;font-size:clamp(18px,2vw,24px)}
 .device-choice p{margin:8px 0 0;color:#d1c8c2;font-size:14px;line-height:1.4}
