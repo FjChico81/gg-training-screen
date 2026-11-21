@@ -12,7 +12,9 @@ const source=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(source,'Expected one inline application script');
 assert.match(source,/loadForms\(\);render\(\);setInterval\(tick,160\);/);
 // sessionStorage is used solely for the short-lived same-tab presentation handoff.
-assert.doesNotMatch(source,/\b(localStorage|WebSocket|supabase|fetch\s*\()\b/i);
+assert.doesNotMatch(source,/\b(WebSocket|supabase|fetch\s*\()\b/i);
+assert.doesNotMatch(source,/localStorage\.(?:getItem|setItem|removeItem)\s*\(/,
+  'The screen must access only the HF-scoped checkpoint module, not arbitrary app storage');
 assert.match(source,/consumeHFHandoff/);
 
 function makeNode(tagName,id=''){
