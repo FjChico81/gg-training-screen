@@ -3,7 +3,7 @@
  * No database, cloud, storage, DOM or network operations in this module.
  * The original workout object is NEVER modified.
  */
-import {buildHFAdvancedGuided} from './hf-advanced-class.mjs';
+import {buildHFAdvancedGuided,validateHFAdvancedSegments} from './hf-advanced-class.mjs';
 export class HFPresentationError extends Error {
   constructor(message) { super(message); this.name='HFPresentationError'; }
 }
@@ -207,6 +207,8 @@ export function consumeHFHandoff(id,{store,now=()=>Date.now()}={}){
         ||(e.gifId!==null&&e.gifId!==undefined&&!/^[a-z0-9-]+$/.test(e.gifId)))
         fail('La clase contiene un ejercicio inválido.');
     }
+    try{validateHFAdvancedSegments(data.plan.guided,data.plan.segments??[])}
+    catch(error){fail(error?.message||'Segmentos de clase incompatibles.')}
   }else{
     if(!Array.isArray(data.plan.stations)||data.plan.stations.length<2||data.plan.stations.length>8
       ||!Number.isInteger(data.plan.rounds)||data.plan.rounds<1||data.plan.rounds>12
