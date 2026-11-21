@@ -64,7 +64,12 @@ test('separate URL modes exist but cannot bypass the infrastructure gate',()=>{
   assert.equal(t.element('screenPanel').hidden,true);
   assert.equal(s.element('trainerPanel').hidden,true);
   assert.equal(s.element('screenPanel').hidden,false);
-  assert.match(index,/hf-live-beta\.html\?role=trainer/);
+  const begin=index.indexOf('function setupHF(){');
+  const end=index.indexOf('function setupLocalProfiles(){',begin);
+  const hfHome=index.slice(begin,end);
+  assert.match(hfHome,/hf-class-prototype\.html/);
+  assert.doesNotMatch(hfHome,/hf-live-beta\.html|hf-pair-preview\.html/,
+    'legacy remote pairing must not be exposed on the HF class launcher');
 });
 
 test('HF beta is render-only until approval and does not contain secrets',()=>{
