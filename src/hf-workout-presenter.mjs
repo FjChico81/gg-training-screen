@@ -3,6 +3,7 @@
  * No database, cloud, storage, DOM or network operations in this module.
  * The original workout object is NEVER modified.
  */
+import {buildHFAdvancedGuided} from './hf-advanced-class.mjs';
 export class HFPresentationError extends Error {
   constructor(message) { super(message); this.name='HFPresentationError'; }
 }
@@ -133,22 +134,17 @@ function checkComplex(w){
 }
 export function toHFPresentation(workout,mode='guided') {
   validateSource(workout);
-  checkComplex(workout);
+  if(mode==='stations')checkComplex(workout);
   const title=short(workout.name,120,'Nombre de la rutina');
   if(mode==='guided') {
-    const guided=[];
-    for(const block of workout.blocks){
-      const name=short(block.name,90,'Bloque');
-      for(const raw of block.items){
-        const chunk=itemToSteps(raw,name);
-        if(guided.length+chunk.length>MAX_STEPS)
-          fail('La expansión de series y descansos supera 200 pasos. Divide la clase en varias rutinas.');
-        guided.push(...chunk);
-      }
-    }
-    if(!guided.length)fail('La rutina no tiene pasos compatibles.');
-    return {version:1,mode,title,plan:{guided},requiresReview:false,
-      warnings:['Los ejercicios sin @segundos avanzan manualmente.','Solo se han insertado los descansos escritos expresamente en la rutina.']};
+    let built;
+    try{built=buildHFAdvancedGuided(workout,itemToSteps)}
+    catch(error){fail(error?.message||'No se ha podido interpretar el formato avanzado.')}
+    if(!built.guided.length)fail('La rutina no tiene pasos compatibles.');
+    return {version:1,mode,title,plan:built,requiresReview:false,
+      warnings:['Los ejercicios sin @segundos avanzan manualmente.',
+        'AMRAP conserva su límite global y sus rondas; FOR TIME conserva el límite global (si existe); EMOM respeta los intervalos de un minuto.',
+        'Solo se insertan descansos explícitos.']};
   }
   if(mode==='stations') {
     if(workout.blocks.length!==1)fail('Para estaciones, selecciona una rutina HF de un solo bloque con 2 a 8 ejercicios. No se fusionan bloques ni rondas automáticamente.');
