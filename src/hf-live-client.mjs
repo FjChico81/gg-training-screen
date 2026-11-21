@@ -4,11 +4,12 @@
  * Expects a separate HF-authenticated session and the planned RLS table.
  * Requires security review, pairing flow, SQL testing, and approval before use.
  */
+import {createHFRuntime,validateHFClassPlan} from './hf-class-runtime.mjs';
 const HF_HOST = 'ydaqsmrfuwhqwqojrxyr.supabase.co'; // Exclusive HF TRAINING target
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const PHASES = new Set(['ready', 'work', 'change', 'finished']);
 const MODES = new Set(['guided', 'stations']);
-const FIELDS = 'id,title,mode,public_plan,runtime,revision,last_command_id,expires_at,updated_at';
+const FIELDS = 'id,pair_id,title,mode,public_plan,runtime,revision,last_command_id,expires_at,updated_at';
 
 export class HFRevisionConflict extends Error {
   constructor(){
@@ -41,10 +42,20 @@ function cleanRuntime(value){
       ||!Number.isFinite(Date.parse(value.deadlineUtc))
       ||!/Z$/.test(value.deadlineUtc))throw Error('Fecha límite UTC inválida');
   }
-  // Allow-list: the screen never receives user identifiers, email, FC, or logs.
+  for(const key of ['runningSinceUtc']){
+    if(value[key]!==undefined&&value[key]!==null &&
+      (typeof value[key]!=='string'||!Number.isFinite(Date.parse(value[key]))||!/Z$/.test(value[key])))
+      throw Error('Reloj UTC del entrenamiento inválido');
+  }
+  if(value.remainingMs!==undefined && value.remainingMs!==null &&
+    (!Number.isSafeInteger(value.remainingMs)||value.remainingMs<0||value.remainingMs>86400000))
+    throw Error('Tiempo restante inválido');
+  // Allow-list: la pantalla nunca recibe correos, tokens, FC ni historial.
   return {
     mode:value.mode,phase:value.phase,step:value.step,turn:value.turn,
     paused:value.paused,deadlineUtc:value.deadlineUtc,
+    runningSinceUtc:value.runningSinceUtc??null,
+    remainingMs:value.remainingMs??null,
     elapsedMs:value.elapsedMs,phaseElapsedMs:value.phaseElapsedMs
   };
 }
@@ -72,7 +83,7 @@ export function createHFLiveClient(config, {
           apikey:config.publishableKey,
           Authorization:'Bearer '+session.access_token,
           'Content-Type':'application/json',
-          ...(method==='PATCH'?{Prefer:'return=representation'}:{})
+          ...(['PATCH','POST'].includes(method)?{Prefer:'return=representation'}:{})
         },
         ...(body===undefined?{}:{body:JSON.stringify(body)}),
         signal:AbortSignal.timeout(12000)
@@ -117,6 +128,36 @@ export function createHFLiveClient(config, {
       +'&expires_at=gt.'+encodeURIComponent(utc)+'&order=created_at.desc&limit=10';
     return request(session,'GET',params(filter));
   }
+  async function createSession(session,{pairing,title,mode,publicPlan,expiresAt}){
+    assertAuth(session);
+    if(!pairing || typeof pairing!=='object')throw Error('Enlace de pantalla necesario');
+    assertUUID(pairing.id,'Enlace');
+    assertUUID(pairing.screen_user_id,'Pantalla');
+    if(pairing.trainer_id!==session.user.id || pairing.screen_user_id===session.user.id)
+      throw Error('El enlace no pertenece al entrenador y pantalla de HF');
+    const current=now().getTime();
+    const pairLimit=Date.parse(pairing.expires_at);
+    const accepted=Date.parse(pairing.accepted_at);
+    if(!Number.isFinite(accepted)||accepted>current||!Number.isFinite(pairLimit)||pairLimit<=current)
+      throw Error('El vínculo no está aceptado o está caducado');
+    if(typeof title!=='string'||!title.trim()||title.length>120)throw Error('Título de clase inválido');
+    validateHFClassPlan(mode,publicPlan);
+    const expiry=Date.parse(expiresAt);
+    if(typeof expiresAt!=='string'||!Number.isFinite(expiry)||!expiresAt.endsWith('Z')||
+      expiry<=current||expiry>current+12*3600000||expiry>pairLimit)
+      throw Error('La caducidad de la clase no está permitida');
+    const rows=await request(session,'POST',params(''),{
+      pair_id:pairing.id,
+      trainer_id:session.user.id,
+      screen_user_id:pairing.screen_user_id,
+      title:title.trim(),mode,
+      public_plan:publicPlan,
+      runtime:createHFRuntime(mode,publicPlan),
+      expires_at:expiresAt
+    });
+    if(rows.length!==1)throw Error('No se confirmó la creación de la clase en HF');
+    return rows[0];
+  }
   async function updateRuntime(session,{id,expectedRevision,commandId,runtime}){
     assertUUID(id,'Sesión de HF');
     assertUUID(commandId,'Orden');
@@ -134,5 +175,5 @@ export function createHFLiveClient(config, {
     const row=await getSession(session,id);
     return {row,committed:row?.last_command_id===commandId};
   }
-  return Object.freeze({getSession,listMyScreenSessions,updateRuntime,inspectUncertainCommand});
+  return Object.freeze({createSession,getSession,listMyScreenSessions,updateRuntime,inspectUncertainCommand});
 }
