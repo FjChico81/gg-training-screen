@@ -952,7 +952,7 @@ document.addEventListener('keydown',event=>{
 });
 let hfPresenting=false;
 let hfClubTools=null,hfFavoritesOnly=false;
-let hfRefreshClub=()=>{},hfToggleFavorite=()=>{},hfSaveTemplate=()=>{};
+let hfRefreshClub=()=>{},hfToggleFavorite=()=>alert('Favoritos HF todavía no disponibles'),hfSaveTemplate=()=>alert('Plantillas HF todavía no disponibles');
 async function presentHFPreparedWorkout(workout,mode='guided'){
  if(!isHF||hfPresenting)return;
  if(session){alert('Finaliza la sesión de entrenamiento en curso antes de presentar otra.');return;}
