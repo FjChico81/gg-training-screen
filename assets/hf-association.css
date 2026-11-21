@@ -122,3 +122,6 @@ html[data-edition="hf"] .hf-class-link{
 html[data-edition="hf"] .hf-class-link:hover{background:#ff874c}
 html[data-edition="hf"] .hf-class-link:focus-visible{outline:3px solid #fff;outline-offset:3px}
 @media(max-width:540px){html[data-edition="hf"] .hf-class-links{grid-template-columns:1fr}}
+
+html[data-edition="hf"] .hf-class-link-demo{grid-column:1/-1;background:#3d3d41;color:#ffe2cc;border-color:#725949}
+html[data-edition="hf"] .hf-class-link-demo:hover{background:#4c3c35}
