@@ -751,6 +751,13 @@ function setupHF(){
  $('historyButton').textContent='Historial de sesiones';
  $('editor').querySelector('.gold').textContent='EDITOR HF';
  $('editor').querySelector('h2').textContent='Crear o modificar entrenamiento';
+ const boardActions=$('board').querySelector('.buttons');
+ if(boardActions&&!document.getElementById('hfPresentFromBoard')){
+  const button=node('button','▶ Presentar en TV / tablet','alt');
+  button.id='hfPresentFromBoard';button.type='button';
+  button.onclick=()=>void presentSavedHFWorkout(active,'guided');
+  boardActions.insertBefore(button,$('back'));
+ }
  document.querySelectorAll('[data-tv-toggle]').forEach(button=>button.textContent='Pantalla de clase');
  $('updateBannerText').textContent='Hay una versión nueva de HF';
  $('restoreFile').setAttribute('aria-label','Seleccionar copia de seguridad HF');
@@ -877,6 +884,28 @@ document.addEventListener('keydown',event=>{
   const menu=document.querySelector('.routine-options:not(.hidden)');
   if(menu){setRoutineMenu(menu,false);menu.previousElementSibling.focus()}
 });
+let hfPresenting=false;
+async function presentSavedHFWorkout(id,mode='guided'){
+ if(!isHF)return;
+ if(hfPresenting)return;
+ if(session){alert('Finaliza la sesión de entrenamiento en curso antes de presentar otra.');return;}
+ const workout=workouts.find(w=>w.id===id);
+ if(!workout){alert('Esta rutina ya no está disponible. Actualiza la biblioteca.');return;}
+ hfPresenting=true;
+ try{
+  const {createHFHandoff}=await import('./src/hf-workout-presenter.mjs');
+  const transferId=createHFHandoff(workout,mode,{store:sessionStorage});
+  const url=new URL('hf-class-display.html',location.href);
+  url.searchParams.set('mode',mode);
+  url.searchParams.set('view','mirror');
+  url.searchParams.set('hfTransfer',transferId);
+  // Same-tab navigation preserves this tab's sessionStorage.
+  // Never modify the original saved workout or its revision.
+  location.assign(url.href);
+ }catch(error){
+  alert('No se puede presentar esta rutina: '+(error?.message||'Error desconocido'));
+ }finally{hfPresenting=false;}
+}
 function workoutCategory(w){const names=w.blocks.map(b=>b.name.toLowerCase()).join(' '),lines=w.blocks.flatMap(b=>b.items).join(' ').toLowerCase(),title=w.name.toLowerCase();if(/amrap/.test(names))return 'AMRAP';if(/emom/.test(names))return 'EMOM';if(/intervalos/.test(names))return 'Intervalos';if(/ronda|circuito|h[ií]brid/.test(names+' '+title))return 'Híbrido';if(/fuerza|torso|pierna|full body/.test(names+' '+title)||w.blocks.some(b=>b.items.some(line=>!!decode(line).strength)))return 'Fuerza';return 'Otros'}
 function renderLibrary(){
  renderVectorRoutines();
@@ -911,7 +940,20 @@ function renderLibrary(){
  const type=category.value;
  const visible=workouts.filter(w=>(type==='Todos'||workoutCategory(w)===type)&&w.name.toLocaleLowerCase('es-ES').includes(filter)).slice().reverse();
  if(!visible.length)target.append(node('p','No hay entrenamientos que coincidan.','muted library-empty'));
- visible.forEach(w=>{const line=node('div','','workout-row'),info=node('div');info.style.flex='1';info.style.minWidth='0';info.append(node('strong',w.name),node('div',workoutCategory(w)+' · '+w.blocks.length+' bloques · '+w.blocks.reduce((n,b)=>n+b.items.length,0)+' ejercicios','muted small'));const actions=node('div','','routine-actions');const open=node('button','Abrir');open.onclick=()=>{if(vectorDays.has(sessionWorkout)&&session){openWorkout(w.id);return}active=w.id;show('board')};const more=node('button','⋯','alt');more.type='button';more.setAttribute('aria-label','Opciones de '+w.name);more.setAttribute('aria-expanded','false');const options=node('div','','routine-options hidden');for(const [label,fn] of [['Duplicar',()=>duplicateWorkout(w.id)],['Renombrar',()=>renameWorkout(w.id)],['Eliminar',()=>deleteWorkout(w.id)]]){const button=node('button',label,label==='Eliminar'?'danger':'alt');button.type='button';button.onclick=()=>{setRoutineMenu(options,false);return fn()};options.append(button)}more.onclick=()=>{const opening=options.classList.contains('hidden');for(const menu of target.querySelectorAll('.routine-options:not(.hidden)'))setRoutineMenu(menu,false);setRoutineMenu(options,opening)};actions.append(open,more,options);line.append(info,actions);target.append(line)})}
+ visible.forEach(w=>{const line=node('div','','workout-row'),info=node('div');info.style.flex='1';info.style.minWidth='0';info.append(node('strong',w.name),node('div',workoutCategory(w)+' · '+w.blocks.length+' bloques · '+w.blocks.reduce((n,b)=>n+b.items.length,0)+' ejercicios','muted small'));const actions=node('div','','routine-actions');const open=node('button','Abrir');open.onclick=()=>{if(vectorDays.has(sessionWorkout)&&session){openWorkout(w.id);return}active=w.id;show('board')};if(isHF){
+ const present=node('button','Presentar','alt');
+ present.type='button';
+ present.setAttribute('aria-label','Presentar '+w.name+' en clase guiada');
+ present.onclick=()=>void presentSavedHFWorkout(w.id,'guided');
+ actions.append(present);
+}
+const more=node('button','⋯','alt');more.type='button';more.setAttribute('aria-label','Opciones de '+w.name);more.setAttribute('aria-expanded','false');const options=node('div','','routine-options hidden');for(const [label,fn] of [['Duplicar',()=>duplicateWorkout(w.id)],['Renombrar',()=>renameWorkout(w.id)],['Eliminar',()=>deleteWorkout(w.id)]]){const button=node('button',label,label==='Eliminar'?'danger':'alt');button.type='button';button.onclick=()=>{setRoutineMenu(options,false);return fn()};options.append(button)}if(isHF){
+ const stations=node('button','Adaptar a estaciones','alt');
+ stations.type='button';
+ stations.onclick=()=>{setRoutineMenu(options,false);void presentSavedHFWorkout(w.id,'stations');};
+ options.append(stations);
+}
+more.onclick=()=>{const opening=options.classList.contains('hidden');for(const menu of target.querySelectorAll('.routine-options:not(.hidden)'))setRoutineMenu(menu,false);setRoutineMenu(options,opening)};actions.append(open,more,options);line.append(info,actions);target.append(line)})}
 function renderBoard(){ $('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':'▶ Iniciar entrenamiento';const w=findWorkout(active);if(!w){show('library');return}$('edit').classList.toggle('hidden',vectorDays.has(active));$('boardName').textContent=w.name;$('count').textContent=w.blocks.length+' bloques · '+w.blocks.reduce((n,b)=>n+b.items.length,0)+' ejercicios';$('blocks').replaceChildren();if(w.exercises){
  w.exercises.forEach((exercise,index)=>{
    const tile=node('div','','tile');
