@@ -126,3 +126,19 @@ test('HF home loads organization only inside its edition guard and legacy indivi
  assert.match(home,/hf-class-checkpoint\.mjs/);
  assert.doesNotMatch(hf,/hps|dionisio/i);
 });
+
+test('an interrupted class from another HF profile cannot be viewed, resumed or discarded',async()=>{
+ const storage=memory();
+ const guestProfile='abcdef0123456789abcdef0123456789';
+ const guest=await boot(storage,{profile:guestProfile});guest.click('start');
+ const checkpoint=storage.getItem('hf:collective-class:checkpoint:v1');
+ assert.ok(checkpoint);
+ const personal=await boot(storage,{profile:'personal',time:1795270002000});
+ assert.equal(personal.el('recoveryPanel').hidden,false);
+ assert.equal(personal.el('resumeRecovery').disabled,true);
+ assert.equal(personal.el('discardRecovery').disabled,true);
+ assert.equal(personal.el('start').disabled,true);
+ assert.match(personal.el('recoveryTitle').textContent,/otro perfil HF/);
+ assert.doesNotMatch(personal.el('recoveryMessage').textContent,/HF · Clase guiada/);
+ assert.equal(storage.getItem('hf:collective-class:checkpoint:v1'),checkpoint);
+});
