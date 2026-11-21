@@ -224,3 +224,20 @@ html[data-edition="hf"] #saved .routine-actions button[aria-pressed="true"]{
     flex:1;min-width:115px
   }
 }
+
+
+html[data-edition="hf"] .hf-org-edit{
+  display:flex;flex-wrap:wrap;align-items:end;gap:9px;width:100%;
+  background:#242326;border:1px solid #90715f;
+  border-radius:11px;margin-top:7px;padding:12px
+}
+html[data-edition="hf"] .hf-org-edit[hidden]{display:none!important}
+html[data-edition="hf"] .hf-org-edit label{font-size:13px;color:#f6c09e;font-weight:800}
+html[data-edition="hf"] .hf-org-edit input,
+html[data-edition="hf"] .hf-org-edit select{
+  min-width:140px;flex:1;background:#171719;color:#fff;
+  border:1px solid #89796f;padding:11px;border-radius:9px;font-size:16px
+}
+html[data-edition="hf"] .hf-org-edit button{
+  min-height:44px;background:#ff671d;color:#251712
+}
