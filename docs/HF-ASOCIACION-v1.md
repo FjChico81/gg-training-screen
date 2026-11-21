@@ -134,3 +134,41 @@ La futura sincronización TV ↔ móvil **no está implementada en este prototip
 5. Conectar la vista TV a eventos de solo lectura con reconsulta de instantánea tras reconexión.
 6. Probar inicio, pausa, avance, pérdida de Wi-Fi, recuperación, latencia y caducidad entre iPhone y Samsung.
 7. Integrar con la biblioteca HF y publicar solo después de la revisión y autorización correspondientes.
+
+## Avance de la siguiente fase — simulación de mando y pantalla (21/11/2026)
+
+### Implementado en rama
+
+- `hf-pair-preview.html`: genera un identificador UUID temporal y abre enlaces separados para pantalla y mando de prueba.
+- `hf-coach-preview.html`: interfaz de entrenador con iniciar, pausar, reanudar, avanzar, reiniciar, confirmación de respuesta y bloqueo ante estados caducados.
+- `hf-class-prototype.html?role=screen&pair=...`: presentación de solo lectura que recibe órdenes, dirige el motor local y publica el estado común. Su audio puede requerir interacción local para desbloquear los sonidos del navegador.
+- `src/hf-preview-link.js`: transporte de mensajes por `BroadcastChannel`, válido solamente entre **pestañas del mismo origen y perfil de navegador**. Valida formato de estado y orden, elimina los campos no públicos, reconoce UUIDs de comando, evita duplicaciones recientes, admite reinicio de la pantalla y acusa recibo.
+- `src/hf-live-client.mjs`: adaptador futuro SIN USO en la UI. Requiere sesión autenticada HF, verifica que la API pertenezca al proyecto HF TRAINING, limita los datos del runtime a campos públicos, usa `revision` para escrituras condicionales y no reintenta órdenes de estado incierto.
+
+### Pruebas con datos simulados
+
+- **6/6** comprobaciones automatizadas del módulo de mensajes, incluida duplicación y reconexión de pantalla.
+- **8/8** pruebas de contrato del cliente de sesión con `fetch` simulado, sin llamar al servidor.
+- Simulación conjunta de pantallas y mando: inicio, siguiente, pausa, reanudación, reinicio y desactivación del mando tras perder estado (entrega de mensajes asíncrona).
+- Los ficheros de test reproducibles son `tests/hf-preview-link-smoke.cjs` y `tests/hf-live-client-smoke.mjs`. La ejecución de sus casos se hizo con un ejecutor de simulación equivalente, **no con una sesión de navegador real ni con CI de GitHub**.
+
+### Lo que NO se afirma
+
+- **No funciona entre el iPhone y la tablet Samsung**: `BroadcastChannel` no sincroniza navegadores independientes.
+- No hay aún control real de la TV por Supabase, emparejamiento autenticado, migración de tabla ni canal Realtime.
+- El identificador de prueba **no autentica**; compartirlo solo sirve para la simulación local.
+- No hay recuperación de sesión real tras apagar un dispositivo ni resistencia a dos entrenadores concurrentes; esto corresponde al servidor y al control CAS.
+- No debe utilizarse la simulación para dirigir clases reales ni desplegarse fuera de la vista previa autorizada.
+
+### Próxima puerta de seguridad
+
+1. Revisar la propuesta `db/hf-training/class-live-sessions-DRAFT-DO-NOT-APPLY.sql` en un proyecto HF **de pruebas**, sin tocar HF de producción. Verificar el emparejamiento con consentimiento activo de la pantalla, no asignación unilateral.
+2. Configurar explícitamente la exposición Data API de la tabla, **GRANT + RLS**, y comprobar con tests de políticas que solo entrenador autorizado escribe y la cuenta de pantalla únicamente lee. La guía oficial actual recalca que GRANT y RLS son controles diferentes.
+3. Decidir transmisión Realtime mediante canales privados Broadcast autorizados o Postgres Changes con RLS y recuperación obligatoria mediante lectura del estado. Broadcast privado es el enfoque recomendado actualmente en la documentación de Supabase para escalabilidad.
+4. Implementar emparejamiento revocable, suscripción y recuperación de pantalla, CAS con órdenes idempotentes y pruebas iPhone-Samsung.
+5. Validar pruebas sobre TV real, protección de datos, paso a producción y regresión de GG/VECTOR antes de solicitar autorización de publicación.
+
+Documentación oficial consultada:
+- https://supabase.com/docs/guides/api/securing-your-api
+- https://supabase.com/docs/guides/realtime/subscribing-to-database-changes
+- https://supabase.com/changelog?types=breaking-change
