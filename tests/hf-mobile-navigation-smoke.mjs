@@ -182,6 +182,7 @@ test('GG/VECTOR path never calls the HF navigation module',()=>{
   assert.ok(rules.length>15);
   assert.ok(rules.every(rule=>rule.includes('html[data-edition="hf"]')||rule.includes('@media')));
   assert.doesNotMatch(group,/innerHTML\s*:/);
+  assert.match(group,/#vectorRoutines\{display:none!important\}/);
 });
 
 test('extra HF profiles with no cloud still receive all three navigation tabs',()=>{
