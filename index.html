@@ -805,7 +805,7 @@ function setupHF(){
      if(!saved||(saved.profileId??'personal')!==localProfile.id)return;
      resumeTitle.textContent='Continuar: '+saved.title;
      resumeDescription.textContent='Guardada en este dispositivo. Al abrir se recuperará en pausa.';
-     resumeLink.href='hf-class-display.html?recover=1&view='+saved.deviceMode;
+     resumeLink.href='hf-class-display.html?recover=1&view='+saved.deviceMode+'&hfProfile='+encodeURIComponent(localProfile.id);
      resume.classList.remove('hidden');
    }catch(error){
      resumeTitle.textContent='Hay una copia de clase que necesita revisión';
