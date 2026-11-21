@@ -2,7 +2,7 @@
 
 Fecha: 21/11/2026
 
-Estado: **IMPLEMENTADO EN RAMA DE DESARROLLO. NO PUBLICADO.**
+Versión: **HF v2.9.65**.
 
 ## Problema detectado
 
@@ -47,7 +47,6 @@ El montaje es asíncrono y no bloquea la carga del motor: si el módulo no se pu
 
 ## Estado de publicación
 
-- Versión oficial estable: **HF v2.9.64**.
-- Esta rama **no** actualiza el número de versión ni producción; si se aprueba, se propondrá **HF v2.9.65**.
-- No se ha fusionado ningún cambio ni contratado servicio de pago.
-- Debe validarse la interfaz con el usuario antes de fusionar o publicar.
+- HF v2.9.65 se publica mediante GitHub Pages al integrar el PR en `main`, con autorización de Chico.
+- La versión anterior de HF es la v2.9.64. La numeración de VECTOR se mantiene en v2.9.71.
+- La revisión visual en iPhone y tablet físicos queda pendiente.
