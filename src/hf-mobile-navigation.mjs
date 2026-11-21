@@ -82,7 +82,9 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal'}={}){
 
   // Short home: no list of classes, workouts, history, profile or cloud.
   const heading=create('h2','¿Qué quieres hacer hoy?','hf-home-heading');
-  const context=create('p','Perfil: '+String(profileLabel).slice(0,50),'hf-home-profile');
+  const profileName=String(profileLabel||'').trim().slice(0,50);
+  const context=create('p','Perfil: '+profileName,'hf-home-profile');
+  context.hidden=!profileName||profileName==='Principal';
   const shortcuts=create('div',undefined,'hf-home-shortcuts');
   function shortcut(symbol,label,description,target){
     const button=create('button',undefined,'hf-home-shortcut');
