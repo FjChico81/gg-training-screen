@@ -745,8 +745,30 @@ function setupHF(){
   link.setAttribute('aria-label','Abrir '+text.toLowerCase()+' y elegir presentación');
   links.append(link);
  }
- section.append(title,note,links);
+ const resume=node('div','','hf-resume-card hidden');
+ resume.id='hfResumeClass';
+ const resumeTitle=node('strong','Clase interrumpida');
+ const resumeDescription=node('p','La clase guardada en este dispositivo se recuperará en pausa.','muted small');
+ const resumeLink=node('a','▶ Continuar clase','hf-resume-link');
+ resumeLink.href='hf-class-display.html?recover=1';
+ resume.append(resumeTitle,resumeDescription,resumeLink);
+ section.append(title,resume,note,links);
  intro.after(section);
+ // Only this browser and only the HF collective checkpoint: never access GG data.
+ void import('./src/hf-class-checkpoint.mjs').then(({readHFCheckpoint})=>{
+   try{
+     const saved=readHFCheckpoint(localStorage);
+     if(!saved)return;
+     resumeTitle.textContent='Continuar: '+saved.title;
+     resumeDescription.textContent='Guardada en este dispositivo. Al abrir se recuperará en pausa.';
+     resumeLink.href='hf-class-display.html?recover=1&view='+saved.deviceMode;
+     resume.classList.remove('hidden');
+   }catch(error){
+     resumeTitle.textContent='Hay una copia de clase que necesita revisión';
+     resumeDescription.textContent='La nueva pantalla te permitirá revisar o descartar la copia sin alterar las rutinas.';
+     resume.classList.remove('hidden');
+   }
+ }).catch(()=>{});
  $('new').textContent='＋ Preparar entrenamiento';
  $('historyButton').textContent='Historial de sesiones';
  $('editor').querySelector('.gold').textContent='EDITOR HF';
