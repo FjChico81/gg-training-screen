@@ -723,8 +723,35 @@ function setupHF(){
  if(!isHF)return;
  document.title='HF v'+GG_APP_VERSION;
  document.querySelector('meta[name="theme-color"]').content='#1c1c1e';
+ const style=document.createElement('link');
+ style.rel='stylesheet';
+ style.href='assets/hf-association.css?v=local1';
+ document.head.append(style);
  $('brandTitle').textContent='HF';
+ $('brandSubtitle').textContent='FUERZA · ERGÓMETROS · CARRERA · FUNCIONAL';
  $('brandSubtitle').classList.remove('hidden');
+ $('library').querySelector('.library-title').textContent='Clases y entrenamientos';
+ const intro=node('p','Prepara la sesión y preséntala desde un móvil conectado a TV o directamente en un iPad o tablet. No hace falta emparejar dispositivos.','hf-class-intro');
+ const heading=$('library').querySelector('.library-title');
+ heading.after(intro);
+ const section=node('section','','hf-class-chooser');
+ section.setAttribute('aria-label','Clases colectivas HF');
+ const title=node('h3','Impartir una clase');
+ const note=node('p','Elige un formato. Después selecciona «Móvil conectado a TV» o «Usar iPad o tablet».','muted small');
+ const links=node('div','','hf-class-links');
+ for(const [text,mode] of [['Clase guiada','guided'],['Circuito por estaciones','stations']]){
+  const link=node('a',text,'hf-class-link');
+  link.href='hf-class-display.html?mode='+mode+'&view=mirror';
+  link.setAttribute('aria-label','Abrir '+text.toLowerCase()+' y elegir presentación');
+  links.append(link);
+ }
+ section.append(title,note,links);
+ intro.after(section);
+ $('new').textContent='＋ Preparar entrenamiento';
+ $('historyButton').textContent='Historial de sesiones';
+ $('editor').querySelector('.gold').textContent='EDITOR HF';
+ $('editor').querySelector('h2').textContent='Crear o modificar entrenamiento';
+ document.querySelectorAll('[data-tv-toggle]').forEach(button=>button.textContent='Pantalla de clase');
  $('updateBannerText').textContent='Hay una versión nueva de HF';
  $('restoreFile').setAttribute('aria-label','Seleccionar copia de seguridad HF');
 }
@@ -1736,7 +1763,7 @@ for(const button of tvToggles)button.addEventListener('click',()=>{
  if(enabled)$('sessionExtras').prepend(strength);
  else $('guided').querySelector('.guided-controls').before(strength);
  const tvToggle=$('guided').querySelector('[data-tv-toggle]');
- tvToggle.textContent=enabled?'Salir de modo TV':'Modo TV';
+ tvToggle.textContent=enabled?(isHF?'Salir de pantalla':'Salir de modo TV'):(isHF?'Pantalla de clase':'Modo TV');
  if(!enabled)clearTvExerciseGif();
  if(view==='guided'){renderRestUI();renderTvExercises()}
 });
