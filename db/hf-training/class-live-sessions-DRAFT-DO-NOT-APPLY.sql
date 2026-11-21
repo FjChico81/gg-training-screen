@@ -17,6 +17,10 @@
 -- No hacer reintentos a ciegas cuando el resultado sea incierto.
 --
 -- Atención: esto es una propuesta a comprobar en un entorno aislado antes de aplicarla.
+-- El emparejamiento con aceptación expresa de la cuenta pantalla sigue PENDIENTE.
+-- No aplicar este borrador sin resolver el consentimiento de vinculación.
+-- Comprobar exposición explícita en Data API: GRANT+RLS no garantizan por sí solos
+-- la disponibilidad del endpoint REST en todos los proyectos (cambio 2026).
 
 begin;
 
@@ -28,6 +32,7 @@ create table public.hf_class_live_sessions (
   mode text not null check (mode in ('guided', 'stations')),
   public_plan jsonb not null check (jsonb_typeof(public_plan) = 'object'),
   runtime jsonb not null check (jsonb_typeof(runtime) = 'object'),
+  constraint hf_class_runtime_mode check (runtime ? 'mode' and runtime->>'mode' = mode),
   revision bigint not null default 0 check (revision >= 0),
   last_command_id uuid,
   expires_at timestamptz not null,
@@ -69,7 +74,7 @@ create policy hf_class_live_insert on public.hf_class_live_sessions
    and expires_at <= statement_timestamp() + interval '24 hours'
  );
 
--- Solo el entrenador puede cambiar el estado; ni coach_id ni screen_user_id
+-- Solo el entrenador puede cambiar el estado; ni trainer_id ni screen_user_id
 -- son columnas editables desde el navegador.
 create policy hf_class_live_update on public.hf_class_live_sessions
  for update to authenticated
@@ -81,6 +86,7 @@ create policy hf_class_live_update on public.hf_class_live_sessions
    trainer_id = (select auth.uid())
    and trainer_id <> screen_user_id
    and expires_at > statement_timestamp()
+   and expires_at <= statement_timestamp() + interval '24 hours'
  );
 
 -- El cliente no puede rebajar revisiones ni repetir de inmediato el mismo ID.
