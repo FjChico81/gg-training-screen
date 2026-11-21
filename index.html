@@ -67,6 +67,10 @@ if(new URLSearchParams(location.search).get('app')==='hf'){
 .guided-view-controls{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;margin-bottom:8px;align-items:stretch}
 #guided .guided-view-controls button{margin:0;min-height:44px}
 .tv-toggle[aria-pressed="true"]{background:var(--accent,#dbc396);color:var(--ink-tv,#17232c)}
+/* VECTOR y HF: pantalla completa real del navegador, independiente del modo TV. */
+#guided #tvFullscreen[aria-pressed="true"]{background:var(--accent,#dbc396);color:var(--ink-tv,#17232c)}
+#guided #tvFullscreenStatus{flex:1 0 100%;order:99;margin:1px 0;padding:7px 10px;border:1px solid var(--line,#405463);border-radius:8px;font-size:12px;line-height:1.35}
+
 #guided .tv-only{display:none}
 #guided .guided-controls{display:contents}
 .tv-mode #guided .guided-controls{display:flex;flex-wrap:wrap;gap:6px;margin:0;align-items:center}
@@ -541,7 +545,7 @@ html:not([data-edition="hf"]) body:has(.vector-home:not(.hidden)) .header-settin
 </div>
 <div id="guidedElapsed" class="elapsed-display"><div class="guided-metric-label muted">TIEMPO TOTAL</div><div id="clock" class="metric">00:00</div></div>
 </div></div>
-<div id="restCard" class="panel hidden" role="status" aria-live="polite"><div id="restLabel" class="gold small">DESCANSO AUTOMÁTICO</div><strong id="restCountdown" aria-live="off">00:00</strong><div id="restNext" class="muted small hidden"></div><button id="skipRest" type="button" class="alt">Omitir</button></div><div class="guided-controls"><div class="guided-primary"><button id="tvCompleteSet" type="button" class="tv-only">✓ Completar serie</button><button id="quickAdvance" type="button">✓ Ejercicio completado</button><button id="quickPause" type="button" class="alt">Pausar</button></div><div class="guided-view-controls"><button type="button" class="alt tv-toggle" data-tv-toggle aria-pressed="false">Modo TV</button><button id="moreSession" type="button" class="alt session-more" aria-expanded="false">▾ Registros y controles</button></div></div><div id="sessionExtras" class="hidden"><div id="actualPanel" class="panel hidden"><h3>RESULTADO REAL DEL EJERCICIO</h3><p id="actualPlanned" class="muted small"></p><label>Cantidad realizada<input id="actualValue" type="number" min="0" step="any" placeholder="Opcional"></label><label>Unidad<select id="actualUnit"><option value="m">Metros</option><option value="km">Kilómetros</option><option value="kcal">Calorías</option><option value="reps">Repeticiones</option><option value="s">Segundos</option></select></label><div class="buttons"><button id="actualSave" class="alt" type="button">Guardar resultado</button></div><p id="actualMessage" class="gold small"></p></div><div id="strengthPanel" class="panel"><div class="row"><h3>REGISTRO DE FUERZA</h3><span class="muted small">Datos reales de cada serie</span></div><div class="setgrid"><label>Repeticiones<input id="reps" type="number" min="0" max="500" step="1" value="10"></label><label>Peso (kg)<input id="weight" type="number" min="0" max="1000" step="0.25" value="0"></label><label>RIR<input id="rir" type="number" min="0" max="15" step="1" value="2"></label><label>Descanso (s)<input id="rest" type="number" min="0" max="1800" step="5" value="90"></label></div><div id="previousSession" class="notice" style="margin:12px 0"></div><div id="seriesProgress" class="gold"></div><div class="buttons"><button id="saveSet" class="alt">Guardar datos</button><button id="cancelEdit" class="alt hidden">Cancelar edición</button><button id="logSet">✓ Completar serie</button><button id="undoSet" class="alt">Deshacer última</button></div><div id="seriesList" class="small"></div></div><div class="panel"><div class="actions"><button id="prev" class="alt">◀ Anterior</button><button id="pause" class="alt">Pausar</button><button id="advance">Siguiente ▶</button><button id="showBoard" class="alt">Ver pizarra</button><button id="finish" class="danger">Finalizar</button></div><p id="status" class="gold" aria-live="polite"></p></div></div></section>
+<div id="restCard" class="panel hidden" role="status" aria-live="polite"><div id="restLabel" class="gold small">DESCANSO AUTOMÁTICO</div><strong id="restCountdown" aria-live="off">00:00</strong><div id="restNext" class="muted small hidden"></div><button id="skipRest" type="button" class="alt">Omitir</button></div><div class="guided-controls"><div class="guided-primary"><button id="tvCompleteSet" type="button" class="tv-only">✓ Completar serie</button><button id="quickAdvance" type="button">✓ Ejercicio completado</button><button id="quickPause" type="button" class="alt">Pausar</button></div><div class="guided-view-controls"><button type="button" class="alt tv-toggle" data-tv-toggle aria-pressed="false">Modo TV</button><button id="tvFullscreen" type="button" class="alt hidden" aria-pressed="false" aria-label="Activar pantalla completa">⛶ Pantalla completa</button><button id="moreSession" type="button" class="alt session-more" aria-expanded="false">▾ Registros y controles</button></div><span id="tvFullscreenStatus" class="muted small hidden" role="status" aria-live="polite"></span></div><div id="sessionExtras" class="hidden"><div id="actualPanel" class="panel hidden"><h3>RESULTADO REAL DEL EJERCICIO</h3><p id="actualPlanned" class="muted small"></p><label>Cantidad realizada<input id="actualValue" type="number" min="0" step="any" placeholder="Opcional"></label><label>Unidad<select id="actualUnit"><option value="m">Metros</option><option value="km">Kilómetros</option><option value="kcal">Calorías</option><option value="reps">Repeticiones</option><option value="s">Segundos</option></select></label><div class="buttons"><button id="actualSave" class="alt" type="button">Guardar resultado</button></div><p id="actualMessage" class="gold small"></p></div><div id="strengthPanel" class="panel"><div class="row"><h3>REGISTRO DE FUERZA</h3><span class="muted small">Datos reales de cada serie</span></div><div class="setgrid"><label>Repeticiones<input id="reps" type="number" min="0" max="500" step="1" value="10"></label><label>Peso (kg)<input id="weight" type="number" min="0" max="1000" step="0.25" value="0"></label><label>RIR<input id="rir" type="number" min="0" max="15" step="1" value="2"></label><label>Descanso (s)<input id="rest" type="number" min="0" max="1800" step="5" value="90"></label></div><div id="previousSession" class="notice" style="margin:12px 0"></div><div id="seriesProgress" class="gold"></div><div class="buttons"><button id="saveSet" class="alt">Guardar datos</button><button id="cancelEdit" class="alt hidden">Cancelar edición</button><button id="logSet">✓ Completar serie</button><button id="undoSet" class="alt">Deshacer última</button></div><div id="seriesList" class="small"></div></div><div class="panel"><div class="actions"><button id="prev" class="alt">◀ Anterior</button><button id="pause" class="alt">Pausar</button><button id="advance">Siguiente ▶</button><button id="showBoard" class="alt">Ver pizarra</button><button id="finish" class="danger">Finalizar</button></div><p id="status" class="gold" aria-live="polite"></p></div></div></section>
 <section id="sessionSummary" class="hidden"><div class="panel"><div class="gold">RESUMEN DE SESIÓN</div><h2>Entrenamiento terminado</h2><div id="summaryWorkout" class="muted"></div><div id="summaryDuration" class="metric"></div><label for="summaryRpe">Esfuerzo percibido (RPE 1–10)</label><input id="summaryRpe" type="number" min="1" max="10" step="1" placeholder="Ej.: 8"><label for="summaryPain">¿Has tenido molestias?</label><select id="summaryPain"><option value="">Seleccionar</option><option value="No">No</option><option value="Sí">Sí</option></select><label for="summaryNotes">Observaciones</label><textarea id="summaryNotes" rows="3" placeholder="Respiración, técnica, sensaciones..."></textarea><div class="buttons"><button id="summarySave">Guardar resumen</button><button id="summarySkip" class="alt">Omitir</button></div><p id="summaryMessage" class="gold"></p></div></section>
 <div id="techniqueOverlay" class="technique-overlay hidden" role="presentation">
  <div class="technique-dialog" role="dialog" aria-modal="true" aria-labelledby="techniqueTitle">
@@ -900,7 +904,7 @@ const ggLibrary = {
     return true;
   }
 };
-function show(v){if(view==='guided'&&v!=='guided')clearTvExerciseGif();if(typeof closeSettings==='function')closeSettings();view=v;document.body.classList.toggle('guided-active',v==='guided');if(v==='guided'){$('sessionExtras').classList.add('hidden');$('moreSession').textContent='⚙ Más opciones';$('moreSession').setAttribute('aria-expanded','false')}if(typeof syncWakeLock==='function')void syncWakeLock();['library','editor','board','guided','history','sessionSummary',...(isHF?['exerciseLibrary']:[])].forEach(id=>$(id).classList.toggle('hidden',id!==v));if(v==='library'){
+function show(v){if(view==='guided'&&v!=='guided'){clearTvExerciseGif();void exitTVFullscreen()}if(typeof closeSettings==='function')closeSettings();view=v;document.body.classList.toggle('guided-active',v==='guided');syncTVFullscreenButton();if(v==='guided'){$('sessionExtras').classList.add('hidden');$('moreSession').textContent='⚙ Más opciones';$('moreSession').setAttribute('aria-expanded','false')}if(typeof syncWakeLock==='function')void syncWakeLock();['library','editor','board','guided','history','sessionSummary',...(isHF?['exerciseLibrary']:[])].forEach(id=>$(id).classList.toggle('hidden',id!==v));if(v==='library'){
   if(usesWorkoutCloud&&!session&&appStorage.getItem(KEY)!==ggLibraryRaw)load();
   renderLibrary();
 }
@@ -1893,10 +1897,45 @@ function setupCompactGuided(){
  $('logSet').textContent='✓ Completar serie';
  $('moreSession').textContent='⚙ Más opciones';
 }
+const tvFullscreenButton=$('tvFullscreen'),tvFullscreenStatus=$('tvFullscreenStatus');
+function setTVFullscreenStatus(message){
+ tvFullscreenStatus.textContent=message;
+ tvFullscreenStatus.classList.toggle('hidden',!message);
+}
+function syncTVFullscreenButton(){
+ const active=document.fullscreenElement===document.documentElement;
+ tvFullscreenButton.classList.toggle('hidden',!document.body.classList.contains('tv-mode'));
+ tvFullscreenButton.textContent=active?'⤢ Salir de pantalla completa':'⛶ Pantalla completa';
+ tvFullscreenButton.setAttribute('aria-label',active?'Salir de pantalla completa':'Activar pantalla completa');
+ tvFullscreenButton.setAttribute('aria-pressed',String(active));
+}
+async function exitTVFullscreen(){
+ if(document.fullscreenElement!==document.documentElement||typeof document.exitFullscreen!=='function')return;
+ try{await document.exitFullscreen()}
+ catch(error){setTVFullscreenStatus('No se pudo salir de pantalla completa. Prueba la tecla Esc o el botón Atrás.')}
+}
+tvFullscreenButton.addEventListener('click',async()=>{
+ setTVFullscreenStatus('');
+ if(document.fullscreenElement){
+  await exitTVFullscreen();
+  return;
+ }
+ if(typeof document.documentElement.requestFullscreen!=='function'||document.fullscreenEnabled===false){
+  setTVFullscreenStatus('Este navegador no permite pantalla completa desde la web. Prueba abrir VECTOR o HF desde un icono instalado en la pantalla de inicio.');
+  return;
+ }
+ try{await document.documentElement.requestFullscreen({navigationUI:'hide'})}
+ catch(error){setTVFullscreenStatus('Chrome u otro navegador ha bloqueado la pantalla completa. Prueba de nuevo desde la página abierta directamente, o utiliza el acceso instalado en la pantalla de inicio.')}
+ syncTVFullscreenButton();
+});
+document.addEventListener('fullscreenchange',()=>{syncTVFullscreenButton();if(document.fullscreenElement)setTVFullscreenStatus('')});
+document.addEventListener('fullscreenerror',()=>{setTVFullscreenStatus('No se pudo activar pantalla completa en este navegador.')});
 const tvToggles=document.querySelectorAll('[data-tv-toggle]');
 for(const button of tvToggles)button.addEventListener('click',()=>{
  const enabled=document.body.classList.toggle('tv-mode');
  for(const toggle of tvToggles)toggle.setAttribute('aria-pressed',String(enabled));
+ syncTVFullscreenButton();
+ if(!enabled){setTVFullscreenStatus('');void exitTVFullscreen()}
  $(enabled?'tvTiming':'guidedHeartPanel').append($('guidedElapsed'));
  const strength=$('strengthPanel');
  if(enabled)$('sessionExtras').prepend(strength);
