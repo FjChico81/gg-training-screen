@@ -265,3 +265,145 @@ html[data-edition="hf"] .hf-org-panel[hidden]{display:none!important}
   html[data-edition="hf"] .hf-org-tabs{gap:5px}
   html[data-edition="hf"] .hf-org-tab{padding:10px 5px;font-size:12px}
 }
+
+
+/* HF mobile navigation v1 · home / personal workouts / collective classes.
+   Entirely edition-scoped; no changes to VECTOR/GG styling. */
+html[data-edition="hf"] #library>.panel{min-width:0}
+html[data-edition="hf"] .hf-primary-tabs{
+  position:sticky;top:5px;z-index:8;
+  display:grid;grid-template-columns:0.85fr 1.7fr 0.9fr;gap:6px;
+  padding:5px;margin:-4px 0 17px;
+  background:#242428;border:1px solid #555057;
+  border-radius:15px;box-shadow:0 5px 15px #0005;
+}
+html[data-edition="hf"] .hf-primary-tab{
+  min-width:0;min-height:49px;line-height:1.2;
+  padding:9px 5px;border-radius:11px;
+  background:transparent;border:1px solid transparent;
+  color:#d6d2d0;font-size:clamp(12px,2.7vw,15px);
+  font-weight:800;white-space:normal;text-wrap:balance;
+}
+html[data-edition="hf"] .hf-primary-tab[aria-selected="true"]{
+  background:#ff671d;color:#1b1512;border-color:#ff671d;
+  box-shadow:inset 0 -3px 0 #bb4310;
+}
+html[data-edition="hf"] .hf-primary-tab:focus-visible,
+html[data-edition="hf"] .hf-home-shortcut:focus-visible{
+  outline:3px solid #ffc09c;outline-offset:2px;
+}
+html[data-edition="hf"] .hf-primary-page[hidden]{display:none!important}
+html[data-edition="hf"] .hf-primary-page{min-width:0}
+html[data-edition="hf"] .hf-home-heading{
+  margin:6px 0 5px;font-size:clamp(23px,4.3vw,32px);
+  font-weight:900;letter-spacing:-.025em;
+}
+html[data-edition="hf"] .hf-home-profile{
+  font-size:13px;color:#c9bdb8;margin:0 0 20px;
+}
+html[data-edition="hf"] .hf-home-shortcuts{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;margin:6px 0 8px;
+}
+html[data-edition="hf"] .hf-home-shortcut{
+  display:flex;flex-direction:column;align-items:flex-start;
+  text-align:left;gap:8px;min-width:0;min-height:155px;
+  background:#312c2e;border:1px solid #755343;
+  color:#f8f3ef;border-radius:16px;padding:16px;
+}
+html[data-edition="hf"] .hf-home-shortcut:first-child{
+  background:#ff671d;color:#201712;border-color:#ff671d;
+}
+html[data-edition="hf"] .hf-home-shortcut-icon{
+  display:grid;place-items:center;
+  width:42px;height:42px;border-radius:11px;
+  background:#0002;font-size:23px;
+}
+html[data-edition="hf"] .hf-home-shortcut strong{
+  font-size:clamp(16px,2.8vw,19px);line-height:1.18;
+}
+html[data-edition="hf"] .hf-home-shortcut small{
+  font-size:13px;line-height:1.35;font-weight:500;
+}
+html[data-edition="hf"] #hfPrimaryPageworkouts .library-title{
+  margin:2px 0 12px;font-size:clamp(22px,4vw,29px);
+}
+html[data-edition="hf"] #hfPrimaryPageworkouts .home-actions{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:9px;margin:8px 0 18px;
+}
+html[data-edition="hf"] #hfPrimaryPageworkouts .home-actions #new{
+  grid-column:auto;font-size:15px;min-height:50px;
+}
+html[data-edition="hf"] #hfPrimaryPageworkouts .home-actions #historyButton{
+  min-height:50px;font-size:14px;
+}
+html[data-edition="hf"] #hfPrimaryPageclasses .hf-class-chooser{
+  margin:0 0 14px;padding:15px;
+}
+html[data-edition="hf"] #hfPrimaryPageclasses .hf-class-chooser h3{
+  font-size:clamp(19px,3.5vw,24px);margin-bottom:6px;
+}
+html[data-edition="hf"] #hfPrimaryPageclasses .hf-class-chooser p{
+  font-size:13px;margin-bottom:12px;
+}
+html[data-edition="hf"] #hfPrimaryPageclasses .hf-class-links{
+  grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+}
+html[data-edition="hf"] #hfPrimaryPageclasses .hf-class-link{
+  min-height:58px;font-size:clamp(12px,2.5vw,16px);
+  padding:10px 8px;
+}
+html[data-edition="hf"] #hfPrimaryPageclasses .hf-class-intro{
+  font-size:13px;line-height:1.4;margin:0 0 10px;
+}
+html[data-edition="hf"] #hfPrimaryPageclasses .hf-org-host{
+  margin:10px 0 0;
+}
+html[data-edition="hf"] .header-settings #settingsPanel{
+  width:min(380px,calc(100vw - 24px));
+  max-height:min(78dvh,700px);
+}
+html[data-edition="hf"] #settingsPanel .hf-settings-section-title,
+html[data-edition="hf"] #settingsPanel .hf-settings-section-caption,
+html[data-edition="hf"] #settingsPanel .hf-settings-profile,
+html[data-edition="hf"] #settingsPanel .hf-settings-cloud,
+html[data-edition="hf"] #settingsPanel .hf-settings-exercise{
+  grid-column:1/-1;min-width:0;width:100%;
+}
+html[data-edition="hf"] #settingsPanel .hf-settings-section-title{
+  margin:14px 0 0;padding-top:12px;
+  border-top:1px solid #675650;color:#ffaf7f;font-size:16px;
+}
+html[data-edition="hf"] #settingsPanel .hf-settings-section-caption{
+  font-size:12px;color:#c7bbb5;margin:0;
+}
+html[data-edition="hf"] #settingsPanel .hf-settings-profile{margin:5px 0}
+html[data-edition="hf"] #settingsPanel .hf-settings-profile label{
+  display:flex;justify-content:space-between;flex-wrap:wrap;
+}
+html[data-edition="hf"] #settingsPanel .hf-settings-profile select{
+  max-width:100%;min-width:135px;margin-top:5px;
+}
+html[data-edition="hf"] #settingsPanel .hf-settings-cloud{
+  border:1px solid #65534a;border-radius:10px;
+  margin:7px 0;padding:9px 11px;
+}
+html[data-edition="hf"] .header-settings #ggCloudPanel>summary{
+  display:block;width:100%;height:auto;list-style:revert;
+  border:0;padding:7px 0;font-size:14px;text-align:left;
+  color:#e9c2ac;
+}
+html[data-edition="hf"] #settingsPanel .hf-settings-exercise{
+  background:#413b3e;min-height:45px;color:#f6ece8;
+}
+@media(max-width:360px){
+  html[data-edition="hf"] .hf-primary-tabs{gap:3px;padding:4px}
+  html[data-edition="hf"] .hf-primary-tab{font-size:11px;padding:8px 3px}
+  html[data-edition="hf"] .hf-home-shortcuts{grid-template-columns:1fr}
+  html[data-edition="hf"] .hf-home-shortcut{min-height:104px}
+  html[data-edition="hf"] #hfPrimaryPageworkouts .home-actions{grid-template-columns:1fr}
+}
+
+/* VECTOR-only preset library must never reappear beneath the HF tabs. */
+html[data-edition="hf"] #vectorRoutines{display:none!important}

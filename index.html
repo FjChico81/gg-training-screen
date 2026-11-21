@@ -725,7 +725,7 @@ function setupHF(){
  document.querySelector('meta[name="theme-color"]').content='#1c1c1e';
  const style=document.createElement('link');
  style.rel='stylesheet';
- style.href='assets/hf-association.css?v=2.9.64';
+ style.href='assets/hf-association.css?v=mobile1';
  document.head.append(style);
  $('brandTitle').textContent='HF';
  $('brandSubtitle').textContent='Hybrid Funcional Club “Go All Out”';
@@ -781,6 +781,7 @@ function setupHF(){
    });
    hfRefreshClub=()=>panel.refresh();
    hfShowClub=key=>{
+     hfMobileNavigation?.selectTab('classes',{focus:true});
      panel.openTab(key);
      organizer.scrollIntoView?.({behavior:'smooth',block:'start'});
    };
@@ -832,6 +833,13 @@ function setupHF(){
  document.querySelectorAll('[data-tv-toggle]').forEach(button=>button.textContent='Pantalla de clase');
  $('updateBannerText').textContent='Hay una versión nueva de HF';
  $('restoreFile').setAttribute('aria-label','Seleccionar copia de seguridad HF');
+ // HF-only progressive navigation enhancement; keep existing engine and IDs.
+ void import('./src/hf-mobile-navigation.mjs?v=mobile2').then(({mountHFMobileNavigation})=>{
+   hfMobileNavigation=mountHFMobileNavigation(document,{profileLabel:localProfile.name});
+ }).catch(error=>{
+   // On module failure, leave the proven legacy layout accessible.
+   console.warn('No se pudo activar la navegación HF:',error);
+ });
 }
 function setupLocalProfiles(){
  const select=$('localProfileSelect');
@@ -955,7 +963,7 @@ document.addEventListener('keydown',event=>{
   const menu=document.querySelector('.routine-options:not(.hidden)');
   if(menu){setRoutineMenu(menu,false);menu.previousElementSibling.focus()}
 });
-let hfPresenting=false;
+let hfPresenting=false,hfMobileNavigation;
 let hfClubTools=null,hfFavoritesOnly=false;
 let hfRefreshClub=()=>{},hfShowClub=()=>{},hfToggleFavorite=()=>alert('Favoritos HF todavía no disponibles'),hfSaveTemplate=()=>alert('Plantillas HF todavía no disponibles');
 async function presentHFPreparedWorkout(workout,mode='guided'){
@@ -1419,7 +1427,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='2.9.64', GG_APP_VERSION=isHF?HF_APP_VERSION:'2.9.71';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='2.9.65', GG_APP_VERSION=isHF?HF_APP_VERSION:'2.9.71';let lastUpdateCheck=0,remoteVersion=null;
 function versionIsNewer(remote,local){const a=remote.split('.').map(Number),b=local.split('.').map(Number);return a.some((v,i)=>v>(b[i]||0)&&a.slice(0,i).every((n,j)=>n===(b[j]||0)))}
 async function checkForUpdates(force=false){if(!navigator.onLine)return;if(!force&&Date.now()-lastUpdateCheck<120000)return;lastUpdateCheck=Date.now();const status=$('updateStatus');if(force)status.textContent='Comprobando…';try{const url=new URL(location.pathname,location.origin);url.searchParams.set('_gg_check',String(Date.now()));const response=await fetch(url.toString(),{cache:'no-store',redirect:'follow'});if(!response.ok)throw Error('No se ha podido consultar la web');const html=await response.text(),match=isHF?html.match(/HF_APP_VERSION='([0-9.]+)'/):html.match(/<title>GG Mobile v([0-9.]+)<\/title>/);if(!match)throw Error('Versión no identificada');remoteVersion=match[1];const newer=versionIsNewer(remoteVersion,GG_APP_VERSION);$('updateBanner').classList.toggle('hidden',!newer);if(newer){$('updateBannerText').textContent='Disponible '+editionName+' v'+remoteVersion+(session?' · termina la sesión antes de actualizar':'');$('applyUpdate').disabled=!!session;status.textContent='Nueva versión: '+remoteVersion}else if(force)status.textContent='Ya tienes la versión más reciente ('+GG_APP_VERSION+')'}catch(e){if(force)status.textContent='No se pudo comprobar: '+e.message}}
 $('checkUpdates').onclick=()=>void checkForUpdates(true);
