@@ -38,6 +38,7 @@ jobs:
         run: |
           node --test \
             tests/hf-class-organization-smoke.mjs \
+            tests/hf-organization-ui-smoke.mjs \
             tests/hf-stage-b-integration-smoke.cjs \
             tests/hf-class-display-smoke.cjs \
             tests/hf-device-modes-smoke.cjs \
