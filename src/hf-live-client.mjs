@@ -84,7 +84,14 @@ export function createHFLiveClient(config, {
       uncertain.cause=error;
       throw uncertain;
     }
-    const raw=await response.text();
+    let raw;
+    try{raw=await response.text();}
+    catch(error){
+      const uncertain=new Error('Respuesta incompleta. Consulta el estado de HF antes de continuar; NO reenvíes la orden.');
+      uncertain.code='HF_UNCERTAIN_REQUEST';
+      uncertain.cause=error;
+      throw uncertain;
+    }
     let data;
     try{data=raw?JSON.parse(raw):null;}catch{data=null;}
     if(!response.ok){
