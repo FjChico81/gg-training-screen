@@ -1,0 +1,25 @@
+{
+  "id": "./?app=vector",
+  "name": "VECTOR Fitness",
+  "short_name": "VECTOR",
+  "description": "Entrenamiento personal de VECTOR Fitness",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "assets/icons/gg-vector-white-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/vector-app.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
