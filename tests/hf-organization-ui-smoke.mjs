@@ -91,6 +91,7 @@ test('templates can be presented or copied into the existing HF editor',()=>{
  const station=dom.find(n=>n.tagName==='BUTTON'&&n.textContent==='Estaciones');
  station.click();
  assert.equal(callbacks.present.at(-1)[1],'stations');
+ assert.equal(callbacks.present.at(-1)[0].name,'Clase habitual');
 });
 test('template category filter narrows the visible card without changing stored data',()=>{
  const {dom,store,controller}=mount();
@@ -117,4 +118,24 @@ test('main app inline scripts remain syntactically valid after edition-scoped HF
  assert.match(hf,/hfClubOrganizer/);
  assert.match(hf,/hf-class-organization\.mjs/);
  assert.match(hf,/if\(!isHF\)return/);
+});
+
+test('template name and category can be edited inline without altering source exercises',()=>{
+ const {dom,store,controller}=mount();
+ tools.saveHFTemplate(store,workout(),{
+  name:'Clase habitual',category:'Híbrido',uuid:()=> '11111111-2222-4333-8444-555555555555'
+ });
+ controller.refresh();
+ const button=dom.find(n=>n.tagName==='BUTTON'&&n.textContent==='Editar datos');
+ button.click();
+ const input=dom.find(n=>n.tagName==='INPUT'&&n.attrs['aria-label']==='Nombre de plantilla');
+ const category=dom.find(n=>n.tagName==='SELECT'&&n.attrs['aria-label']==='Categoría de la plantilla');
+ assert.ok(input);assert.ok(category);
+ input.value='Mi nuevo circuito';category.value='Cardio';
+ const save=dom.find(n=>n.tagName==='BUTTON'&&n.textContent==='Guardar cambios');
+ save.click();
+ const [saved]=tools.listHFTemplates(store);
+ assert.equal(saved.name,'Mi nuevo circuito');
+ assert.equal(saved.category,'Cardio');
+ assert.equal(saved.workout.blocks[0].items[0],'Burpees | 3x10 | descanso 20s');
 });
