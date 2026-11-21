@@ -234,7 +234,9 @@ create policy hf_live_insert_trainer on public.hf_class_live_sessions
   )
   and exists (
     select 1 from public.hf_class_pairings p
-    where p.id=pair_id and p.trainer_id=trainer_id and p.screen_user_id=screen_user_id
+    where p.id=hf_class_live_sessions.pair_id
+      and p.trainer_id=hf_class_live_sessions.trainer_id
+      and p.screen_user_id=hf_class_live_sessions.screen_user_id
     and p.accepted_at is not null and p.expires_at>statement_timestamp()
     and not exists (select 1 from public.hf_class_pair_revocations r where r.pair_id=p.id)
   )
@@ -245,7 +247,10 @@ create policy hf_live_update_trainer_only on public.hf_class_live_sessions
   trainer_id=(select auth.uid())
   and expires_at>statement_timestamp()
   and exists (
-    select 1 from public.hf_class_pairings p where p.id=pair_id
+    select 1 from public.hf_class_pairings p
+    where p.id=hf_class_live_sessions.pair_id
+    and p.trainer_id=hf_class_live_sessions.trainer_id
+    and p.screen_user_id=hf_class_live_sessions.screen_user_id
     and p.accepted_at is not null and p.expires_at>statement_timestamp()
     and not exists (select 1 from public.hf_class_pair_revocations r where r.pair_id=p.id)
   )
@@ -258,7 +263,10 @@ create policy hf_live_update_trainer_only on public.hf_class_live_sessions
     where a.user_id=(select auth.uid()) and a.actor_kind='trainer' and a.active
   )
   and exists (
-    select 1 from public.hf_class_pairings p where p.id=pair_id
+    select 1 from public.hf_class_pairings p
+    where p.id=hf_class_live_sessions.pair_id
+    and p.trainer_id=hf_class_live_sessions.trainer_id
+    and p.screen_user_id=hf_class_live_sessions.screen_user_id
     and p.accepted_at is not null and p.expires_at>statement_timestamp()
     and not exists (select 1 from public.hf_class_pair_revocations r where r.pair_id=p.id)
   )
