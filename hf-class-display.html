@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1c1c1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="HF">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-180.png">
+<link rel="manifest" href="hf.webmanifest">
 <title>HF · Clases colectivas</title>
 <style>
 :root{--bg:#171719;--panel:#28282c;--panel2:#323237;--ink:#f8f6f4;--muted:#bbb7b6;--hot:#ff671d;--hot2:#ffad78;--line:#55545a;--work:#ff671d;--rest:#55c1c4}
@@ -852,15 +857,23 @@
   el('coachToggle').onclick=()=>setDockCollapsed(!document.body.classList.contains('controls-collapsed'));
   el('togglePresentation').onclick=()=>presentation(!document.body.classList.contains('presentation'));
   el('exitPresentation').onclick=()=>presentation(false);
+  function hfFullscreenFallback(){
+    const installed=window.matchMedia?.('(display-mode: standalone)').matches||window.matchMedia?.('(display-mode: fullscreen)').matches||navigator.standalone===true;
+    if(installed)return 'HF ya está abierta como aplicación, sin barra de direcciones. Los controles del sistema dependen del dispositivo.';
+    const apple=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    if(apple)return 'En iPhone o iPad: abre HF en Safari, pulsa Compartir → Añadir a pantalla de inicio, activa «Abrir como app» si aparece y abre HF desde ese icono.';
+    if(/Android/i.test(navigator.userAgent))return 'En Android: menú ⋮ de Chrome o Samsung Internet → Instalar app o Añadir a pantalla de inicio. Abre HF desde su icono.';
+    return 'En ordenador, prueba F11 o instala HF desde el menú del navegador para abrirla sin barras.';
+  }
   el('hfFullscreen').onclick=async()=>{
     setHFFullscreenStatus('');
     if(document.fullscreenElement){await exitHFFullscreen();return}
     if(typeof el('screen').requestFullscreen!=='function'||document.fullscreenEnabled===false){
-      setHFFullscreenStatus('Este navegador no permite pantalla completa desde la web. Abre HF desde un acceso instalado en la pantalla de inicio.');
+      setHFFullscreenStatus(hfFullscreenFallback());
       return;
     }
     try{await el('screen').requestFullscreen({navigationUI:'hide'})}
-    catch(error){setHFFullscreenStatus('El navegador ha bloqueado la pantalla completa. Prueba desde la página abierta directamente o desde su acceso instalado.')}
+    catch(error){setHFFullscreenStatus('No se ha podido activar pantalla completa. '+hfFullscreenFallback())}
     syncHFFullscreenButton();
   };
   document.addEventListener('fullscreenchange',()=>{
