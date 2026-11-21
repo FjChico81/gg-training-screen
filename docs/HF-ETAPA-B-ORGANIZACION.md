@@ -65,4 +65,27 @@ Etapa B solicitada: simplificar el trabajo del entrenador mediante clases favori
 5. Solicitar autorización específica para fusionar y publicar la etapa B. No inferir autorización a partir del inicio del desarrollo.
 6. Se mantiene aplazada la prueba física de conexión HDMI→TV hasta indicación del usuario.
 
-**Versión oficial vigente al comenzar:** HF v2.9.63. Esta etapa no incrementa versión ni cambia producción.
+**Versión oficial vigente al comenzar:** HF v2.9.63. **Candidata preparada:** HF v2.9.64, exclusivamente en la rama de desarrollo. La aplicación oficial no se ha actualizado.
+
+
+## Auditoría de interfaz y preparación de lanzamiento
+
+- La navegación **Favoritos / Plantillas / Historial** se presenta ahora como tres pestañas táctiles: solo un panel visible para evitar pantallas excesivamente largas en iPhone. Se emplean `role=tablist`, `role=tab`, `aria-controls`, `aria-selected` y navegación con teclado.
+- Al guardar una plantilla, HF abre automáticamente su pestaña para que el entrenador vea el resultado. El nombre de la plantilla también se conserva al usar «Presentar».
+- Corregido el enlace **Continuar clase** para que preserve el perfil HF de origen. De este modo no deriva incorrectamente al perfil Principal en perfiles adicionales.
+- El candidato usa la versión **HF v2.9.64** sin alterar **GG/VECTOR v2.9.71**, e incluye renovación de caché del CSS y módulos HF para evitar recursos antiguos del navegador.
+- Se han añadido pruebas de navegación por pestañas y de enlace de recuperación por perfil; el conjunto se ha reejecutado sobre el código corregido.
+- **Validación visual realizada:** revisión técnica de jerarquía, semántica accesible y reglas CSS responsive. **No validado:** renderización final en navegador real/dispositivos, porque la vista previa Vercel conocida no corresponde al HEAD actualizado y existe una limitación de despliegues gratuitos. No declarar aprobado el ensayo visual físico.
+- El punto 1 (HDMI TV, iPad, Samsung) permanece aplazado por decisión del usuario.
+- **Publicación:** no fusionar la PR ni modificar producción hasta autorización explícita, una vez aceptado el riesgo de pruebas físicas aplazadas.
+
+### Criterios operativos de aceptación antes de producción
+
+1. Abrir HF en móvil con una rutina guardada y marcarla como favorita; comprobar que el filtro muestra solo las favoritas.
+2. Crear una plantilla, comprobar que aparece en su pestaña, cambiar categoría y utilizarla como base de una nueva rutina.
+3. Impartir una clase y finalizar; comprobar que el historial colectivo contiene un único registro, sin tocar el individual.
+4. Interrumpir una clase desde un perfil adicional y verificar que al recuperar mantiene el perfil correcto y no revela la sesión desde otro perfil.
+5. Descargar la exportación colectiva en JSON; conservar también la copia de rutinas/historial personal, que es independiente.
+6. Volver a ejecutar las comprobaciones de CI y revisar el commit exacto antes de fusionar.
+
+**Estado:** código preparado y probado de forma automatizada. **Sin aprobación de pruebas visuales en navegador ni pruebas físicas.**
