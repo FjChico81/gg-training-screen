@@ -114,6 +114,9 @@ as $$
 begin
   if old.accepted_at is not null
      or old.request_expires_at <= statement_timestamp()
+     or exists (
+       select 1 from public.hf_class_pair_revocations r where r.pair_id=old.id
+     )
      or new.trainer_id is distinct from old.trainer_id
      or new.screen_user_id is distinct from old.screen_user_id
      or new.expires_at is distinct from old.expires_at
@@ -151,7 +154,6 @@ create policy hf_pair_revocation_actor_insert on public.hf_class_pair_revocation
     revoked_by=(select auth.uid())
     and exists (
       select 1 from public.hf_class_pairings p where p.id=pair_id
-        and p.accepted_at is not null
         and (p.trainer_id=(select auth.uid()) or p.screen_user_id=(select auth.uid()))
     )
   );
@@ -172,6 +174,20 @@ create table public.hf_class_live_sessions (
   updated_at timestamptz not null default statement_timestamp(),
   expires_at timestamptz not null,
   constraint hf_live_mode_consistency check (runtime->>'mode'=mode),
+  constraint hf_live_public_plan_format check (
+    (mode='guided' and jsonb_typeof(public_plan->'guided')='array'
+      and (public_plan - 'guided')='{}'::jsonb)
+    or
+    (mode='stations' and jsonb_typeof(public_plan->'stations')='array'
+      and (public_plan - array['stations','rounds','work','change'])='{}'::jsonb)
+  ),
+  constraint hf_live_public_runtime_keys check (
+    (runtime - array['mode','phase','step','turn','paused','deadlineUtc',
+      'elapsedMs','phaseElapsedMs'])='{}'::jsonb
+  ),
+  constraint hf_live_payload_limits check (
+    octet_length(public_plan::text)<=32768 and octet_length(runtime::text)<=4096
+  ),
   constraint hf_live_duration check (
     expires_at>created_at and expires_at<=created_at + interval '12 hours'
   )
