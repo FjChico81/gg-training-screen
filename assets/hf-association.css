@@ -241,3 +241,27 @@ html[data-edition="hf"] .hf-org-edit select{
 html[data-edition="hf"] .hf-org-edit button{
   min-height:44px;background:#ff671d;color:#251712
 }
+
+/* Compact HF club switcher: only one information panel visible at once. */
+html[data-edition="hf"] .hf-org-tabs{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;max-width:100%;min-width:0
+}
+html[data-edition="hf"] .hf-org-tab{
+  min-height:48px;padding:10px 8px;border-radius:12px;
+  border:1px solid #78685f;background:#343033;
+  color:#e7ddd7;font-size:clamp(12px,2.8vw,15px);
+  font-weight:750;white-space:nowrap
+}
+html[data-edition="hf"] .hf-org-tab[aria-selected="true"]{
+  background:#ff671d;border-color:#ff671d;color:#231710;
+  font-weight:900;box-shadow:inset 0 -3px 0 #b9440e
+}
+html[data-edition="hf"] .hf-org-tab:focus-visible{
+  outline:3px solid #ffbd92;outline-offset:3px
+}
+html[data-edition="hf"] .hf-org-panel[hidden]{display:none!important}
+@media(max-width:360px){
+  html[data-edition="hf"] .hf-org-tabs{gap:5px}
+  html[data-edition="hf"] .hf-org-tab{padding:10px 5px;font-size:12px}
+}
