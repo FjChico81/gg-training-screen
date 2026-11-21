@@ -24,6 +24,7 @@ function createFakeDom(){
   getAttribute(k){return this.attrs[k];}
   remove(){}
   click(){this.onclick?.();}
+  focus(){this.focused=true;}
   querySelector(selector){
    if(selector==='h3')return find(this,n=>n.tagName==='H3');
    return null;
@@ -138,4 +139,37 @@ test('template name and category can be edited inline without altering source ex
  assert.equal(saved.name,'Mi nuevo circuito');
  assert.equal(saved.category,'Cardio');
  assert.equal(saved.workout.blocks[0].items[0],'Burpees | 3x10 | descanso 20s');
+});
+
+test('compact HF club tabs show only one panel and remain keyboard-accessible',()=>{
+ const {dom,controller}=mount();
+ controller.refresh();
+ const favorites=dom.find(n=>n.id==='hfClubFavorites');
+ const templates=dom.find(n=>n.id==='hfClubTemplates');
+ const history=dom.find(n=>n.id==='hfClubHistory');
+ const tablist=dom.find(n=>n.attrs['role']==='tablist');
+ assert.ok(tablist);
+ assert.equal(tablist.attrs['aria-label'],'Organización de clases HF');
+ assert.equal(favorites.hidden,false);
+ assert.equal(templates.hidden,true);
+ assert.equal(history.hidden,true);
+ const tab=dom.find(n=>n.textContent==='▦ Plantillas'&&n.attrs['role']==='tab');
+ tab.click();
+ assert.equal(favorites.hidden,true);
+ assert.equal(templates.hidden,false);
+ assert.equal(history.hidden,true);
+ assert.equal(tab.attrs['aria-selected'],'true');
+ assert.equal(tab.attrs['aria-controls'],'hfClubTemplates');
+ controller.openTab('history');
+ assert.equal(templates.hidden,true);
+ assert.equal(history.hidden,false);
+ assert.equal(tablist.attrs['role'],'tablist');
+});
+test('resume class link retains the original local HF profile',()=>{
+ const page=readFileSync(resolve('index.html'),'utf8');
+ const a=page.indexOf('function setupHF(){');
+ const b=page.indexOf('function setupLocalProfiles(){',a);
+ const hf=page.slice(a,b);
+ assert.match(hf,/resumeLink\.href=.*hfProfile.*encodeURIComponent\(localProfile\.id\)/);
+ assert.match(hf,/saved\.profileId.*localProfile\.id/);
 });
