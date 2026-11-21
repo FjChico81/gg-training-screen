@@ -226,14 +226,14 @@
       {name:'Burpees',target:'10 repeticiones'},
       {name:'Carrera',target:'150 metros'}
     ],
-    rounds:3,work:60,change:20
+    rounds:3,work:60,change:20,segments:[]
   };
   let config=JSON.parse(JSON.stringify(defaults));
   let importedTitle='', importedMode='', importReviewPending=false, importBlocked=false;
   const params=new URLSearchParams(location.search);
   const requestedMode=params.get('mode');
   let deviceMode=params.get('view')==='tablet'?'tablet':'mirror';
-  let state={mode:requestedMode==='stations'?'stations':'guided',phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0};
+  let state={mode:requestedMode==='stations'?'stations':'guided',phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0,specialIndex:-1,specialElapsedMs:0,specialAnchor:0,amrapRounds:0,results:[]};
   let sound=true;
   const pad=n=>String(n).padStart(2,'0');
   function time(ms,countdown=false){
@@ -249,6 +249,45 @@
   function durationSeconds(){
     if(state.mode==='guided')return config.guided[state.step]?.seconds||0;
     return state.phase==='change'?config.change:config.work;
+  }
+  function specialIndexAt(index){
+    return (config.segments||[]).findIndex(seg=>index>=seg.start&&index<=seg.end);
+  }
+  function activeSpecial(){return (config.segments||[])[state.specialIndex]||null;}
+  function activeSpecialElapsed(){
+    if(state.specialIndex<0)return 0;
+    return state.specialElapsedMs+(state.paused||state.phase==='ready'||state.phase==='finished'
+      ?0:Math.max(0,Date.now()-state.specialAnchor));
+  }
+  function syncSpecialForStep(over=0){
+    const index=state.mode==='guided'?specialIndexAt(state.step):-1;
+    if(index===state.specialIndex)return;
+    state.specialIndex=index;
+    state.specialElapsedMs=0;
+    state.specialAnchor=index<0?0:Date.now()-over;
+    state.amrapRounds=0;
+  }
+  function recordSpecial(seg,complete){
+    if(!seg||seg.type==='emom')return;
+    state.results.push({
+      type:seg.type,label:seg.label,
+      seconds:Math.min(7200,Math.floor(activeSpecialElapsed()/1000)),
+      complete,
+      ...(seg.type==='amrap'?{rounds:state.amrapRounds,partial:state.step-seg.start}:{}),
+      ...(seg.type==='for-time'?{steps:complete?seg.end-seg.start+1:state.step-seg.start,
+        total:seg.end-seg.start+1}:{})
+    });
+  }
+  function finishSpecialByLimit(over=0){
+    const seg=activeSpecial();
+    if(!seg||seg.type==='emom')return;
+    state.specialElapsedMs=seg.limitSeconds*1000;
+    state.specialAnchor=Date.now();
+    recordSpecial(seg,false);
+    state.step=seg.end+1;
+    if(state.step>=config.guided.length){finish(over);}
+    else{state.phase='work';phaseStart(over);syncSpecialForStep(over);}
+    notify();render();
   }
   function phaseStart(over=0){
     const now=Date.now();
@@ -282,9 +321,16 @@
   function nextPhase(over=0){
     if(state.phase==='ready'||state.phase==='finished')return;
     if(state.mode==='guided'){
-      state.step++;
-      if(state.step>=config.guided.length)finish(over);
-      else phaseStart(over);
+      const seg=activeSpecial();
+      if(seg?.type==='amrap'&&state.step===seg.end){
+        state.amrapRounds++;
+        state.step=seg.start;phaseStart(over);
+      }else{
+        if(seg?.type==='for-time'&&state.step===seg.end)recordSpecial(seg,true);
+        state.step++;
+        if(state.step>=config.guided.length)finish(over);
+        else{phaseStart(over);syncSpecialForStep(over);}
+      }
     }else if(state.phase==='work'){
       if(state.turn>=config.stations.length*config.rounds-1)finish(over);
       else if(config.change>0){state.phase='change';phaseStart(over);}
@@ -302,10 +348,12 @@
       state.sessionAnchor=Date.now();
       state.paused=false;
       phaseStart();
+      syncSpecialForStep();
     }else if(state.paused){
       const now=Date.now();
       state.sessionAnchor=now;
       state.phaseAnchor=now;
+      if(state.specialIndex>=0)state.specialAnchor=now;
       state.paused=false;
       if(state.remainingMs!==null)state.deadline=now+state.remainingMs;
     }
@@ -316,6 +364,7 @@
     if(state.paused){startSession();return;}
     state.sessionElapsedMs=totalElapsed();
     state.phaseElapsedMs=currentElapsed();
+    if(state.specialIndex>=0)state.specialElapsedMs=activeSpecialElapsed();
     state.remainingMs=state.deadline===null?null:Math.max(0,state.deadline-Date.now());
     state.deadline=null;
     state.paused=true;
@@ -324,7 +373,7 @@
   function resetSession(force=false){
     if(!force&&state.phase!=='ready'&&state.phase!=='finished'&&!confirm('¿Reiniciar la sesión actual? Se perderá el progreso del prototipo.'))return false;
     const mode=state.mode;
-    state={mode,phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0};
+    state={mode,phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0,specialIndex:-1,specialElapsedMs:0,specialAnchor:0,amrapRounds:0,results:[]};
     render();return true;
   }
   function tick(){
