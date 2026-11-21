@@ -18,7 +18,7 @@ const screenCode=lastScript('hf-class-prototype.html').replace(
 const coachCode=lastScript('hf-coach-preview.html');
 const pair='11111111-2222-4333-8444-555555555555';
 let clock=1000000,n=1;
-const uuid=()=>('00000000-0000-4000-8000-'+(n++).toString(16).padStart(12,'0');
+const uuid=()=>'00000000-0000-4000-8000-'+(n++).toString(16).padStart(12,'0');
 class BC{
   static peers=new Map();static queue=[];
   constructor(name){
