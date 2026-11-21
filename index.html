@@ -744,6 +744,11 @@ function setupHF(){
    link.setAttribute('aria-label','Abrir prototipo de '+label.toLowerCase());
    links.append(link);
  }
+ const pairDemo=node('a','Simular mando y pantalla','hf-class-link hf-class-link-demo');
+ pairDemo.href='hf-pair-preview.html';
+ pairDemo.setAttribute('aria-label','Abrir simulación de mando y pantalla en dos pestañas del mismo navegador');
+ links.append(pairDemo);
+ demoNote.textContent='Dos formatos de clase y una simulación de mando en dos pestañas del mismo navegador; sin sincronización real entre dispositivos.';
  demo.append(demoTitle,demoNote,links);
  intro.after(demo);
  $('new').textContent='＋ Preparar una clase';
