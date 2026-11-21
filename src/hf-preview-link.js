@@ -44,7 +44,7 @@
     const channel=new Channel('hf-class-demo-v1:'+pair);
     const clientId=uuid();
     const seen=new Set();
-    let revision=0,lastRevision=-1,closed=false;
+    let revision=0,lastRevision=-1,screenSender=null,closed=false;
     function post(kind,rest={}){
       if(closed)return false;
       channel.postMessage({version:VERSION,kind,pair,sender:clientId,...rest});
@@ -77,10 +77,13 @@
         catch(e){accepted=false;}
         post('ack',{commandId:m.commandId,accepted});
       }else{
-        if(m.kind==='state'&&Number.isInteger(m.revision)&&m.revision>lastRevision
+        if(m.kind==='state'&&Number.isInteger(m.revision)&&m.revision>=1
           &&safeSnapshot(m.payload)){
-          lastRevision=m.revision;
-          onState(m.payload,m.revision);
+          if(m.sender!==screenSender){screenSender=m.sender;lastRevision=-1;}
+          if(m.revision>lastRevision){
+            lastRevision=m.revision;
+            onState(m.payload,m.revision);
+          }
         }
         if(m.kind==='ack'&&isValidPair(m.commandId)
           &&typeof m.accepted==='boolean'){
