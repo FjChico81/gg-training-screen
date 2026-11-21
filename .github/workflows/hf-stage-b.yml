@@ -1,0 +1,49 @@
+name: HF stage B - club organization safety
+
+on:
+  push:
+    branches:
+      - feature/hf-stage-b-class-organization-v1
+    paths:
+      - 'src/hf-class-organization.mjs'
+      - 'hf-class-display.html'
+      - 'index.html'
+      - 'assets/hf-association.css'
+      - 'tests/hf-*'
+      - '.github/workflows/hf-stage-b.yml'
+  pull_request:
+    paths:
+      - 'src/hf-class-organization.mjs'
+      - 'hf-class-display.html'
+      - 'index.html'
+      - 'assets/hf-association.css'
+      - 'tests/hf-*'
+      - '.github/workflows/hf-stage-b.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  hf-stage-b:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Checkout isolated HF branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Runtime
+        run: node --version
+      - name: Offline HF-only regression suite
+        run: |
+          node --test \
+            tests/hf-class-organization-smoke.mjs \
+            tests/hf-stage-b-integration-smoke.cjs \
+            tests/hf-class-display-smoke.cjs \
+            tests/hf-device-modes-smoke.cjs \
+            tests/hf-saved-workout-presenter-smoke.mjs \
+            tests/hf-saved-display-integration-smoke.cjs \
+            tests/hf-class-checkpoint-smoke.mjs \
+            tests/hf-advanced-format-smoke.mjs \
+            tests/hf-advanced-runtime-smoke.cjs \
+            tests/hf-recovery-ui-smoke.cjs
