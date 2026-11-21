@@ -731,28 +731,19 @@ function setupHF(){
  $('brandSubtitle').textContent='FUERZA · ERGÓMETROS · CARRERA · FUNCIONAL';
  $('brandSubtitle').classList.remove('hidden');
  $('library').querySelector('.library-title').textContent='Clases y entrenamientos';
- const intro=node('p','Prepara la sesión y abre su pizarra. Durante la clase, activa «Pantalla de clase» para que el grupo siga los ejercicios, los tiempos y el siguiente movimiento.','hf-class-intro');
+ const intro=node('p','Diseña tus entrenamientos y preséntalos en la TV conectada al móvil o directamente en un iPad/tablet. Clases guiadas y circuitos comparten cronómetros y ejercicios.','hf-class-intro');
  $('library').querySelector('.library-title').after(intro);
  const demo=node('section','','hf-class-chooser');
- demo.setAttribute('aria-label','Formatos de la asociación');
- const demoTitle=node('h3','Entrenamientos colectivos');
- const demoNote=node('p','Prototipos de clase: todavía no sincronizan móvil y pantalla ni guardan resultados.','muted small');
+ demo.setAttribute('aria-label','Clases colectivas HF');
+ const demoTitle=node('h3','Impartir una clase en HF');
+ const demoNote=node('p','Elige el formato y, en la siguiente pantalla, selecciona «Móvil conectado a TV» o «Usar iPad o tablet». No necesitas emparejar dos dispositivos.','muted small');
  const links=node('div','','hf-class-links');
  for(const [label,mode] of [['Clase guiada','guided'],['Circuito por estaciones','stations']]){
    const link=node('a',label,'hf-class-link');
-   link.href='hf-class-prototype.html?mode='+mode;
-   link.setAttribute('aria-label','Abrir prototipo de '+label.toLowerCase());
+   link.href='hf-class-prototype.html?mode='+mode+'&view=mirror';
+   link.setAttribute('aria-label','Abrir '+label.toLowerCase()+' y elegir modo de pantalla');
    links.append(link);
  }
- const pairDemo=node('a','Simular mando y pantalla','hf-class-link hf-class-link-demo');
- pairDemo.href='hf-pair-preview.html';
- pairDemo.setAttribute('aria-label','Abrir simulación de mando y pantalla en dos pestañas del mismo navegador');
- links.append(pairDemo);
- const liveBeta=node('a','Conexión móvil y pantalla · Pendiente de autorización','hf-class-link hf-class-link-demo');
- liveBeta.href='hf-live-beta.html?role=trainer';
- liveBeta.setAttribute('aria-label','Ver el desarrollo de sincronización HF, bloqueado hasta acreditar independencia de HPS');
- links.append(liveBeta);
- demoNote.textContent='Clase guiada, estaciones y simulación local. La conexión entre dispositivos está preparada en beta y bloqueada hasta verificar el servidor exclusivo de HF.';
  demo.append(demoTitle,demoNote,links);
  intro.after(demo);
  $('new').textContent='＋ Preparar una clase';
