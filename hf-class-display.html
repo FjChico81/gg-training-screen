@@ -315,6 +315,60 @@
 'use strict';
 (function(){
   const el=id=>document.getElementById(id);
+  // HF collective: optional BLE monitor, independent of BUHARDILLA's working BLE module.
+  let classHrDevice=null,classHrCharacteristic=null,classHrValue=null,classHrAt=0;
+  const classZones=[
+    {number:5,min:185,label:'Máximo'}, {number:4,min:178,label:'Umbral'},
+    {number:3,min:165,label:'Aeróbica'}, {number:2,min:152,label:'Suave'},
+    {number:1,min:119,label:'Calentamiento'}
+  ];
+  function renderClassHeart(){
+    const connected=Boolean(classHrDevice?.gatt?.connected);
+    const live=connected&&classHrValue!==null&&Date.now()-classHrAt<12000;
+    const zone=live?classZones.find(z=>classHrValue>=z.min):null;
+    el('classHrBpm').textContent=live?String(classHrValue):'--';
+    for(const item of el('classHeart')?.querySelectorAll?.('[data-zone]')||[]){
+      item.dataset.active=String(Boolean(zone&&Number(item.dataset.zone)===zone.number));
+    }
+    el('classConnectHr').textContent=connected?'♥ Desconectar pulsómetro':'♥ Conectar pulsómetro';
+    el('classHrStatus').textContent=live?(zone?'Z'+zone.number+' · '+zone.label:'Por debajo de Z1'):
+      connected?'Conectado · esperando pulsaciones':'Sin lectura Bluetooth';
+  }
+  function onClassHrReading(event){
+    const d=event.target?.value;
+    if(!d||d.byteLength<2)return;
+    const flags=d.getUint8(0),sixteen=Boolean(flags&1);
+    if(d.byteLength<(sixteen?3:2))return;
+    const value=sixteen?d.getUint16(1,true):d.getUint8(1);
+    if(value<25||value>240)return;
+    classHrValue=value;classHrAt=Date.now();renderClassHeart();
+  }
+  el('classConnectHr').onclick=async()=>{
+    if(classHrDevice?.gatt?.connected){
+      classHrDevice.gatt.disconnect();classHrValue=null;renderClassHeart();return;
+    }
+    if(typeof navigator==='undefined'||!navigator.bluetooth?.requestDevice){
+      el('classHrStatus').textContent='Este navegador no admite Bluetooth LE. Prueba un navegador compatible o utiliza HF sin sensor.';
+      return;
+    }
+    try{
+      el('classHrStatus').textContent='Buscando sensor cardíaco…';
+      const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}]});
+      classHrDevice=device;device.addEventListener('gattserverdisconnected',()=>{
+        classHrValue=null;classHrCharacteristic=null;renderClassHeart();
+      });
+      const server=await device.gatt.connect();
+      const service=await server.getPrimaryService('heart_rate');
+      const characteristic=await service.getCharacteristic('heart_rate_measurement');
+      await characteristic.startNotifications();
+      characteristic.addEventListener('characteristicvaluechanged',onClassHrReading);
+      classHrCharacteristic=characteristic;renderClassHeart();
+    }catch(error){
+      classHrValue=null;
+      el('classHrStatus').textContent=error.name==='NotFoundError'?'No se ha seleccionado ningún pulsómetro':
+        'No se pudo conectar: '+(error?.message||'Error Bluetooth');
+    }
+  };
   const assetBase='assets/technique/';
   const mediaCatalog=[
     [/burpee/i,'burpee-con-salto.gif','🏃'],
@@ -1170,7 +1224,7 @@
     classPrestartRunning=false;classPrestartDeadline=null;persistCheckpoint(true);
   });
   updateDeviceUI();
-  loadForms();render();setInterval(tick,160);
+  loadForms();render();renderClassHeart();setInterval(tick,160);setInterval(renderClassHeart,3000);
   void bootstrapRecovery();
 })();
 </script>
