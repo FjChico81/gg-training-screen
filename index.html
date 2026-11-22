@@ -1733,10 +1733,91 @@ $('cancelEdit').onclick=()=>{editingSet=-1;renderSeries();$('status').textConten
 $('saveSet').onclick=()=>{try{const values=getDraft();if(editingSet>=0){const entries=seriesLog[step]||[];if(!entries[editingSet])throw Error('La serie ya no existe');entries[editingSet]={...entries[editingSet],...values,correctedAt:new Date().toISOString()};editingSet=-1;saveSession();renderSeries();$('status').textContent='Serie corregida. El descanso no se reinicia.'}else{draftSets[step]=values;saveSession();$('status').textContent='Datos guardados sin iniciar descanso'}}catch(e){alert(e.message)}};
 $('logSet').onclick=()=>{try{const a=currentStrength();if(!session||!a)throw Error('Selecciona un ejercicio de fuerza');if(restRunning||transitionTo!==null)return;const entries=seriesLog[step]??=[];if(entries.length>=a.sets)return;const entry={...getDraft(),at:new Date().toISOString()};entries.push(entry);delete draftSets[step];const last=entries.length>=a.sets;if(last&&vectorDays.has(active))entry.rest=0;const exercises=steps();const next=exercises[step+1];const transitionSeconds=last?plannedTransition(exercises[step],next):null;const transition=transitionSeconds!==null;if(transition){transitionTo=step+1;restRemaining=transitionSeconds;restRunning=restRemaining>0}else{transitionTo=null;restRemaining=last?0:entry.rest;restRunning=restRemaining>0}void initAudio();saveSession();if(transition&&restRemaining===0){finishExerciseTransition();return}renderSeries();$('status').textContent=transition?'Descanso entre ejercicios iniciado.':last?'Ejercicio completo. Pulsa Siguiente.':'Serie completada'+(restRunning?'. Descanso iniciado.':'.')}catch(e){alert(e.message)}};
 $('undoSet').onclick=()=>{if((seriesLog[step]||[]).length){seriesLog[step].pop();restRemaining=0;restRunning=false;transitionTo=null;saveSession();renderSeries()}};
-let pendingSummaryId=null;function archiveSession(){try{const k='gg-strength-history-v1',h=JSON.parse(appStorage.getItem(k)||'[]');if(!Array.isArray(h))throw Error('Historial inválido');const w=findWorkout(sessionWorkout)||findWorkout(active);const recordId='session-'+Date.now();h.push({id:recordId,workoutId:sessionWorkout,name:w?.name||'Entrenamiento',date:new Date().toISOString(),elapsed,seriesLog:JSON.parse(JSON.stringify(seriesLog)),exerciseNames:w?.blocks.flatMap(b=>b.items.map(x=>decode(x).label))||[],exerciseSnapshot:w?.blocks.flatMap(b=>b.items.map(line=>({block:b.name,label:decode(line).label,raw:line})))||[],vectorDose:w?.exercises?.map(vectorDose),amrapResults:JSON.parse(JSON.stringify(amrapResults)),ftResults:JSON.parse(JSON.stringify(ftResults)),actualResults:JSON.parse(JSON.stringify(actualResults))});appStorage.setItem(k,JSON.stringify(h));pendingSummaryId=recordId;return true}catch(e){alert('No se ha podido guardar el historial. No cierres la sesión: revisa el almacenamiento del navegador.');return false}}
+let pendingSummaryId=null;function archiveSession(){try{const k='gg-strength-history-v1',h=JSON.parse(appStorage.getItem(k)||'[]');if(!Array.isArray(h))throw Error('Historial inválido');const w=findWorkout(sessionWorkout)||findWorkout(active);const recordId='session-'+Date.now();h.push({id:recordId,workoutId:sessionWorkout,name:w?.name||'Entrenamiento',date:new Date().toISOString(),elapsed,lastReachedStep:step+1,seriesLog:JSON.parse(JSON.stringify(seriesLog)),exerciseNames:w?.blocks.flatMap(b=>b.items.map(x=>decode(x).label))||[],exerciseSnapshot:w?.blocks.flatMap(b=>b.items.map(line=>({block:b.name,label:decode(line).label,raw:line})))||[],vectorDose:w?.exercises?.map(vectorDose),amrapResults:JSON.parse(JSON.stringify(amrapResults)),ftResults:JSON.parse(JSON.stringify(ftResults)),actualResults:JSON.parse(JSON.stringify(actualResults))});appStorage.setItem(k,JSON.stringify(h));pendingSummaryId=recordId;return true}catch(e){alert('No se ha podido guardar el historial. No cierres la sesión: revisa el almacenamiento del navegador.');return false}}
 function openSessionSummary(){const w=findWorkout(sessionWorkout);$('summaryWorkout').textContent=w?.name||'Entrenamiento';$('summaryDuration').textContent=formatSeconds(Math.floor(elapsed));$('summaryRpe').value='';$('summaryPain').value='';$('summaryNotes').value='';$('summaryMessage').textContent='';show('sessionSummary')}
-$('summarySkip').onclick=()=>{pendingSummaryId=null;show('board')};
-$('summarySave').onclick=()=>{try{const rpe=$('summaryRpe').value.trim(),pain=$('summaryPain').value,notes=$('summaryNotes').value.trim();if(rpe&&(!Number.isInteger(Number(rpe))||Number(rpe)<1||Number(rpe)>10))throw Error('RPE debe estar entre 1 y 10');const key='gg-strength-history-v1',history=getHistory(),record=history.find(x=>x.id===pendingSummaryId);if(!record)throw Error('No se encuentra la sesión guardada');record.rpe=rpe?Number(rpe):null;record.pain=pain||null;record.notes=notes;appStorage.setItem(key,JSON.stringify(history));pendingSummaryId=null;show('board')}catch(e){$('summaryMessage').textContent=e.message}};
+function renderCompletedSummary(record){
+ const target=$('completedSummaryBody');
+ target.replaceChildren();
+ if(!record){target.append(node('p','No se ha encontrado el historial de esta sesión. No se ha borrado ningún dato.','notice'));return}
+ const metrics=node('div','','completed-metrics');
+ const duration=Number.isFinite(Number(record.elapsed))?Math.max(0,Number(record.elapsed)):0;
+ const snapshot=Array.isArray(record.exerciseSnapshot)?record.exerciseSnapshot:[];
+ const planned=snapshot.length||(Array.isArray(record.exerciseNames)?record.exerciseNames.length:0);
+ const lastReached=Number.isInteger(record.lastReachedStep)?Math.min(planned,record.lastReachedStep):null;
+ for(const [label,value] of [
+   ['Tiempo entrenado',formatSeconds(Math.floor(duration))],
+   ['Pasos programados',String(planned)],
+   ['Último paso alcanzado',lastReached===null?'No registrado':String(lastReached)+' / '+planned],
+   ['Esfuerzo (RPE)',record.rpe===null||record.rpe===undefined?'Sin registrar':String(record.rpe)+' / 10'],
+   ['Molestias',record.pain||'Sin registrar']
+ ]){
+   const card=node('div','','completed-stat');
+   card.append(node('small',label),node('strong',value));
+   metrics.append(card);
+ }
+ target.append(node('h3',record.name||'Entrenamiento'),metrics);
+ const date=new Date(record.date);
+ if(Number.isFinite(date.getTime()))target.append(node('p','Finalizada el '+date.toLocaleString('es-ES'),'muted small'));
+ const feedback=node('div','','tile');
+ feedback.append(node('h3','Feedback'));
+ feedback.append(node('p',record.notes?.trim()||'Sin observaciones añadidas.','completed-detail'));
+ target.append(feedback);
+ const list=snapshot.length?snapshot:(record.exerciseNames||[]).map(x=>({label:x}));
+ if(list.length){
+   const details=node('details','','tools-details completed-detail');
+   const heading=node('summary','Ver ejercicios y registros ('+list.length+')');
+   details.append(heading);
+   const listEl=node('ol','','completed-exercises');
+   for(let i=0;i<list.length;i++){
+     const item=list[i],li=node('li','');
+     const title=node('strong',item.label||'Ejercicio');
+     li.append(title);
+     const instruction=item.raw?decode(item.raw).instructions:'';
+     if(instruction)li.append(node('div','Indicaciones: '+instruction,'muted small completed-detail'));
+     const sets=record.seriesLog?.[i];
+     if(Array.isArray(sets)&&sets.length){
+       li.append(node('div',sets.map((entry,j)=>'Serie '+(j+1)+': '+entry.reps+' rep · '+entry.weight+' kg · RIR '+entry.rir).join(' | '),'muted small'));
+     }
+     const result=record.actualResults?.[i];
+     if(result)li.append(node('div','Resultado: '+result.value+' '+result.unit,'muted small'));
+     listEl.append(li);
+   }
+   details.append(listEl);
+   target.append(details);
+ }
+ for(const [type,results] of [['AMRAP',record.amrapResults],['FOR TIME',record.ftResults]]){
+   if(!Array.isArray(results)||!results.length)continue;
+   const section=node('div','','tile');
+   section.append(node('h3',type));
+   for(const x of results){
+     section.append(node('p',(x.name||type)+' · '+(type==='AMRAP'?(x.rounds||0)+' rondas completas':formatSeconds(Math.floor(x.seconds||0))),'completed-detail'));
+   }
+   target.append(section);
+ }
+}
+function showCompletedSummary(){
+ if(isHF){pendingSummaryId=null;show('board');return}
+ const record=getHistory().find(entry=>entry.id===pendingSummaryId);
+ if(!record){$('summaryMessage').textContent='No se encuentra la sesión guardada. Se ha conservado el formulario.';return}
+ renderCompletedSummary(record);
+ pendingSummaryId=null;show('completedSummary');
+}
+$('completedSummaryHome').onclick=()=>show('library');
+$('completedSummaryHistory').onclick=()=>show('history');
+$('summarySkip').onclick=showCompletedSummary;
+$('summarySave').onclick=()=>{
+ try{
+  const rpe=$('summaryRpe').value.trim(),pain=$('summaryPain').value,notes=$('summaryNotes').value.trim();
+  if(rpe&&(!Number.isInteger(Number(rpe))||Number(rpe)<1||Number(rpe)>10))
+   throw Error('RPE debe estar entre 1 y 10');
+  const key='gg-strength-history-v1',history=getHistory(),record=history.find(x=>x.id===pendingSummaryId);
+  if(!record)throw Error('No se encuentra la sesión guardada');
+  record.rpe=rpe?Number(rpe):null;record.pain=pain||null;record.notes=notes;
+  appStorage.setItem(key,JSON.stringify(history));
+  if(isHF){pendingSummaryId=null;show('board');return}
+  showCompletedSummary();
+ }catch(error){$('summaryMessage').textContent=error.message}
+};
 function renderActual(){const item=steps()[step],panel=$('actualPanel');panel.classList.toggle('hidden',!session||!item||!!item.strength);if(!session||!item||item.strength)return;$('actualPlanned').textContent='Programado: '+item.label+(item.duration?' · '+item.duration+' segundos':'');const record=actualResults[step];$('actualValue').value=record?.value??'';$('actualUnit').value=record?.unit||(/kcal/i.test(item.label)?'kcal':/\bkm\b/i.test(item.label)?'km':/\b\d+\s*m\b/i.test(item.label)?'m':item.duration?'s':'reps');$('actualMessage').textContent=record?'Resultado guardado':'Puedes avanzar sin registrar un resultado'}
 $('actualSave').onclick=()=>{const value=$('actualValue').value.trim();if(value===''||!Number.isFinite(Number(value))||Number(value)<0){$('actualMessage').textContent='Introduce una cantidad válida';return}actualResults[step]={value:Number(value),unit:$('actualUnit').value};saveSession();$('actualMessage').textContent='Resultado guardado'};
 $('skipRest').onclick=()=>{if(!session||paused||!restRunning)return;if(transitionTo!==null){finishExerciseTransition();return}restRemaining=0;restRunning=false;saveSession();renderSeries();$('status').textContent='Descanso omitido. Ya puedes hacer la siguiente serie.'};$('quickAdvance').onclick=()=>$('advance').click();$('quickPause').onclick=()=>$('pause').click();function setSessionExtrasOpen(open){
