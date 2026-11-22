@@ -681,6 +681,94 @@ html[data-edition="hf"] .completed-exercises{margin:0;padding-left:22px}
 html[data-edition="hf"] .completed-exercises li{margin:8px 0}
 html[data-edition="hf"] .tv-mode.guided-active #guided .hr-zone-bar{max-width:540px}
 @media(prefers-reduced-motion:reduce){html[data-edition="hf"] .hr-zone-segment[data-active="true"]{transform:none}}
+
+/* BUHARDILLA + HF · modos TV: título cardíaco completo y barra continua de colores vivos */
+body.tv-mode.guided-active #guided .heart-rate-display{
+ box-sizing:border-box;min-height:0;justify-content:center;
+ gap:clamp(2px,.65vh,8px);
+ padding:clamp(18px,2.8vh,30px) clamp(10px,1.5vw,22px) clamp(8px,1.4vh,16px);
+ overflow:visible
+}
+body.tv-mode.guided-active #guided #hrLabel{
+ flex:0 0 auto;display:block;position:relative;
+ font-size:clamp(14px,2.65vh,23px);line-height:1.35;
+ text-align:center;white-space:nowrap;margin:0;padding:0;
+ overflow:visible
+}
+body.tv-mode.guided-active #guided .heart-rate-value{
+ flex:0 1 auto;font-size:clamp(68px,14vh,154px);line-height:1.03;
+ min-height:0;margin:0
+}
+body.tv-mode.guided-active #guided #hrZone{margin:0;line-height:1.15;flex-shrink:0}
+body.tv-mode.guided-active #guided .hr-zone-bar{flex-shrink:0}
+html:not([data-edition="hf"]) .hr-zone-bar,
+html[data-edition="hf"] .hr-zone-bar{
+ display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+ gap:0!important;width:min(100%,520px);
+ margin:12px auto 4px;border-radius:9px;
+}
+html:not([data-edition="hf"]) .hr-zone-segment,
+html[data-edition="hf"] .hr-zone-segment{
+ opacity:1!important;border:0!important;border-radius:0!important;
+ transform:none!important;min-height:clamp(23px,3.5vh,36px);
+ font-size:clamp(11px,1.65vh,16px);z-index:0;
+}
+.hr-zone-bar .hr-zone-segment:first-child{border-radius:9px 0 0 9px!important}
+.hr-zone-bar .hr-zone-segment:last-child{border-radius:0 9px 9px 0!important}
+html:not([data-edition="hf"]) .hr-zone-segment[data-hr-zone="1"],
+html[data-edition="hf"] .hr-zone-segment[data-hr-zone="1"]{background:#fff!important;color:#151515!important}
+html:not([data-edition="hf"]) .hr-zone-segment[data-hr-zone="2"],
+html[data-edition="hf"] .hr-zone-segment[data-hr-zone="2"]{background:#1594ff!important;color:#082135!important}
+html:not([data-edition="hf"]) .hr-zone-segment[data-hr-zone="3"],
+html[data-edition="hf"] .hr-zone-segment[data-hr-zone="3"]{background:#00d663!important;color:#072515!important}
+html:not([data-edition="hf"]) .hr-zone-segment[data-hr-zone="4"],
+html[data-edition="hf"] .hr-zone-segment[data-hr-zone="4"]{background:#ff9500!important;color:#2d1900!important}
+html:not([data-edition="hf"]) .hr-zone-segment[data-hr-zone="5"],
+html[data-edition="hf"] .hr-zone-segment[data-hr-zone="5"]{background:#ff4353!important;color:#2b0610!important}
+html:not([data-edition="hf"]) .hr-zone-segment[data-active="true"],
+html[data-edition="hf"] .hr-zone-segment[data-active="true"]{
+ box-shadow:inset 0 0 0 3px #fff,0 0 0 1px #222!important;
+ outline:0!important;outline-offset:0!important;z-index:1
+}
+/* Preparación: únicamente las cifras, sin tarjeta/recuadro. Los mandos siguen accesibles. */
+html:not([data-edition="hf"]) #prestartOverlay,
+html[data-edition="hf"] #prestartOverlay{
+ background:transparent!important;pointer-events:none!important;
+ display:flex;align-items:center;justify-content:center;padding:0;z-index:50
+}
+html:not([data-edition="hf"]) #prestartOverlay .prestart-dialog,
+html[data-edition="hf"] #prestartOverlay .prestart-dialog{
+ width:auto!important;max-width:100%;background:transparent!important;
+ border:0!important;border-radius:0!important;box-shadow:none!important;
+ padding:0!important;margin:0!important;overflow:visible
+}
+#prestartOverlay .prestart-eyebrow,
+#prestartOverlay #prestartTitle,
+#prestartOverlay #prestartInfo,
+#prestartOverlay #prestartCancel{display:none!important}
+html:not([data-edition="hf"]) #prestartValue,
+html[data-edition="hf"] #prestartValue{
+ font-size:clamp(130px,30vmin,330px)!important;font-weight:1000;
+ line-height:1!important;color:#ff6a2a!important;
+ text-shadow:0 7px 19px #000d,0 0 6px #000;
+ background:transparent!important;padding:0!important;margin:0!important
+}
+#prestartOverlay #prestartContinue{
+ display:block;pointer-events:auto;min-height:48px;
+ margin:16px auto 0;max-width:max-content
+}
+#prestartOverlay #prestartContinue.hidden{display:none!important}
+#cancelTraining{background:#50383e!important;border:1px solid #87646b!important;color:#fff!important}
+@media (orientation:landscape) and (max-height:540px){
+ body.tv-mode.guided-active #guided .heart-rate-display{
+  padding-top:clamp(10px,2vh,18px);gap:2px
+ }
+ body.tv-mode.guided-active #guided .heart-rate-value{font-size:clamp(55px,12vh,100px)}
+ body.tv-mode.guided-active #guided #hrLabel{font-size:clamp(12px,2.8vh,18px)}
+ html:not([data-edition="hf"]) .hr-zone-segment,html[data-edition="hf"] .hr-zone-segment{
+  min-height:clamp(18px,3.3vh,26px)
+ }
+}
 </style></head><body>
 <header class="row" style="margin-bottom:18px"><div><h1 id="brandTitle" class="gold"><span class="gg-brand-mark" aria-label="BUHARDILLA Fitness"><span class="buhardilla-wordmark"><strong>BUHARDILLA</strong><em>Fitness</em></span></span></h1><span id="brandSubtitle" class="muted small hidden">GO ALL OUT</span></div><div class="header-settings"><button id="settingsToggle" type="button" aria-label="Abrir ajustes" aria-expanded="false" aria-controls="settingsPanel" class="settings-gear">⚙</button><div id="settingsPanel" class="tools-inner hidden"><button id="closeSettings" class="alt" type="button" style="grid-column:1/-1">✕ Cerrar ajustes</button><button id="soundToggle" class="alt">🔊 Avisos activados</button><button id="soundTest" class="alt">♪ Probar sonido</button><button id="wakeToggle" class="alt" type="button" style="grid-column:1/-1">☀ Mantener pantalla activa: activado</button><span id="wakeStatus" class="muted small" style="grid-column:1/-1" aria-live="polite">Pendiente de iniciar sesión</span><button id="connectHr" class="alt" type="button" style="grid-column:1/-1">♥ Conectar pulsómetro Bluetooth</button><button id="disconnectHr" class="alt hidden" type="button" style="grid-column:1/-1">Desconectar pulsómetro</button><span id="hrConnectionStatus" class="muted small" style="grid-column:1/-1" aria-live="polite">Sensor no conectado</span><button id="checkUpdates" class="alt" type="button" style="grid-column:1/-1">↻ Buscar actualizaciones</button>
 <button id="forceRefresh" class="alt" type="button" style="grid-column:1/-1">↻ Recargar versión sin borrar datos</button><span id="updateStatus" class="muted small" style="grid-column:1/-1" aria-live="polite"></span><span id="audioStatus" class="muted small" aria-live="polite">Audio sin comprobar</span><details class="settings-data"><summary>Datos</summary><div class="settings-data-actions"><button id="backupButton" class="alt">↓ Copia de seguridad</button><button id="restoreButton" class="alt" type="button">↑ Restaurar copia</button><input id="restoreFile" class="hidden" type="file" accept=".json,application/json" aria-label="Seleccionar copia de seguridad GG Mobile"></div></details><button id="addLocalProfile" type="button" class="alt settings-wide">Añadir perfil</button><p id="appVersion" class="muted small settings-wide"></p></div></div></header><div id="updateBanner" class="panel hidden" style="border:1px solid var(--accent,#dbc396)"><div class="row"><span id="updateBannerText">Hay una versión nueva de GG Mobile</span><button id="applyUpdate" type="button">Actualizar ahora</button></div></div>
@@ -783,7 +871,7 @@ html[data-edition="hf"] .tv-mode.guided-active #guided .hr-zone-bar{max-width:54
   <button id="prestartCancel" class="alt" type="button">Cancelar inicio</button></div>
  </div>
 </div>
-<div id="restCard" class="panel hidden" role="status" aria-live="polite"><div id="restLabel" class="gold small">DESCANSO AUTOMÁTICO</div><strong id="restCountdown" aria-live="off">00:00</strong><div id="restNext" class="muted small hidden"></div><button id="skipRest" type="button" class="alt">Omitir</button></div><div class="guided-controls"><div class="guided-primary"><button id="tvCompleteSet" type="button" class="tv-only">✓ Completar serie</button><button id="quickAdvance" type="button">✓ Ejercicio completado</button><button id="quickPause" type="button" class="alt">Pausar</button></div><div class="guided-view-controls"><button id="restartTraining" type="button" class="alt">↻ Reiniciar</button><button type="button" class="alt tv-toggle" data-tv-toggle aria-pressed="false">Modo TV</button><button id="moreSession" type="button" class="alt session-more" aria-expanded="false">▾ Registros y controles</button></div></div><div id="sessionExtras" class="hidden"><button id="tvReturnToTraining" type="button" class="alt tv-return-training">← Volver al entrenamiento</button><div id="actualPanel" class="panel hidden"><h3>RESULTADO REAL DEL EJERCICIO</h3><p id="actualPlanned" class="muted small"></p><label>Cantidad realizada<input id="actualValue" type="number" min="0" step="any" placeholder="Opcional"></label><label>Unidad<select id="actualUnit"><option value="m">Metros</option><option value="km">Kilómetros</option><option value="kcal">Calorías</option><option value="reps">Repeticiones</option><option value="s">Segundos</option></select></label><div class="buttons"><button id="actualSave" class="alt" type="button">Guardar resultado</button></div><p id="actualMessage" class="gold small"></p></div><div id="strengthPanel" class="panel"><div class="row"><h3>REGISTRO DE FUERZA</h3><span class="muted small">Datos reales de cada serie</span></div><div class="setgrid"><label>Repeticiones<input id="reps" type="number" min="0" max="500" step="1" value="10"></label><label>Peso (kg)<input id="weight" type="number" min="0" max="1000" step="0.25" value="0"></label><label>RIR<input id="rir" type="number" min="0" max="15" step="1" value="2"></label><label>Descanso (s)<input id="rest" type="number" min="0" max="1800" step="5" value="90"></label></div><div id="previousSession" class="notice" style="margin:12px 0"></div><div id="seriesProgress" class="gold"></div><div class="buttons"><button id="saveSet" class="alt">Guardar datos</button><button id="cancelEdit" class="alt hidden">Cancelar edición</button><button id="logSet">✓ Completar serie</button><button id="undoSet" class="alt">Deshacer última</button></div><div id="seriesList" class="small"></div></div><div class="panel"><div class="actions"><button id="prev" class="alt">◀ Anterior</button><button id="pause" class="alt">Pausar</button><button id="advance">Siguiente ▶</button><button id="showBoard" class="alt">Ver pizarra</button><button id="finish" class="danger">Finalizar</button></div><p id="status" class="gold" aria-live="polite"></p></div></div></section>
+<div id="restCard" class="panel hidden" role="status" aria-live="polite"><div id="restLabel" class="gold small">DESCANSO AUTOMÁTICO</div><strong id="restCountdown" aria-live="off">00:00</strong><div id="restNext" class="muted small hidden"></div><button id="skipRest" type="button" class="alt">Omitir</button></div><div class="guided-controls"><div class="guided-primary"><button id="tvCompleteSet" type="button" class="tv-only">✓ Completar serie</button><button id="quickAdvance" type="button">✓ Ejercicio completado</button><button id="quickPause" type="button" class="alt">Pausar</button></div><div class="guided-view-controls"><button id="restartTraining" type="button" class="alt">↻ Reiniciar</button><button id="cancelTraining" type="button" class="alt">✕ Cancelar</button><button type="button" class="alt tv-toggle" data-tv-toggle aria-pressed="false">Modo TV</button><button id="moreSession" type="button" class="alt session-more" aria-expanded="false">▾ Registros y controles</button></div></div><div id="sessionExtras" class="hidden"><button id="tvReturnToTraining" type="button" class="alt tv-return-training">← Volver al entrenamiento</button><div id="actualPanel" class="panel hidden"><h3>RESULTADO REAL DEL EJERCICIO</h3><p id="actualPlanned" class="muted small"></p><label>Cantidad realizada<input id="actualValue" type="number" min="0" step="any" placeholder="Opcional"></label><label>Unidad<select id="actualUnit"><option value="m">Metros</option><option value="km">Kilómetros</option><option value="kcal">Calorías</option><option value="reps">Repeticiones</option><option value="s">Segundos</option></select></label><div class="buttons"><button id="actualSave" class="alt" type="button">Guardar resultado</button></div><p id="actualMessage" class="gold small"></p></div><div id="strengthPanel" class="panel"><div class="row"><h3>REGISTRO DE FUERZA</h3><span class="muted small">Datos reales de cada serie</span></div><div class="setgrid"><label>Repeticiones<input id="reps" type="number" min="0" max="500" step="1" value="10"></label><label>Peso (kg)<input id="weight" type="number" min="0" max="1000" step="0.25" value="0"></label><label>RIR<input id="rir" type="number" min="0" max="15" step="1" value="2"></label><label>Descanso (s)<input id="rest" type="number" min="0" max="1800" step="5" value="90"></label></div><div id="previousSession" class="notice" style="margin:12px 0"></div><div id="seriesProgress" class="gold"></div><div class="buttons"><button id="saveSet" class="alt">Guardar datos</button><button id="cancelEdit" class="alt hidden">Cancelar edición</button><button id="logSet">✓ Completar serie</button><button id="undoSet" class="alt">Deshacer última</button></div><div id="seriesList" class="small"></div></div><div class="panel"><div class="actions"><button id="prev" class="alt">◀ Anterior</button><button id="pause" class="alt">Pausar</button><button id="advance">Siguiente ▶</button><button id="showBoard" class="alt">Ver pizarra</button><button id="finish" class="danger">Finalizar</button></div><p id="status" class="gold" aria-live="polite"></p></div></div></section>
 <section id="sessionSummary" class="hidden"><div class="panel"><div class="gold">RESUMEN DE SESIÓN</div><h2>Entrenamiento terminado</h2><div id="summaryWorkout" class="muted"></div><div id="summaryDuration" class="metric"></div><label for="summaryRpe">Esfuerzo percibido (RPE 1–10)</label><input id="summaryRpe" type="number" min="1" max="10" step="1" placeholder="Ej.: 8"><label for="summaryPain">¿Has tenido molestias?</label><select id="summaryPain"><option value="">Seleccionar</option><option value="No">No</option><option value="Sí">Sí</option></select><label for="summaryNotes">Observaciones</label><textarea id="summaryNotes" rows="3" placeholder="Respiración, técnica, sensaciones..."></textarea><div class="buttons"><button id="summarySave">Guardar resumen</button><button id="summarySkip" class="alt">Omitir</button></div><p id="summaryMessage" class="gold"></p></div></section>
 <section id="completedSummary" class="hidden"><div class="panel">
  <div class="gold">ACTIVIDAD COMPLETADA</div>
@@ -1632,11 +1720,7 @@ $('prestartContinue').onclick=()=>{
  prestartRunning=true;clockAnchor=Date.now();
  void initAudio();syncPrestartOverlay();saveSession();
 };
-$('prestartCancel').onclick=()=>{
- if(prestartRemaining<=0)return;
- prestartRemaining=0;prestartRunning=false;paused=true;session=false;
- saveSession();show('board');
-};
+$('prestartCancel').onclick=()=>{$('cancelTraining').click()};
 function saveSession(){try{appStorage.setItem('gg-active-session-v1',JSON.stringify({active:sessionWorkout,step,paused,elapsed,stepElapsed,session,seriesLog,restRemaining,restRunning,transitionTo,draftSets,prestartRemaining,vectorTargets,amrapElapsed,amrapRounds,amrapResults,amrapLastBlock,amrapCurrent,ftElapsed,ftResults,actualResults}))}catch(e){}}
 function numeric(id,min,max){const raw=$(id).value;if(raw==='')throw Error('Falta '+id);const v=Number(raw);if(!Number.isFinite(v)||v<min||v>max)throw Error('Valor inválido en '+id);return v}
 function currentStrength(){return steps()[step]?.strength||null}
@@ -1876,6 +1960,19 @@ $('start').onclick=()=>{
  beginTrainingSession();
 };
 $('restartTraining').classList.remove('hidden');
+function cancelTrainingSession(){
+ if(!session)return;
+ const alreadyStarted=prestartRemaining<=0;
+ if(alreadyStarted&&!confirm('¿Cancelar el entrenamiento? Se descartará el progreso actual sin guardarlo en el historial. Las rutinas y sesiones anteriores permanecerán intactas.'))return;
+ prestartRemaining=0;prestartRunning=false;
+ paused=true;session=false;sessionWorkout=null;
+ step=0;elapsed=0;stepElapsed=0;amrapElapsed=0;amrapRounds=0;amrapResults=[];
+ ftElapsed=0;ftResults=[];actualResults={};amrapLastBlock=null;amrapCurrent=null;
+ editingSet=-1;seriesLog={};draftSets={};restRemaining=0;restRunning=false;transitionTo=null;
+ clockAnchor=Date.now();resetHeartLimitAlert();
+ saveSession();syncPrestartOverlay();void releaseWakeLock();show('board');
+}
+$('cancelTraining').onclick=cancelTrainingSession;
 $('restartTraining').onclick=()=>{
  if(!session)return;
  if(!confirm('¿Reiniciar el entrenamiento desde el principio? Se perderá el progreso de la sesión en curso, pero el historial anterior se conservará.'))return;
