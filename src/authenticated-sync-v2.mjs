@@ -232,9 +232,11 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
     try{
      const newRevision=await cloud.upsertRevision(profileId,item,revision);
      shadow[key]={revision:newRevision};
-     if(item.deleted_at)byKey.set(key,{...item,revision:newRevision});
-     else byKey.set(key,{...item,revision:newRevision});
-     delete pending[key];
+     byKey.set(key,{...item,revision:newRevision});
+     // A second edit may have arrived while the network request was pending.
+     // Never acknowledge/delete a newer local change with an older response.
+     if(pending[key]===item)delete pending[key];
+     else queued=true;
     }catch(error){
      unresolved[key]=item;
      if(!(error instanceof SecureSyncConflict))onState('Cambio pendiente: '+error.message);
