@@ -610,6 +610,9 @@ html:not([data-edition="hf"]) .history-entry-heading button{min-height:42px;font
 <p class="muted small">El reloj asigna un ejercicio a cada minuto y repite la lista en orden. Si fijas menos de 60 segundos de trabajo, el resto del minuto es recuperación.</p>
 <div class="buttons"><button id="emomAdd" type="button">Añadir EMOM</button><button id="emomCancel" class="alt" type="button">Cancelar</button></div>
 </div><div id="v2ForTime" class="hidden"><label>Nombre del For Time<input id="ftName" value="For Time híbrido"></label><div class="setgrid"><label>Rondas<input id="ftRounds" type="number" min="1" max="20" value="3"></label><label>Límite (min; 0 sin límite)<input id="ftLimit" type="number" min="0" max="120" value="20"></label></div><label for="ftLines">Ejercicios por ronda</label><textarea id="ftLines" rows="6" aria-describedby="ftExamples" placeholder="500 m carrera&#10;10 flexiones&#10;2 minutos de remo"></textarea><p id="ftExamples" class="muted small">Escribe «2 minutos de remo» o «Remo 2 min» para una cuenta atrás. Las distancias y repeticiones avanzan manualmente.</p><div class="buttons"><button id="ftAdd" type="button">＋ Añadir For Time</button><button id="ftCancel" type="button" class="alt">Cancelar</button></div></div><div id="v2Amrap" class="hidden"><label for="amrapName">Nombre del AMRAP</label><input id="amrapName" value="AMRAP híbrido"><label for="amrapMinutes">Tiempo límite (minutos)</label><input id="amrapMinutes" type="number" min="1" max="120" value="15"><label for="amrapLines">Ejercicios (uno por línea, se repetirán durante el tiempo límite)</label><textarea id="amrapLines" rows="7" placeholder="300 m SkiErg&#10;10 burpees&#10;15 sentadillas goblet · 20 kg&#10;200 m carrera"></textarea><p class="muted small">Los ejercicios por distancia y repeticiones avanzan manualmente. Puedes usar @30 para un ejercicio cronometrado. El reloj general del AMRAP nunca se reinicia al cambiar de ejercicio.</p><div class="buttons"><button id="amrapAdd" type="button">＋ Añadir AMRAP</button><button id="amrapCancel" class="alt" type="button">Cancelar</button></div></div><div id="v2Circuit" class="hidden"><label for="circuitTitle">Nombre del circuito</label><input id="circuitTitle" value="Circuito híbrido"><div class="setgrid"><label>Rondas<input id="circuitRounds" type="number" min="1" max="20" value="3"></label><label>Descanso entre rondas (s)<input id="circuitRest" type="number" min="0" max="1800" value="90"></label></div><label for="circuitLines">Ejercicios de cada ronda (uno por línea)</label><textarea id="circuitLines" rows="8" placeholder="500 m carrera en cinta&#10;10 flexiones&#10;400 m remo&#10;10 sentadillas goblet · 20 kg&#10;300 m SkiErg&#10;40 m farmer carry · 20 kg/mano&#10;Bicicleta @120&#10;10 dominadas neutras"></textarea><p class="muted small">Introduce la secuencia una sola vez. Usa @120 para ejercicios de 120 segundos; los demás avanzan manualmente. Se repetirá la secuencia el número de rondas indicado.</p><div class="buttons"><button id="circuitAdd" type="button">＋ Añadir circuito completo</button><button id="circuitCancel" class="alt" type="button">Cancelar</button></div></div><div id="v2Fields" class="hidden"><label for="v2Name">Nombre del ejercicio</label><input id="v2Name" placeholder="Ej.: Press banca, SkiErg, carrera">
+<div class="v2-instruction-field"><label for="v2Instructions">AÑADIR INSTRUCCIONES <span class="muted small">(opcional)</span></label>
+<textarea id="v2Instructions" rows="3" maxlength="200" placeholder="Ej.: cinta a 12 km/h y 1 % de inclinación; mantener el ritmo hasta terminar."></textarea>
+<p class="muted small">Se mostrarán durante el ejercicio. Puedes indicar velocidad, técnica, resistencia o cualquier consigna del entrenador.</p></div>
 <details id="v2Technique" class="technique-picker">
 <summary>Elegir GIF de la biblioteca</summary>
 <label for="techniqueSearch">Buscar ejercicio</label>
@@ -1228,7 +1231,7 @@ function renderLibrary(){
  star.onclick=()=>hfToggleFavorite(w.id);
  actions.append(star);
 }
-const more=node('button','⋯','alt');more.type='button';more.setAttribute('aria-label','Opciones de '+w.name);more.setAttribute('aria-expanded','false');const options=node('div','','routine-options hidden');for(const [label,fn] of [['Duplicar',()=>duplicateWorkout(w.id)],['Renombrar',()=>renameWorkout(w.id)],['Eliminar',()=>deleteWorkout(w.id)]]){const button=node('button',label,label==='Eliminar'?'danger':'alt');button.type='button';button.onclick=()=>{setRoutineMenu(options,false);return fn()};options.append(button)}if(isHF){
+const more=node('button','⋯','alt');more.type='button';more.setAttribute('aria-label','Opciones de '+w.name);more.setAttribute('aria-expanded','false');const options=node('div','','routine-options hidden');for(const [label,fn] of [['Editar',()=>{if(isActiveRoutine(w.id)){alert('Finaliza la sesión activa antes de editar este entrenamiento.');return}edit(w)}],['Duplicar',()=>duplicateWorkout(w.id)],['Renombrar',()=>renameWorkout(w.id)],['Eliminar',()=>deleteWorkout(w.id)]]){const button=node('button',label,label==='Eliminar'?'danger':'alt');button.type='button';button.onclick=()=>{setRoutineMenu(options,false);return fn()};options.append(button)}if(isHF){
  const stations=node('button','Adaptar a estaciones','alt');
  stations.type='button';
  stations.onclick=()=>{setRoutineMenu(options,false);void presentSavedHFWorkout(w.id,'stations');};
@@ -1272,16 +1275,35 @@ function renderBoard(){ $('resume').classList.toggle('hidden',!(session&&session
  });
  return;
 }w.blocks.forEach((b,i)=>{const tile=node('div','','tile');tile.append(node('h3',String(i+1).padStart(2,'0')+' · '+b.name));b.items.forEach(item=>tile.append(node('p',readTechniqueLink(item).text)));$('blocks').append(tile)})}
+function readExerciseInstructions(line){
+ const raw=String(line||'');
+ const match=raw.match(/ \| INSTRUCCIONES ([^ |]+)(?=(?: \| GIF [a-z0-9-]+)?(?: @\d+)?$)/);
+ if(!match)return {text:raw,instructions:''};
+ let instructions='';
+ try{instructions=decodeURIComponent(match[1])}catch(error){instructions=''}
+ return {text:raw.replace(match[0],''),instructions};
+}
+function addExerciseInstructions(line,value){
+ const instructions=String(value||'').trim();
+ const original=readExerciseInstructions(line).text;
+ if(!instructions)return original;
+ if(instructions.length>200)throw Error('Las instrucciones no pueden superar 200 caracteres.');
+ const encoded=encodeURIComponent(instructions);
+ const result=original.replace(/( \| GIF [a-z0-9-]+)?( @\d+)?$/,(_,gif='',time='')=>' | INSTRUCCIONES '+encoded+gif+time);
+ if(result.length>500)throw Error('Las instrucciones son demasiado largas para el formato de entrenamiento; acórtalas.');
+ return result;
+}
 function readTechniqueLink(line){
- const match=line.match(/ \| GIF ([a-z0-9-]+)(?= @\d+$|$)/);
- return match?{text:line.replace(match[0],''),techniqueId:match[1]}:{text:line,techniqueId:''};
+ const clean=readExerciseInstructions(line);
+ const match=clean.text.match(/ \| GIF ([a-z0-9-]+)(?= @\d+$|$)/);
+ return match?{text:clean.text.replace(match[0],''),techniqueId:match[1],instructions:clean.instructions}:{text:clean.text,techniqueId:'',instructions:clean.instructions};
 }
 function addTechniqueLink(line,id){
  return id?line.replace(/( @\d+)?$/,(_,duration='')=>' | GIF '+id+duration):line;
 }
 const FOR_TIME_BLOCK=/^FOR TIME \d+s · .+ · Ronda \d+\/\d+$/;
 function forTimeLine(line,strict=false){
- const {text,techniqueId}=readTechniqueLink(line);
+ const {text,techniqueId,instructions}=readTechniqueLink(line);
  const explicit=text.match(/ @(\d+)$/);
  if(explicit){
   if(strict)durationSeconds(explicit[1],'s');
@@ -1296,10 +1318,10 @@ function forTimeLine(line,strict=false){
  if(!first&&!last)return line;
  const [label,number,unit]=first?[first[3],first[1],first[2]]:[last[1],last[2],last[3]];
  const seconds=Number(number.replace(',','.'))*(/^min/i.test(unit)?60:1);
- try{return addTechniqueLink(label.trim()+' @'+durationSeconds(seconds,'s'),techniqueId)}
+ try{return addExerciseInstructions(addTechniqueLink(label.trim()+' @'+durationSeconds(seconds,'s'),techniqueId),instructions)}
  catch(error){if(strict)throw error;return line}
 }
-function decode(line){const {text,techniqueId}=readTechniqueLink(line);line=text;const m=line.match(/^(.*?)\s+@(\d+)$/);if(m)return{label:m[1],duration:Number(m[2]),strength:null,techniqueId};const parts=line.split('|').map(x=>x.trim());let label=parts[0],sets=0,reps=0,weight=null,rir=null,rest=90;const legacy=label.match(/^(\d+)\s*[x×]\s*(\d+)\s+(.+)$/i);if(legacy){sets=Number(legacy[1]);reps=Number(legacy[2]);label=legacy[3]}for(const p of parts.slice(1)){let z=p.match(/^(\d+)\s*[x×]\s*(\d+)$/i);if(z){sets=Number(z[1]);reps=Number(z[2]);continue}z=p.match(/^(\d+(?:[.,]\d+)?)\s*kg$/i);if(z){weight=Number(z[1].replace(',','.'));continue}z=p.match(/^RIR\s*(\d+)$/i);if(z){rir=Number(z[1]);continue}z=p.match(/^descanso\s*(\d+)\s*s?$/i);if(z){rest=Number(z[1])}}const strength=sets>0&&sets<=30&&reps<=500?{sets,reps,weight,rir,rest}:null;return{label,duration:0,strength,techniqueId}}function steps(){
+function decode(line){const {text,techniqueId,instructions}=readTechniqueLink(line);line=text;const m=line.match(/^(.*?)\s+@(\d+)$/);if(m)return{label:m[1],duration:Number(m[2]),strength:null,techniqueId,instructions};const parts=line.split('|').map(x=>x.trim());let label=parts[0],sets=0,reps=0,weight=null,rir=null,rest=90;const legacy=label.match(/^(\d+)\s*[x×]\s*(\d+)\s+(.+)$/i);if(legacy){sets=Number(legacy[1]);reps=Number(legacy[2]);label=legacy[3]}for(const p of parts.slice(1)){let z=p.match(/^(\d+)\s*[x×]\s*(\d+)$/i);if(z){sets=Number(z[1]);reps=Number(z[2]);continue}z=p.match(/^(\d+(?:[.,]\d+)?)\s*kg$/i);if(z){weight=Number(z[1].replace(',','.'));continue}z=p.match(/^RIR\s*(\d+)$/i);if(z){rir=Number(z[1]);continue}z=p.match(/^descanso\s*(\d+)\s*s?$/i);if(z){rest=Number(z[1])}}const strength=sets>0&&sets<=30&&reps<=500?{sets,reps,weight,rir,rest}:null;return{label,duration:0,strength,techniqueId,instructions}}function steps(){
  const w=findWorkout(active);
  if(!w)return [];
  return w.blocks.flatMap(b=>b.items.map((line,index)=>{
