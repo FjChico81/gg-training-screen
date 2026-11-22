@@ -15,7 +15,7 @@ try{
   const selected=profiles.find(p=>profileLocalId(user.id,p.id)===requested);
   if(!selected)throw Error('El perfil de HF no pertenece a tu cuenta. Abre HF y selecciona un perfil autorizado.');
   if(typeof window.__HF_V2_BOOT!=='function')throw Error('La pantalla de clase no ha podido iniciarse.');
-  const root='hf-auth-v2:'+user.id+':';
+  const root='hf-auth-v2:'+user.id+':'+requested+':';
   const historyKey='hf:'+requested+':hf-collective-history-v1';
   const checkpointKey='hf:collective-class:checkpoint:v1';
   const localHistory=root+historyKey,localCheckpoint=root+checkpointKey;
@@ -67,7 +67,7 @@ try{
   document.addEventListener('visibilitychange',()=>{
    if(document.visibilityState==='visible')void sync.synchronize();
   });
-  window.__HF_V2_BOOT(user.id);
+  window.__HF_V2_BOOT(user.id,requested);
   document.documentElement.dataset.access='unlocked';
  }
 }catch(error){
