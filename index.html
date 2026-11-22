@@ -772,6 +772,19 @@ html[data-edition="hf"] #prestartValue{
  }
 }
 
+.header-settings{display:flex;gap:8px}
+.fullscreen-toggle svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fullscreen-toggle[aria-pressed="false"] .fullscreen-exit,
+.fullscreen-toggle[aria-pressed="true"] .fullscreen-enter{display:none}
+#fullscreenStatus:not(:empty){
+ position:absolute;right:0;top:calc(100% + 6px);z-index:19;width:max-content;max-width:min(290px,85vw);
+ padding:8px 10px;border:1px solid var(--outline,#526574);border-radius:8px;
+ background:var(--panel,#243440);color:var(--text,#f8fafc);font-size:14px
+}
+@media (orientation:landscape) and (max-height:540px){
+ .tv-mode.guided-active>header .fullscreen-toggle{width:40px;height:40px;min-height:40px}
+}
+
 /* Secure v2 gate. Until authenticated by GG FAMILY / HF TRAINING, no app UI is visible. */
 html[data-access="locked"] body > :not(#accountWall):not(script){
  visibility:hidden!important;pointer-events:none!important;
@@ -821,7 +834,15 @@ html[data-access="locked"] body{background:#17191f!important}
   <p class="account-foot">GG FAMILY y HF TRAINING utilizan cuentas y bases de datos independientes. No se importan tus rutinas antiguas.</p>
  </div>
 </div>
-<header class="row" style="margin-bottom:18px"><div><h1 id="brandTitle" class="gold"><span class="gg-brand-mark" aria-label="BUHARDILLA Fitness"><span class="buhardilla-wordmark"><strong>BUHARDILLA</strong><em>Fitness</em></span></span></h1><span id="brandSubtitle" class="muted small hidden">GO ALL OUT</span></div><div class="header-settings"><button id="settingsToggle" type="button" aria-label="Abrir ajustes" aria-expanded="false" aria-controls="settingsPanel" class="settings-gear">⚙</button><div id="settingsPanel" class="tools-inner hidden"><button id="closeSettings" class="alt" type="button" style="grid-column:1/-1">✕ Cerrar ajustes</button><button id="soundToggle" class="alt">🔊 Avisos activados</button><button id="soundTest" class="alt">♪ Probar sonido</button><button id="wakeToggle" class="alt" type="button" style="grid-column:1/-1">☀ Mantener pantalla activa: activado</button><span id="wakeStatus" class="muted small" style="grid-column:1/-1" aria-live="polite">Pendiente de iniciar sesión</span><button id="connectHr" class="alt" type="button" style="grid-column:1/-1">♥ Conectar pulsómetro Bluetooth</button><button id="disconnectHr" class="alt hidden" type="button" style="grid-column:1/-1">Desconectar pulsómetro</button><span id="hrConnectionStatus" class="muted small" style="grid-column:1/-1" aria-live="polite">Sensor no conectado</span><button id="checkUpdates" class="alt" type="button" style="grid-column:1/-1">↻ Buscar actualizaciones</button>
+<header class="row" style="margin-bottom:18px"><div><h1 id="brandTitle" class="gold"><span class="gg-brand-mark" aria-label="BUHARDILLA Fitness"><span class="buhardilla-wordmark"><strong>BUHARDILLA</strong><em>Fitness</em></span></span></h1><span id="brandSubtitle" class="muted small hidden">GO ALL OUT</span></div><div class="header-settings">
+<button id="fullscreenToggle" class="settings-gear fullscreen-toggle" type="button" aria-label="Activar pantalla completa" title="Activar pantalla completa" aria-pressed="false">
+ <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <path class="fullscreen-enter" d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/>
+  <path class="fullscreen-exit" d="M3 9h6V3m12 6h-6V3M9 21v-6H3m12 6v-6h6"/>
+ </svg>
+</button>
+<span id="fullscreenStatus" role="status"></span>
+<button id="settingsToggle" type="button" aria-label="Abrir ajustes" aria-expanded="false" aria-controls="settingsPanel" class="settings-gear">⚙</button><div id="settingsPanel" class="tools-inner hidden"><button id="closeSettings" class="alt" type="button" style="grid-column:1/-1">✕ Cerrar ajustes</button><button id="soundToggle" class="alt">🔊 Avisos activados</button><button id="soundTest" class="alt">♪ Probar sonido</button><button id="wakeToggle" class="alt" type="button" style="grid-column:1/-1">☀ Mantener pantalla activa: activado</button><span id="wakeStatus" class="muted small" style="grid-column:1/-1" aria-live="polite">Pendiente de iniciar sesión</span><button id="connectHr" class="alt" type="button" style="grid-column:1/-1">♥ Conectar pulsómetro Bluetooth</button><button id="disconnectHr" class="alt hidden" type="button" style="grid-column:1/-1">Desconectar pulsómetro</button><span id="hrConnectionStatus" class="muted small" style="grid-column:1/-1" aria-live="polite">Sensor no conectado</span><button id="checkUpdates" class="alt" type="button" style="grid-column:1/-1">↻ Buscar actualizaciones</button>
 <button id="forceRefresh" class="alt" type="button" style="grid-column:1/-1">↻ Recargar versión sin borrar datos</button><button id="accountLogout" class="alt" type="button" style="grid-column:1/-1">Cerrar sesión</button><p id="accountUser" class="muted small" style="grid-column:1/-1"></p><p id="accountSyncState" class="muted small" role="status" style="grid-column:1/-1"></p><span id="updateStatus" class="muted small" style="grid-column:1/-1" aria-live="polite"></span><span id="audioStatus" class="muted small" aria-live="polite">Audio sin comprobar</span><details class="settings-data"><summary>Datos</summary><div class="settings-data-actions"><button id="backupButton" class="alt">↓ Copia de seguridad</button><button id="restoreButton" class="alt" type="button">↑ Restaurar copia</button><input id="restoreFile" class="hidden" type="file" accept=".json,application/json" aria-label="Seleccionar copia de seguridad GG Mobile"></div></details><button id="addLocalProfile" type="button" class="alt settings-wide">Añadir perfil</button><p id="appVersion" class="muted small settings-wide"></p></div></div></header><div id="updateBanner" class="panel hidden" style="border:1px solid var(--accent,#dbc396)"><div class="row"><span id="updateBannerText">Hay una versión nueva de GG Mobile</span><button id="applyUpdate" type="button">Actualizar ahora</button></div></div>
 <section id="library"><div class="panel"><h2 class="library-title">Mis entrenamientos</h2><div id="localProfilePanel">
 <label for="localProfileSelect">Perfil<select id="localProfileSelect"></select></label>
@@ -2111,6 +2132,31 @@ $('soundToggle').onclick=()=>{soundEnabled=!soundEnabled;try{appStorage.setItem(
 $('soundTest').onclick=async()=>{const ok=await initAudio();if(ok){playTone(false);audioStatus('Prueba enviada · comprueba volumen y salida de audio')}};
 $('start').addEventListener('click',()=>{void initAudio()});$('resume').addEventListener('click',()=>{void initAudio()});$('pause').addEventListener('click',()=>{void initAudio()});
 updateSoundButton();
+const fullscreenToggle=$('fullscreenToggle'),fullscreenStatus=$('fullscreenStatus');
+function updateFullscreenToggle(){
+ const active=Boolean(document.fullscreenElement);
+ const label=active?'Salir de pantalla completa':'Activar pantalla completa';
+ fullscreenToggle.setAttribute('aria-pressed',String(active));
+ fullscreenToggle.setAttribute('aria-label',label);
+ fullscreenToggle.title=label;
+ fullscreenStatus.textContent='';
+}
+fullscreenToggle.addEventListener('click',async()=>{
+ fullscreenStatus.textContent='';
+ try{
+  if(document.fullscreenElement){
+   await document.exitFullscreen();
+  }else if(document.fullscreenEnabled&&document.documentElement.requestFullscreen){
+   await document.documentElement.requestFullscreen();
+  }else{
+   fullscreenStatus.textContent='Este navegador no permite activar la pantalla completa.';
+  }
+ }catch{
+  fullscreenStatus.textContent='No se pudo cambiar la pantalla completa. Vuelve a intentarlo.';
+ }
+});
+document.addEventListener('fullscreenchange',updateFullscreenToggle);
+updateFullscreenToggle();
 const settingsMenu=$('settingsPanel'),settingsToggle=$('settingsToggle');
 function closeSettings(){settingsMenu.classList.add('hidden');settingsToggle.setAttribute('aria-expanded','false')}
 function toggleSettings(){const isClosed=settingsMenu.classList.contains('hidden');settingsMenu.classList.toggle('hidden',!isClosed);settingsToggle.setAttribute('aria-expanded',String(isClosed))}
