@@ -1,8 +1,8 @@
 -- GG FAMILY or HF TRAINING, each in its own dedicated project.
 -- IMPORTANT: Never apply this file to HPS or an unidentified database.
--- PREPARED ONLY: require confirmed project name, owner/organization, backup and approval.
+-- Applied via Supabase migrations to verified GG FAMILY and HF TRAINING projects (2026-11-22).
+-- Organization GG/HF TRAINING (Free); no HPS resources used.
 -- No migration of legacy local workouts/history is performed.
-begin;
 create table if not exists public.training_profiles_v2 (
   id uuid primary key,
   owner_id uuid not null references auth.users(id) on delete cascade,
@@ -57,4 +57,3 @@ create policy records_v2_update on public.training_records_v2 for update to auth
   using ((select auth.uid()) = owner_id and (select auth.uid()) is not null)
   with check ((select auth.uid()) = owner_id and (select auth.uid()) is not null);
 -- No DELETE grant: explicit client deletions use tombstones, with revision checks.
-commit;
