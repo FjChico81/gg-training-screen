@@ -652,6 +652,35 @@ html:not([data-edition="hf"]) .completed-exercises li{margin:7px 0;line-height:1
   min-height:clamp(20px,3vh,34px);font-size:clamp(10px,1.6vh,16px)
  }
 }
+
+/* HF individual: use the shared session features with HF's own dark palette. */
+html[data-edition="hf"] .hr-zone-bar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin:12px auto 5px;max-width:460px}
+html[data-edition="hf"] .hr-zone-segment{position:relative;display:grid;place-items:center;min-height:24px;border:2px solid transparent;border-radius:5px;opacity:.65;font-weight:850;font-size:12px}
+html[data-edition="hf"] .hr-zone-segment[data-hr-zone="1"]{background:#fff;color:#111;border-color:#a8a8a8}
+html[data-edition="hf"] .hr-zone-segment[data-hr-zone="2"]{background:#76bcff;color:#10202c}
+html[data-edition="hf"] .hr-zone-segment[data-hr-zone="3"]{background:#67db90;color:#122719}
+html[data-edition="hf"] .hr-zone-segment[data-hr-zone="4"]{background:#ffad60;color:#321e0e}
+html[data-edition="hf"] .hr-zone-segment[data-hr-zone="5"]{background:#ff8585;color:#321212}
+html[data-edition="hf"] .hr-zone-segment[data-active="true"]{opacity:1;transform:translateY(-4px);outline:2px solid #fff;outline-offset:2px}
+html[data-edition="hf"] .hr-zone-segment[data-active="true"]::before{content:"▼";position:absolute;top:-23px;color:#fff}
+html[data-edition="hf"] .prestart-overlay{display:grid;place-items:center;position:fixed;inset:0;z-index:100;background:rgba(12,12,15,.95);padding:16px}
+html[data-edition="hf"] .prestart-dialog{width:min(100%,540px);padding:clamp(20px,4vw,40px);border:2px solid #ff671d;border-radius:20px;background:#28282c;color:#fff;text-align:center}
+html[data-edition="hf"] .prestart-eyebrow{color:#ffad78;font-weight:850;letter-spacing:.14em}
+html[data-edition="hf"] .prestart-dialog h2{color:#fff;font-size:clamp(20px,4vw,34px)}
+html[data-edition="hf"] #prestartValue{display:block;font-size:clamp(100px,25vw,225px);line-height:1;font-weight:900}
+html[data-edition="hf"] .prestart-dialog p{color:#eee;line-height:1.5}
+html[data-edition="hf"] .prestart-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px}
+html[data-edition="hf"] .prestart-actions button{min-height:50px}
+html[data-edition="hf"] #completedSummaryBody{display:grid;gap:12px}
+html[data-edition="hf"] .completed-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+html[data-edition="hf"] .completed-stat{padding:14px;border:1px solid var(--line,#666);border-radius:12px;background:#29292d}
+html[data-edition="hf"] .completed-stat strong{display:block;font-size:clamp(22px,3vw,34px)}
+html[data-edition="hf"] .completed-stat small{color:#d0c9c2}
+html[data-edition="hf"] .completed-detail{white-space:pre-line;overflow-wrap:anywhere;line-height:1.5}
+html[data-edition="hf"] .completed-exercises{margin:0;padding-left:22px}
+html[data-edition="hf"] .completed-exercises li{margin:8px 0}
+html[data-edition="hf"] .tv-mode.guided-active #guided .hr-zone-bar{max-width:540px}
+@media(prefers-reduced-motion:reduce){html[data-edition="hf"] .hr-zone-segment[data-active="true"]{transform:none}}
 </style></head><body>
 <header class="row" style="margin-bottom:18px"><div><h1 id="brandTitle" class="gold"><span class="gg-brand-mark" aria-label="BUHARDILLA Fitness"><span class="buhardilla-wordmark"><strong>BUHARDILLA</strong><em>Fitness</em></span></span></h1><span id="brandSubtitle" class="muted small hidden">GO ALL OUT</span></div><div class="header-settings"><button id="settingsToggle" type="button" aria-label="Abrir ajustes" aria-expanded="false" aria-controls="settingsPanel" class="settings-gear">⚙</button><div id="settingsPanel" class="tools-inner hidden"><button id="closeSettings" class="alt" type="button" style="grid-column:1/-1">✕ Cerrar ajustes</button><button id="soundToggle" class="alt">🔊 Avisos activados</button><button id="soundTest" class="alt">♪ Probar sonido</button><button id="wakeToggle" class="alt" type="button" style="grid-column:1/-1">☀ Mantener pantalla activa: activado</button><span id="wakeStatus" class="muted small" style="grid-column:1/-1" aria-live="polite">Pendiente de iniciar sesión</span><button id="connectHr" class="alt" type="button" style="grid-column:1/-1">♥ Conectar pulsómetro Bluetooth</button><button id="disconnectHr" class="alt hidden" type="button" style="grid-column:1/-1">Desconectar pulsómetro</button><span id="hrConnectionStatus" class="muted small" style="grid-column:1/-1" aria-live="polite">Sensor no conectado</span><button id="checkUpdates" class="alt" type="button" style="grid-column:1/-1">↻ Buscar actualizaciones</button><span id="updateStatus" class="muted small" style="grid-column:1/-1" aria-live="polite"></span><span id="audioStatus" class="muted small" aria-live="polite">Audio sin comprobar</span><details class="settings-data"><summary>Datos</summary><div class="settings-data-actions"><button id="backupButton" class="alt">↓ Copia de seguridad</button><button id="restoreButton" class="alt" type="button">↑ Restaurar copia</button><input id="restoreFile" class="hidden" type="file" accept=".json,application/json" aria-label="Seleccionar copia de seguridad GG Mobile"></div></details><button id="addLocalProfile" type="button" class="alt settings-wide">Añadir perfil</button><p id="appVersion" class="muted small settings-wide"></p></div></div></header><div id="updateBanner" class="panel hidden" style="border:1px solid var(--accent,#dbc396)"><div class="row"><span id="updateBannerText">Hay una versión nueva de GG Mobile</span><button id="applyUpdate" type="button">Actualizar ahora</button></div></div>
 <section id="library"><div class="panel"><h2 class="library-title">Mis entrenamientos</h2><div id="localProfilePanel">
