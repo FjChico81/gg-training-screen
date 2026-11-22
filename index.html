@@ -1155,7 +1155,7 @@ function setupHF(){
  const resumeTitle=node('strong','Clase interrumpida');
  const resumeDescription=node('p','La clase guardada en este dispositivo se recuperará en pausa.','muted small');
  const resumeLink=node('a','▶ Continuar clase','hf-resume-link');
- resumeLink.href='hf-class-display.html?recover=1';
+ resumeLink.href='hf-class-display.html?recover=1&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v=2.9.64';
  resume.append(resumeTitle,resumeDescription,resumeLink);
  section.append(title,resume,note,links);
  intro.after(section);
