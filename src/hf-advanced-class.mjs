@@ -29,6 +29,14 @@ function number(s,min,max,what){
   return value;
 }
 function matchForTime(block){return block.name.match(FORMATS.forTime);}
+// Un ejercicio puede llevar indicaciones y una referencia GIF sin alterar el
+// patrón temporal del EMOM. Se usan copias limpias solo para validar la ronda;
+// la conversión del paso recibe el texto original y conserva los metadatos.
+function emomStructureLine(raw){
+ return raw
+  .replace(/ \| INSTRUCCIONES [^ |]+(?=(?: \| GIF [a-z0-9-]+)?(?: @\d+)?$)/,'')
+  .replace(/ \| GIF [a-z0-9-]+(?= @\d+$|$)/,'');
+}
 function pushSteps(out,raws,name,convert,advanced){
   for(const raw of raws){
     const added=step(raw,name,convert,advanced);
@@ -67,8 +75,8 @@ export function buildHFAdvancedGuided(workout,convert){
       const start=guided.length;
       let workSeconds=null,restSeconds=null;
       for(let j=0;j<rounds;j++){
-        const work=items[j*2].match(/^(.*?) · Ronda (\d+)\/(\d+) @(\d+)$/);
-        const rest=items[j*2+1].match(/^Recuperaci[oó]n · Ronda (\d+)\/(\d+) @(\d+)$/i);
+        const work=emomStructureLine(items[j*2]).match(/^(.*?) · Ronda (\d+)\/(\d+) @(\d+)$/);
+        const rest=emomStructureLine(items[j*2+1]).match(/^Recuperaci[oó]n · Ronda (\d+)\/(\d+) @(\d+)$/i);
         if(!work||!rest||!work[1]||Number(work[2])!==j+1||Number(rest[1])!==j+1||
           Number(work[3])!==rounds||Number(rest[2])!==rounds)reject('El EMOM tiene rondas incompletas o desordenadas.');
         const workTime=number(work[4],1,59,'Trabajo EMOM');
