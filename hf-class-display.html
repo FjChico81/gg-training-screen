@@ -199,6 +199,54 @@
  .hf-class-prestart strong{font-size:clamp(80px,27vw,170px)}
 }
 @media(prefers-reduced-motion:reduce){.hf-class-zone-bar span[data-active="true"]{transform:none}}
+
+/* HF colectivo · barra continua de zonas cardíacas, colores vivos y preparación sin recuadro */
+.hf-class-zone-bar{gap:0!important;border-radius:9px;overflow:visible}
+.hf-class-zone-bar span{
+ opacity:1!important;border:0!important;border-radius:0!important;transform:none!important;
+ min-height:25px;line-height:25px;font-size:clamp(11px,1.5vh,16px)
+}
+.hf-class-zone-bar span:first-child{border-radius:9px 0 0 9px!important}
+.hf-class-zone-bar span:last-child{border-radius:0 9px 9px 0!important}
+.hf-class-zone-bar span[data-zone="1"]{background:#fff!important;color:#151515!important}
+.hf-class-zone-bar span[data-zone="2"]{background:#1594ff!important;color:#082135!important}
+.hf-class-zone-bar span[data-zone="3"]{background:#00d663!important;color:#072515!important}
+.hf-class-zone-bar span[data-zone="4"]{background:#ff9500!important;color:#2d1900!important}
+.hf-class-zone-bar span[data-zone="5"]{background:#ff4353!important;color:#2b0610!important}
+.hf-class-zone-bar span[data-active="true"]{
+ box-shadow:inset 0 0 0 3px #fff,0 0 0 1px #222!important;
+ outline:0!important;outline-offset:0!important;z-index:1
+}
+.hf-class-prestart{
+ background:transparent!important;pointer-events:none!important;
+ display:flex;align-items:center;justify-content:center;padding:0!important
+}
+.hf-class-prestart>div{
+ width:auto!important;max-width:100%!important;
+ background:transparent!important;border:0!important;box-shadow:none!important;
+ padding:0!important;margin:0!important;overflow:visible
+}
+.hf-class-prestart p,.hf-class-prestart h2{display:none!important}
+.hf-class-prestart #classPrestartNumber{
+ font-size:clamp(130px,30vmin,330px)!important;
+ line-height:1!important;font-weight:1000;color:#ff6a2a!important;
+ text-shadow:0 7px 19px #000d,0 0 6px #000;
+ background:transparent!important;padding:0!important;margin:0!important
+}
+.hf-class-prestart #classPrestartContinue{
+ pointer-events:auto;display:block;min-height:48px;margin:16px auto 0
+}
+.hf-class-prestart #classPrestartContinue[hidden]{display:none!important}
+.hf-class-prestart #classPrestartCancel{
+ position:fixed;bottom:max(16px,3.5vh);left:50%;transform:translateX(-50%);
+ pointer-events:auto;z-index:151;padding:11px 22px;background:#50383e;color:#fff;
+ border:1px solid #87646b;min-height:48px
+}
+#cancelClass{background:#50383e;color:#fff;border-color:#87646b}
+.presentation .hf-class-heart-top{min-height:32px;align-items:center}
+.presentation .hf-class-heart{padding-top:8px}
+.presentation .hf-class-heart-top strong{line-height:1.25;white-space:nowrap}
+.presentation .hf-class-zone-bar{gap:0!important}
 </style>
 </head>
 <body>
@@ -291,7 +339,7 @@
     <button id="next" type="button" class="secondary" disabled>Avanzar ▶</button>
     <button id="finishClass" type="button" class="secondary">✓ Finalizar</button>
     <button id="reset" type="button" class="danger">↺ Reiniciar</button>
-    <button id="restartClass" type="button" class="danger">↻ Reiniciar desde cero</button>
+    <button id="restartClass" type="button" class="danger">↻ Reiniciar desde cero</button><button id="cancelClass" type="button" class="secondary">✕ Cancelar</button>
   </div>
   <section id="classOutcome" class="class-outcome" hidden aria-label="Resultado de la clase"></section>
   <section id="classFeedback" class="hf-class-feedback" hidden aria-label="Feedback al finalizar la clase">
@@ -939,9 +987,17 @@
     if(state.phase!=='ready'&&!confirm('¿Reiniciar desde el principio? Se descartará el progreso de la clase actual. El historial anterior no se borrará.'))return;
     if(resetSession(true))startSession();
   };
-  el('classPrestartCancel').onclick=()=>{
-    classPrestartMs=0;classPrestartRunning=false;classPrestartDeadline=null;syncClassPrestart();render();
+  el('cancelClass').onclick=()=>{
+    if(state.phase==='finished')return;
+    const inProgress=state.phase!=='ready';
+    if(inProgress&&!confirm('¿Cancelar la clase sin guardarla? Se perderá el progreso de esta sesión, pero no el historial de clases anteriores.'))return;
+    if(resetSession(true)){
+      classPrestartMs=0;classPrestartRunning=false;classPrestartDeadline=null;
+      syncClassPrestart();
+      render();
+    }
   };
+  el('classPrestartCancel').onclick=()=>el('cancelClass').click();
   el('classPrestartContinue').onclick=()=>{
     if(classPrestartMs<=0||state.phase!=='ready')return;
     classPrestartRunning=true;classPrestartDeadline=Date.now()+classPrestartMs;
