@@ -777,13 +777,13 @@
         next.guided=parseGuided(el('guidedLines').value).map((entry,i)=>{
           const previous=config.guided[i];
           return previous&&entry.name===previous.name&&entry.target===previous.target&&entry.seconds===previous.seconds
-            ?{...entry,gifId:previous.gifId,block:previous.block,kind:previous.kind}:entry;
+            ?{...entry,gifId:previous.gifId,block:previous.block,kind:previous.kind,...(previous.instructions?{instructions:previous.instructions}:{})}:entry;
         });
       }else{
         next.stations=parseStations(el('stationLines').value).map((entry,i)=>{
           const previous=config.stations[i];
           return previous&&entry.name===previous.name&&entry.target===previous.target
-            ?{...entry,gifId:previous.gifId}:entry;
+            ?{...entry,gifId:previous.gifId,...(previous.instructions?{instructions:previous.instructions}:{})}:entry;
         });
         next.rounds=intVal('rounds',1,12);
         next.work=intVal('workTime',10,1800);
