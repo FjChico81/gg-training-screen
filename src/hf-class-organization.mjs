@@ -125,6 +125,14 @@ function validateHistoryRecord(r){
     !Number.isSafeInteger(r.total)||r.total<0||r.total>200||
     r.progress>r.total||!Array.isArray(r.results)||r.results.length>50)
     fail('Registro de clase inválido.');
+  if(r.feedback!==undefined){
+    const feedback=r.feedback;
+    if(!feedback||typeof feedback!=='object'||Array.isArray(feedback)||
+      (feedback.rpe!==null&&(!Number.isInteger(feedback.rpe)||feedback.rpe<1||feedback.rpe>10))||
+      !['','Sí','No'].includes(feedback.pain)||
+      typeof feedback.notes!=='string'||feedback.notes.length>1000)
+      fail('Feedback colectivo inválido.');
+  }
   for(const result of r.results){
     if(!result||!['amrap','for-time','emom'].includes(result.type)||
       !limitText(result.label,85)||!Number.isSafeInteger(result.seconds)||
@@ -157,6 +165,23 @@ export function appendHFCollectiveHistory(store,entry){
   if(items.length>=MAX_HISTORY)fail('Historial lleno. Exporta una copia; no se ha borrado ningún registro.');
   safeWrite(store,HF_COLLECTIVE_HISTORY_KEY,raw,{version:1,items:[...items,record]});
   return {added:true,duplicate:false};
+}
+export function updateHFCollectiveFeedback(store,runId,feedback){
+  if(typeof runId!=='string'||!UUID.test(runId))fail('Identificador de clase inválido.');
+  const normalized={
+    rpe:feedback?.rpe??null,
+    pain:feedback?.pain??'',
+    notes:feedback?.notes??''
+  };
+  const {raw,items}=readHistoryData(store);
+  const index=items.findIndex(record=>record.runId===runId);
+  if(index<0)fail('No se encuentra la clase archivada; no se ha borrado nada.');
+  const updated={...items[index],feedback:normalized};
+  validateHistoryRecord(updated);
+  if(items[index].feedback)fail('El feedback ya está guardado. No se sobrescribirá.');
+  const next=items.map((record,i)=>i===index?updated:record);
+  safeWrite(store,HF_COLLECTIVE_HISTORY_KEY,raw,{version:1,items:next});
+  return {saved:true,runId};
 }
 export function exportHFCollectiveData(store){
   return {
