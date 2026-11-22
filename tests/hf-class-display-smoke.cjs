@@ -82,6 +82,33 @@ test('a class starts after exactly ten seconds and preparation does not count as
   assert.equal(a.t.getState().sessionElapsedMs,0);
   assert.equal(a.t.getState().deadline,a.now()+90_000);
 });
+test('Cancelar during the initial 10 s returns to zero without starting a class',()=>{
+  const a=boot();
+  a.el('start').onclick();
+  assert.equal(a.t.getState().phase,'ready');
+  assert.equal(a.el('classPrestart').hidden,false);
+  a.advance(3000);
+  a.el('classPrestartCancel').onclick();
+  assert.equal(a.t.getState().phase,'ready');
+  assert.equal(a.el('classPrestart').hidden,true);
+  a.advance(15000);
+  assert.equal(a.t.getState().phase,'ready');
+  assert.equal(a.t.getState().sessionElapsedMs,0);
+  assert.equal(a.el('start').disabled,false);
+});
+test('Cancelar during a class stops it without archiving a finished result',()=>{
+  const a=boot();
+  a.t.start(); // bypass preparation to isolate the already-active engine
+  a.advance(3000);
+  assert.equal(a.t.getState().phase,'work');
+  a.el('cancelClass').onclick();
+  assert.equal(a.t.getState().phase,'ready');
+  assert.equal(a.t.getState().sessionElapsedMs,0);
+  assert.equal(a.t.getState().results.length,0);
+  a.advance(30000);
+  assert.equal(a.t.getState().phase,'ready');
+});
+
 test('guided exercise automatically advances only when a duration is specified',()=>{
   const a=boot();
   a.t.start();
