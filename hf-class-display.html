@@ -145,6 +145,18 @@
 .import-notice strong{color:#ffbd92}
 .import-notice.error{border-color:#a35a60;background:#392729}
 .import-notice p{margin:0 0 6px}.import-notice p:last-child{margin-bottom:0}
+
+/* HF · Indicaciones del entrenador, visibles en clase y estaciones. */
+.exercise-instruction{
+ white-space:pre-line;overflow-wrap:anywhere;
+ margin:9px 0;padding:9px 12px;border-left:4px solid #ff671d;
+ background:#3a2b24;color:#ffe2ca;border-radius:8px;
+ font-weight:700;font-size:clamp(14px,1.8vw,22px);line-height:1.4
+}
+.next-instruction{font-size:clamp(13px,1.4vw,19px);padding:7px 9px}
+.station-instruction{font-size:clamp(12px,1.25vw,17px);padding:7px 9px}
+.presentation .exercise-instruction{font-size:clamp(15px,2.2vmin,27px)}
+.presentation .station-instruction{font-size:clamp(12px,1.7vmin,20px)}
 </style>
 </head>
 <body>
@@ -602,6 +614,7 @@
     main.append(node('div','eyebrow',ended?'SESIÓN COMPLETADA':rest?'DESCANSO PROGRAMADO':current?.block?'EJERCICIO ACTUAL · '+current.block:'EJERCICIO ACTUAL'));
     main.append(node('div','exercise-name',ended?'¡BUEN TRABAJO!':current.name));
     main.append(node('div','exercise-target',ended?'Entrenamiento finalizado':current.target));
+    if(!ended&&current?.instructions)main.append(node('p','exercise-instruction','INDICACIONES: '+current.instructions));
     if(!ended&&!rest)main.append(media(current.name,current.gifId));
     const side=node('div','side-stack'),clock=node('div','card time-card');
     clock.append(node('div','eyebrow',ended?'FIN':current&&current.seconds>0?'CUENTA ATRÁS':'TIEMPO EN EJERCICIO'));
@@ -611,6 +624,7 @@
     following.append(node('div','eyebrow','SIGUIENTE'));
     following.append(node('div','exercise-name',next?next.name:'Fin del entrenamiento'));
     following.append(node('div','exercise-target',next?next.target:''));
+    if(next?.instructions)following.append(node('p','exercise-instruction next-instruction','INDICACIONES: '+next.instructions));
     side.append(clock,following);layout.append(main,side);
     return layout;
   }
@@ -632,6 +646,7 @@
       card.append(node('div','group',(changing?'LLEGA GRUPO ':'GRUPO ')+String.fromCharCode(65+groupIndex)));
       card.append(node('div','exercise-name',item.name));
       card.append(node('div','exercise-target',item.target));
+      if(item.instructions)card.append(node('p','exercise-instruction station-instruction','INDICACIONES: '+item.instructions));
       card.append(media(item.name,item.gifId));
       grid.append(card);
     });
@@ -762,13 +777,13 @@
         next.guided=parseGuided(el('guidedLines').value).map((entry,i)=>{
           const previous=config.guided[i];
           return previous&&entry.name===previous.name&&entry.target===previous.target&&entry.seconds===previous.seconds
-            ?{...entry,gifId:previous.gifId,block:previous.block,kind:previous.kind}:entry;
+            ?{...entry,gifId:previous.gifId,block:previous.block,kind:previous.kind,...(previous.instructions?{instructions:previous.instructions}:{})}:entry;
         });
       }else{
         next.stations=parseStations(el('stationLines').value).map((entry,i)=>{
           const previous=config.stations[i];
           return previous&&entry.name===previous.name&&entry.target===previous.target
-            ?{...entry,gifId:previous.gifId}:entry;
+            ?{...entry,gifId:previous.gifId,...(previous.instructions?{instructions:previous.instructions}:{})}:entry;
         });
         next.rounds=intVal('rounds',1,12);
         next.work=intVal('workTime',10,1800);
