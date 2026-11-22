@@ -494,6 +494,8 @@
     state.sessionElapsedMs=Math.max(0,totalElapsed()-over);
     state.phase='finished';state.paused=false;state.deadline=null;state.remainingMs=0;state.sessionAnchor=0;
     historyOutcome=outcome;
+    classFinishedRunId=checkpointRunId;
+    classFeedbackDone=false;classFeedbackValue=null;
     notify();
     saveCollectiveOutcome();
   }
@@ -755,6 +757,28 @@
     layout.append(top,grid);
     return layout;
   }
+  function renderClassFinalSummary(){
+    const root=el('classFinalSummaryBody');
+    root.replaceChildren();
+    const title=importedTitle||el('screenTitle').textContent||'Clase HF';
+    root.append(node('div','hf-summary-card','Clase: '+title));
+    root.append(node('div','hf-summary-card','Tiempo activo: '+time(Math.floor(state.sessionElapsedMs))));
+    const total=state.mode==='guided'?config.guided.length:config.stations.length*config.rounds;
+    const progress=historyOutcome==='completed'?total:
+      state.mode==='guided'?Math.min(total,state.step):Math.min(total,state.turn);
+    root.append(node('div','hf-summary-card','Formato: '+(state.mode==='guided'?'Clase guiada':'Estaciones')+
+      ' · Pasos: '+progress+'/'+total+' · '+(historyOutcome==='completed'?'Completada':'Finalizada manualmente')));
+    const feedback=classFeedbackValue;
+    root.append(node('div','hf-summary-card','RPE: '+(feedback?.rpe??'Sin registrar')+
+      ' · Molestias: '+(feedback?.pain||'Sin registrar')+
+      '\nObservaciones: '+(feedback?.notes||'Sin observaciones')));
+    if(state.results.length){
+      for(const result of state.results){
+        root.append(node('div','hf-summary-card',result.type.toUpperCase()+' · '+result.label+
+         ' · '+time(Math.floor(result.seconds*1000))));
+      }
+    }
+  }
   function render(){
     const isGuided=state.mode==='guided',done=state.phase==='finished';
     el('guidedMode').setAttribute('aria-pressed',String(isGuided));
@@ -785,6 +809,9 @@
       ?'Completar ronda ▶':'Siguiente ejercicio ▶'):state.phase==='change'?'Iniciar siguiente estación ▶':'Terminar intervalo ▶';
     const outcome=el('classOutcome');
     outcome.hidden=!done;
+    el('classFeedback').hidden=!done||classFeedbackDone;
+    el('classFinalSummary').hidden=!done||!classFeedbackDone;
+    if(done&&classFeedbackDone)renderClassFinalSummary();
     if(done){
       outcome.replaceChildren(node('strong','Clase finalizada · '+time(totalElapsed())));
       if(state.results.length){
@@ -865,6 +892,35 @@
     notify();syncClassPrestart();
   };
   el('retryCollectiveArchive').onclick=()=>saveCollectiveOutcome();
+  el('classSkipFeedback').onclick=()=>{
+    if(state.phase!=='finished')return;
+    classFeedbackDone=true;classFeedbackValue=null;render();
+  };
+  el('classSaveFeedback').onclick=async()=>{
+    if(state.phase!=='finished')return;
+    const raw=el('classRpe').value.trim(),pain=el('classPain').value,notes=el('classNotes').value.trim();
+    const rpe=raw===''?null:Number(raw);
+    if((rpe!==null&&(!Number.isInteger(rpe)||rpe<1||rpe>10))||notes.length>1000){
+      el('classFeedbackStatus').textContent='RPE debe estar entre 1 y 10 y las observaciones no superar 1000 caracteres.';
+      return;
+    }
+    if(!historyArchived||!classFinishedRunId){
+      el('classFeedbackStatus').textContent='El historial de esta clase todavía no está guardado. Pulsa Reintentar si aparece algún error.';
+      return;
+    }
+    el('classSaveFeedback').disabled=true;
+    const feedback={rpe,pain,notes};
+    try{
+      const {hfScopedStorage,updateHFCollectiveFeedback}=await import('./src/hf-class-organization.mjs?v=2.9.64');
+      updateHFCollectiveFeedback(hfScopedStorage(localStorage,hfProfileId),classFinishedRunId,feedback);
+      classFeedbackValue=feedback;classFeedbackDone=true;
+      el('classFeedbackStatus').textContent='✓ Feedback archivado en el perfil HF.';
+      render();
+    }catch(error){
+      el('classFeedbackStatus').textContent='No se pudo guardar feedback: '+(error?.message||'Error desconocido')+'. El formulario sigue disponible.';
+    }finally{el('classSaveFeedback').disabled=false}
+  };
+  el('classSummaryClose').onclick=()=>{location.assign('index.html?app=hf')};
   el('finishClass').onclick=()=>{
     if(state.phase==='ready'||state.phase==='finished'||recoveryPending||importBlocked)return;
     if(!confirm('¿Finalizar la clase colectiva? Se cerrará la sesión y su copia temporal. Las rutinas guardadas no se modificarán.'))return;
