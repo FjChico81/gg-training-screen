@@ -947,6 +947,8 @@ html[data-access="locked"] body{background:#17191f!important}
 'use strict';
 const KEY='gg-training-screen-workouts-v1', $=id=>document.getElementById(id);
 const isHF=document.documentElement.dataset.edition==='hf';
+const SECURE_AUTH_V2=true; // Candidate: DO NOT MERGE before verified dedicated GG/HF projects.
+let secureNamespace=null,secureApply=false,secureSyncController=null;
 const editionName=isHF?'HF':'BUHARDILLA Fitness';
 const vectorRoutines=isHF?[]:globalThis.vectorRoutineCatalog??[];
 const vectorDays=new Map(vectorRoutines.flatMap(routine=>routine.days.map(day=>{
@@ -1033,9 +1035,25 @@ const localProfile=localProfiles.find(profile=>profile.id===requestedProfile)??l
 const usesWorkoutCloud=localProfile.id==='personal';
 const storagePrefix=isHF?'hf:'+localProfile.id+':':usesWorkoutCloud?'':'gg:'+localProfile.id+':';
 const appStorage={
- getItem(key){return localStorage.getItem(storagePrefix+key)},
- setItem(key,value){localStorage.setItem(storagePrefix+key,value)},
- removeItem(key){localStorage.removeItem(storagePrefix+key)}
+ getItem(key){
+  if(SECURE_AUTH_V2)return secureNamespace?localStorage.getItem(secureNamespace+key):null;
+  return localStorage.getItem(storagePrefix+key)
+ },
+ setItem(key,value){
+  if(SECURE_AUTH_V2&&!secureNamespace)throw Error('Inicia sesión para guardar datos.');
+  localStorage.setItem((SECURE_AUTH_V2?secureNamespace:storagePrefix)+key,value);
+  if(SECURE_AUTH_V2&&!secureApply&&secureSyncController){
+   const kind=key===KEY?'workout':key==='gg-strength-history-v1'?'history':key==='gg-active-session-v1'?'active':null;
+   if(kind){
+    secureSyncController.changed(kind,kind==='active'?JSON.parse(value):value);
+    if(navigator.onLine)void secureSyncController.synchronize();
+   }
+  }
+ },
+ removeItem(key){
+  if(SECURE_AUTH_V2&&!secureNamespace)throw Error('Inicia sesión para modificar datos.');
+  localStorage.removeItem((SECURE_AUTH_V2?secureNamespace:storagePrefix)+key)
+ }
 };
 function openLocalProfile(id){
  if(id===localProfile.id)return;
@@ -1065,7 +1083,7 @@ function setupVectorHome(){
  const profileRow=node('div','','vector-profile-row');
  profile.before(profileRow);
  profileRow.append(profile);
- if(usesWorkoutCloud){
+ if(usesWorkoutCloud&&!SECURE_AUTH_V2){
    const cloud=$('ggCloudPanel');
    cloud.querySelector('summary').classList.add('hidden');
    profileRow.after(cloud);
@@ -1263,8 +1281,8 @@ let exerciseRestSeconds=90;try{const value=appStorage.getItem('gg-between-exerci
 let ggCloud, ggLibraryRaw;
 function load(){
   ggLibraryRaw=appStorage.getItem(KEY);
-  try{const raw=JSON.parse(ggLibraryRaw);workouts=Array.isArray(raw)?raw:!isHF&&usesWorkoutCloud?[example]:[]}
-  catch(e){workouts=!isHF&&usesWorkoutCloud?[example]:[]}
+  try{const raw=JSON.parse(ggLibraryRaw);workouts=Array.isArray(raw)?raw:!SECURE_AUTH_V2&&!isHF&&usesWorkoutCloud?[example]:[]}
+  catch(e){workouts=!SECURE_AUTH_V2&&!isHF&&usesWorkoutCloud?[example]:[]}
 }
 function persist(){
   try{
@@ -2707,7 +2725,7 @@ $('appVersion').textContent='Versión '+GG_APP_VERSION;
 for(const id of ['v2Name','ftLines','circuitLines','amrapLines','emomExercises','visualName','timerName'])setupExercisePicker(id);
 setupExerciseLibrary();setupVectorHome();setupCompactGuided();load();try{const saved=JSON.parse(appStorage.getItem('gg-active-session-v1'));if(saved&&saved.session&&findWorkout(saved.active)){active=saved.active;sessionWorkout=saved.active;prestartRemaining=Number.isFinite(Number(saved.prestartRemaining))?Math.max(0,Math.min(10,Number(saved.prestartRemaining))):0;prestartRunning=false;step=Math.max(0,Math.min(saved.step,findWorkout(active).blocks.reduce((n,b)=>n+b.items.length,0)-1));paused=true;elapsed=saved.elapsed||0;stepElapsed=saved.stepElapsed||0;seriesLog=saved.seriesLog||{};restRemaining=saved.restRemaining||0;restRunning=!!saved.restRunning;transitionTo=Number.isInteger(saved.transitionTo)&&saved.transitionTo===step+1? saved.transitionTo:null;draftSets=saved.draftSets||{};vectorTargets=saved.vectorTargets||{};amrapElapsed=saved.amrapElapsed||0;amrapRounds=saved.amrapRounds||0;amrapResults=saved.amrapResults||[];ftElapsed=saved.ftElapsed||0;ftResults=saved.ftResults||[];actualResults=saved.actualResults||{};session=true}}catch(e){}show('library');void checkForUpdates();
 </script><script type="module">
-if(usesWorkoutCloud){
+if(usesWorkoutCloud&&!SECURE_AUTH_V2){
   if(isHF){
     $('cloudSummaryLabel').textContent='☁ Sincronización HF';
     document.querySelector('#ggCloudPanel .notice').textContent='Inicia sesión con tu cuenta HF en cada dispositivo para sincronizar las rutinas del perfil Principal. Los perfiles adicionales se guardan en este navegador.';
