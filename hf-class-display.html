@@ -377,18 +377,18 @@ html[data-access="unlocked"] #hfAccountWall{display:none!important}
 </section>
 <script>
 'use strict';
-function bootHFClass(authorizedOwnerId=null){
+function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
   // Legacy tests use an injected localStorage parameter; the browser uses
   // global localStorage. The authenticated owner gets a separate prefix.
   const originalStore=typeof localStorage==='undefined'?null:localStorage;
   const hfAccountStorage=authorizedOwnerId&&originalStore?{
-    getItem:key=>originalStore.getItem('hf-auth-v2:'+authorizedOwnerId+':'+key),
+    getItem:key=>originalStore.getItem('hf-auth-v2:'+authorizedOwnerId+':'+authorizedProfileId+':'+key),
     setItem:(key,value)=>{
-      originalStore.setItem('hf-auth-v2:'+authorizedOwnerId+':'+key,value);
+      originalStore.setItem('hf-auth-v2:'+authorizedOwnerId+':'+authorizedProfileId+':'+key,value);
       window.__HF_CLASS_SYNC_HOOK?.(key,value,false);
     },
     removeItem:key=>{
-      originalStore.removeItem('hf-auth-v2:'+authorizedOwnerId+':'+key);
+      originalStore.removeItem('hf-auth-v2:'+authorizedOwnerId+':'+authorizedProfileId+':'+key);
       window.__HF_CLASS_SYNC_HOOK?.(key,null,true);
     }
   }:originalStore;
