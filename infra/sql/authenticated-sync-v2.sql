@@ -20,7 +20,7 @@ create index if not exists training_profiles_v2_owner
 create table if not exists public.training_records_v2 (
   owner_id uuid not null,
   profile_id uuid not null,
-  kind text not null check (kind in ('workout','history','active','preferences')),
+  kind text not null check (kind in ('workout','history','active','preferences','collective','class_state')),
   client_id text not null check (length(client_id) between 1 and 128),
   payload jsonb not null check (jsonb_typeof(payload) = 'object'),
   revision bigint not null default 1 check (revision between 1 and 9223372036854775807),
