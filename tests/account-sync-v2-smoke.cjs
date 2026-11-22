@@ -127,3 +127,34 @@ test('login wall protects both apps and HF class direct URL',()=>{
  assert.match(sql,/\(select auth\.uid\(\)\) = owner_id/);
  assert.doesNotMatch(sql,/grant\s+all\s+on\s+public\.training_records_v2\s+to\s+anon/i);
 });
+
+test('a previously verified user can open cached profile offline, but new devices cannot',async()=>{
+ const api=await mod,transport=server(),storage=memory();
+ const online=client(api,transport,storage);
+ await online.login('test@example.com','test-pass');
+ const profiles=await online.profiles();
+ assert.equal(profiles.length,1);
+ transport.setOnline(false);
+ const offline=api.createEditionCloud({url:'https://example.supabase.co',
+  publishableKey:'sb_publishable_mock',edition:'gg',storage,
+  fetchImpl:transport.fetch,now:()=>100500,offline:()=>true});
+ const cached=await offline.verify();
+ assert.equal(cached.offline,true);
+ const cachedProfiles=await offline.profiles();
+ assert.equal(cachedProfiles[0].id,userId);
+ const empty=api.createEditionCloud({url:'https://example.supabase.co',
+  publishableKey:'sb_publishable_mock',edition:'hf',storage:memory(),
+  fetchImpl:transport.fetch,now:()=>100500,offline:()=>true});
+ assert.equal(await empty.verify(),null,'New browser cannot unlock offline');
+ const noAuth=client(api,transport,memory(),'hf');
+ await assert.rejects(noAuth.getRecords(userId),/Inicia sesión/);
+});
+test('offline account scope and HF collective profiles do not overlap',()=>{
+ const html=readFileSync(resolve(root,'hf-class-display.html'),'utf8');
+ const gate=readFileSync(resolve(root,'src/hf-class-access-v2.mjs'),'utf8');
+ const main=readFileSync(resolve(root,'index.html'),'utf8');
+ assert.match(main,/secureNamespace=\(isHF\?'hf-v2:':'gg-v2:'\)/);
+ assert.match(html,/authorizedProfileId/);
+ assert.match(gate,/window\.__HF_V2_BOOT\(user\.id,requested\)/);
+ assert.match(gate,/const root='hf-auth-v2:'\+user\.id\+':'\+requested\+':'/);
+});
