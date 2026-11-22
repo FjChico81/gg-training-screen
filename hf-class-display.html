@@ -157,6 +157,47 @@
 .station-instruction{font-size:clamp(12px,1.25vw,17px);padding:7px 9px}
 .presentation .exercise-instruction{font-size:clamp(15px,2.2vmin,27px)}
 .presentation .station-instruction{font-size:clamp(12px,1.7vmin,20px)}
+
+/* HF colectivo: preparador, monitor FC opcional y feedback individual del entrenador. */
+.hf-class-heart{max-width:1700px;margin:7px auto 12px;padding:9px 14px;border:1px solid #6d615e;border-radius:12px;background:#29292e}
+.hf-class-heart-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.hf-class-heart-top strong{font-size:clamp(16px,2.4vw,28px);font-variant-numeric:tabular-nums}
+.hf-class-heart-top button{min-height:40px;padding:7px 11px;font-size:13px}
+.hf-class-heart #classHrStatus{margin:4px 0 0}
+.hf-class-zone-bar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin:13px 0 5px}
+.hf-class-zone-bar span{position:relative;text-align:center;font-size:12px;font-weight:850;min-height:21px;line-height:21px;border-radius:5px;opacity:.7}
+.hf-class-zone-bar span[data-zone="1"]{background:#fff;color:#111}
+.hf-class-zone-bar span[data-zone="2"]{background:#76bcff;color:#152d43}
+.hf-class-zone-bar span[data-zone="3"]{background:#67db90;color:#17341b}
+.hf-class-zone-bar span[data-zone="4"]{background:#ffad60;color:#382210}
+.hf-class-zone-bar span[data-zone="5"]{background:#ff8585;color:#3d1919}
+.hf-class-zone-bar span[data-active="true"]{opacity:1;outline:2px solid white;outline-offset:2px;transform:translateY(-3px)}
+.hf-class-zone-bar span[data-active="true"]::before{content:"▼";position:absolute;top:-19px;left:50%;transform:translateX(-50%);color:#fff;font-size:13px}
+.hf-class-prestart{position:fixed;inset:0;z-index:150;background:#101014f2;display:grid;place-items:center;padding:18px}
+.hf-class-prestart>div{width:min(100%,540px);background:#27272b;border:2px solid #ff671d;border-radius:19px;text-align:center;padding:30px 18px}
+.hf-class-prestart h2{color:white;font-size:clamp(22px,4vw,36px);margin:10px 0}
+.hf-class-prestart strong{display:block;font-size:clamp(100px,24vw,230px);line-height:1;font-weight:900}
+.hf-class-prestart button{margin:7px 5px}
+.hf-class-feedback,.hf-class-final-summary{margin:12px 0;border:1px solid #89614c;background:#302725;border-radius:13px;padding:clamp(15px,2vw,25px)}
+.hf-class-feedback label{display:block;font-size:15px;font-weight:800;margin:13px 0 5px}
+.hf-class-feedback input,.hf-class-feedback select,.hf-class-feedback textarea{display:block;width:100%;max-width:660px;padding:10px;border-radius:8px;border:1px solid #9b8580;background:#232326;color:white}
+.hf-class-feedback textarea{resize:vertical;min-height:80px}
+.hf-class-feedback .feedback-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:13px}
+.hf-class-final-summary #classFinalSummaryBody{display:grid;gap:11px;margin:12px 0}
+.hf-class-final-summary .hf-summary-card{padding:12px;border-radius:8px;border:1px solid #64514b;background:#29292e;white-space:pre-line;overflow-wrap:anywhere}
+.presentation .hf-class-heart{position:fixed;z-index:22;top:calc(6px + env(safe-area-inset-top));left:36%;right:17%;max-width:none;margin:0;padding:4px 10px}
+.presentation .hf-class-heart-top strong{font-size:clamp(12px,1.8vw,20px)}
+.presentation .hf-class-heart-top button{min-height:30px;font-size:11px;padding:4px 7px}
+.presentation .hf-class-zone-bar{margin:9px 0 0}
+.presentation .hf-class-zone-bar span{min-height:15px;line-height:15px;font-size:10px}
+.presentation .hf-class-heart #classHrStatus{display:none}
+.presentation .hf-class-feedback,.presentation .hf-class-final-summary{position:relative;z-index:15}
+@media(max-width:720px){
+ .presentation .hf-class-heart{position:relative;top:auto;left:auto;right:auto;margin:5px 0 8px}
+ .hf-class-heart-top button{width:100%}
+ .hf-class-prestart strong{font-size:clamp(80px,27vw,170px)}
+}
+@media(prefers-reduced-motion:reduce){.hf-class-zone-bar span[data-active="true"]{transform:none}}
 </style>
 </head>
 <body>
@@ -214,6 +255,22 @@
     <div><span id="phaseTag" class="status" role="status">PREPARADO</span><div class="sub">TIEMPO TOTAL: <strong class="session-total" id="totalClock">00:00</strong></div></div>
   </div>
   <div id="importNotice" class="import-notice" hidden role="status" aria-live="polite"></div>
+  <section id="classHeart" class="hf-class-heart" aria-label="Pulsaciones durante la clase">
+    <div class="hf-class-heart-top"><strong>PULSACIONES: <span id="classHrBpm">--</span> PPM</strong>
+    <button id="classConnectHr" class="secondary" type="button">♥ Conectar pulsómetro</button></div>
+    <div class="hf-class-zone-bar" aria-label="Zonas de frecuencia cardíaca">
+      <span data-zone="1">Z1</span><span data-zone="2">Z2</span><span data-zone="3">Z3</span><span data-zone="4">Z4</span><span data-zone="5">Z5</span>
+    </div>
+    <p id="classHrStatus" class="sub" role="status">Sin lectura Bluetooth</p>
+  </section>
+  <section id="classPrestart" class="hf-class-prestart" hidden role="dialog" aria-modal="true" aria-labelledby="classPrestartTitle">
+    <div><p>PREPÁRATE</p><h2 id="classPrestartTitle">La clase empieza en</h2>
+      <strong id="classPrestartNumber" aria-live="off">10</strong>
+      <p id="classPrestartInfo">La actividad comenzará cuando termine la cuenta atrás.</p>
+      <button id="classPrestartContinue" type="button" class="secondary" hidden>▶ Continuar preparación</button>
+      <button id="classPrestartCancel" type="button" class="secondary">Cancelar inicio</button>
+    </div>
+  </section>
   <section id="recoveryPanel" class="recovery-panel" hidden aria-label="Recuperar clase anterior">
     <strong id="recoveryTitle">Recuperación de clase</strong>
     <p id="recoveryMessage" role="status"></p>
@@ -233,8 +290,22 @@
     <button id="next" type="button" class="secondary" disabled>Avanzar ▶</button>
     <button id="finishClass" type="button" class="secondary">✓ Finalizar</button>
     <button id="reset" type="button" class="danger">↺ Reiniciar</button>
+    <button id="restartClass" type="button" class="danger">↻ Reiniciar desde cero</button>
   </div>
-  <section id="classOutcome" class="class-outcome" hidden aria-label="Resumen de la clase"></section>
+  <section id="classOutcome" class="class-outcome" hidden aria-label="Resultado de la clase"></section>
+  <section id="classFeedback" class="hf-class-feedback" hidden aria-label="Feedback al finalizar la clase">
+    <h2>¿Cómo ha ido la clase?</h2>
+    <label for="classRpe">Esfuerzo percibido (RPE 1–10)</label><input id="classRpe" type="number" min="1" max="10" placeholder="Ej.: 7">
+    <label for="classPain">¿Has tenido molestias?</label><select id="classPain"><option value="">Sin registrar</option><option value="No">No</option><option value="Sí">Sí</option></select>
+    <label for="classNotes">Observaciones de la clase</label><textarea id="classNotes" maxlength="1000" rows="3" placeholder="Técnica, ritmo, sensaciones, incidencias..."></textarea>
+    <div class="feedback-actions"><button id="classSaveFeedback" type="button">Guardar feedback y ver resumen</button>
+      <button id="classSkipFeedback" type="button" class="secondary">Omitir y ver resumen</button></div>
+    <p id="classFeedbackStatus" class="sub" role="status"></p>
+  </section>
+  <section id="classFinalSummary" class="hf-class-final-summary" hidden aria-label="Resumen final de la actividad">
+    <h2>Resumen de la actividad completada</h2><div id="classFinalSummaryBody"></div>
+    <button id="classSummaryClose" class="secondary" type="button">Volver a HF</button>
+  </section>
   <div id="collectiveArchiveStatus" class="collective-archive-status" role="status" hidden></div>
   <button id="retryCollectiveArchive" class="secondary" type="button" hidden>Reintentar guardar la clase</button>
   <p class="notice">HF funciona en este dispositivo. Por HDMI, móvil y TV muestran la misma imagen. Las clases interrumpidas pueden recuperarse en este navegador y las finalizadas se registran en su historial colectivo local, si el almacenamiento está disponible.</p>
