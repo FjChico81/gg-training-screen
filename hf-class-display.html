@@ -867,7 +867,7 @@
     render();
     showImportNotice('Abriendo la rutina guardada de HF…');
     try{
-      const {consumeHFHandoff}=await import('./src/hf-workout-presenter.mjs');
+      const {consumeHFHandoff}=await import('./src/hf-workout-presenter.mjs?v=2.9.67');
       const payload=consumeHFHandoff(transfer,{store:sessionStorage});
       importedTitle=payload.title;
       importedMode=payload.mode;
