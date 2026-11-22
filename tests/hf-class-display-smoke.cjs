@@ -49,7 +49,7 @@ function boot(query=''){
     'globalThis.__test={',
     'getState:()=>({...state}),',
     'getConfig:()=>JSON.parse(JSON.stringify(config)),',
-    'start:startSession,pause:pauseSession,next:nextPhase,',
+    'start:()=>startSession(true),pause:pauseSession,next:nextPhase,',
     'tick:tick,reset:resetSession,switchMode:switchMode,',
     'parseGuided:parseGuided,parseStations:parseStations,',
     'apply:()=>document.getElementById("configForm").onsubmit({preventDefault(){}})',
@@ -69,6 +69,19 @@ test('opens class mode from the two HF entry URLs',()=>{
   assert.equal(boot('?mode=not-recognized').t.getState().mode,'guided');
 });
 
+test('a class starts after exactly ten seconds and preparation does not count as training',()=>{
+  const a=boot();
+  a.el('start').onclick();
+  assert.equal(a.t.getState().phase,'ready');
+  assert.equal(a.el('classPrestartNumber').textContent,'10');
+  a.advance(5000);
+  assert.equal(a.t.getState().phase,'ready');
+  assert.equal(a.el('classPrestartNumber').textContent,'5');
+  a.advance(5000);
+  assert.equal(a.t.getState().phase,'work');
+  assert.equal(a.t.getState().sessionElapsedMs,0);
+  assert.equal(a.t.getState().deadline,a.now()+90_000);
+});
 test('guided exercise automatically advances only when a duration is specified',()=>{
   const a=boot();
   a.t.start();
