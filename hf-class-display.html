@@ -378,10 +378,10 @@ html[data-access="unlocked"] #hfAccountWall{display:none!important}
 <script>
 'use strict';
 function bootHFClass(authorizedOwnerId=null){
-  // The user's verified account gets an isolated local checkpoint/history scope.
-  // Never migrate or read another account's legacy local class records.
-  const originalStore=globalThis.localStorage;
-  const localStorage=authorizedOwnerId?{
+  // Legacy tests use an injected localStorage parameter; the browser uses
+  // global localStorage. The authenticated owner gets a separate prefix.
+  const originalStore=typeof localStorage==='undefined'?null:localStorage;
+  const hfAccountStorage=authorizedOwnerId&&originalStore?{
     getItem:key=>originalStore.getItem('hf-auth-v2:'+authorizedOwnerId+':'+key),
     setItem:(key,value)=>originalStore.setItem('hf-auth-v2:'+authorizedOwnerId+':'+key,value),
     removeItem:key=>originalStore.removeItem('hf-auth-v2:'+authorizedOwnerId+':'+key)
@@ -490,7 +490,7 @@ function bootHFClass(authorizedOwnerId=null){
 
   // Independent, device-local HF checkpoint; never reads or writes GG storage.
   let checkpointTools=null,checkpointRunId=null,recoverySnapshot=null,checkpointError=null;
-  let recoveryPending=typeof localStorage!=='undefined',lastCheckpointAt=0;
+  let recoveryPending=typeof hfAccountStorage!=='undefined',lastCheckpointAt=0;
   let checkpointWarned=false;
   const hfProfileId=params.get('hfProfile')||'personal';
   let historyArchived=false,historySaving=false,historyOutcome='completed';
@@ -574,7 +574,7 @@ function bootHFClass(authorizedOwnerId=null){
   }
   function saveCollectiveOutcome(){
     if(historyArchived||historySaving)return;
-    if(typeof localStorage==='undefined'||!checkpointRunId){
+    if(typeof hfAccountStorage==='undefined'||!checkpointRunId){
       el('collectiveArchiveStatus').hidden=false;
       el('collectiveArchiveStatus').textContent='⚠ El historial no se puede guardar sin almacenamiento local o identificador de sesión.';
       el('retryCollectiveArchive').hidden=false;
@@ -602,7 +602,7 @@ function bootHFClass(authorizedOwnerId=null){
     el('collectiveArchiveStatus').textContent='Guardando el resultado colectivo en este dispositivo…';
     el('retryCollectiveArchive').hidden=true;
     void import('./src/hf-class-organization.mjs?v=2.9.68').then(({hfScopedStorage,appendHFCollectiveHistory})=>{
-      const store=hfScopedStorage(localStorage,hfProfileId);
+      const store=hfScopedStorage(hfAccountStorage,hfProfileId);
       return appendHFCollectiveHistory(store,entry);
     }).then(()=>{
       historyArchived=true;historySaving=false;
@@ -671,13 +671,13 @@ function bootHFClass(authorizedOwnerId=null){
     });
   }
   function persistCheckpoint(force=false){
-    if(typeof localStorage==='undefined'||!checkpointTools||!checkpointRunId||
+    if(typeof hfAccountStorage==='undefined'||!checkpointTools||!checkpointRunId||
       recoveryPending||importBlocked||!['work','change'].includes(state.phase))return;
     const now=Date.now();
     if(!force&&now-lastCheckpointAt<2000)return;
     lastCheckpointAt=now;
     try{
-      checkpointTools.writeHFCheckpoint(localStorage,makeCheckpoint(now),{now});
+      checkpointTools.writeHFCheckpoint(hfAccountStorage,makeCheckpoint(now),{now});
       el('saveIndicator').hidden=false;
       el('saveIndicator').textContent='✓ Clase protegida en este dispositivo · Última copia '+
         new Date(now).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
@@ -692,10 +692,10 @@ function bootHFClass(authorizedOwnerId=null){
     }
   }
   function clearCurrentCheckpoint(){
-    if(!checkpointTools||!checkpointRunId||typeof localStorage==='undefined')return;
+    if(!checkpointTools||!checkpointRunId||typeof hfAccountStorage==='undefined')return;
     try{
-      const saved=checkpointTools.readHFCheckpoint(localStorage,{now:Date.now()});
-      if(saved?.runId===checkpointRunId)checkpointTools.clearHFCheckpoint(localStorage);
+      const saved=checkpointTools.readHFCheckpoint(hfAccountStorage,{now:Date.now()});
+      if(saved?.runId===checkpointRunId)checkpointTools.clearHFCheckpoint(hfAccountStorage);
     }catch(error){
       // Never remove an unknown/corrupted record implicitly.
       el('saveIndicator').hidden=false;
@@ -1047,7 +1047,7 @@ function bootHFClass(authorizedOwnerId=null){
     const feedback={rpe,pain,notes};
     try{
       const {hfScopedStorage,updateHFCollectiveFeedback}=await import('./src/hf-class-organization.mjs?v=2.9.68');
-      updateHFCollectiveFeedback(hfScopedStorage(localStorage,hfProfileId),classFinishedRunId,feedback);
+      updateHFCollectiveFeedback(hfScopedStorage(hfAccountStorage,hfProfileId),classFinishedRunId,feedback);
       classFeedbackValue=feedback;classFeedbackDone=true;
       el('classFeedbackStatus').textContent='✓ Feedback archivado en el perfil HF.';
       render();
@@ -1205,7 +1205,7 @@ function bootHFClass(authorizedOwnerId=null){
     }
   }
   async function bootstrapRecovery(){
-    if(typeof localStorage==='undefined'){
+    if(typeof hfAccountStorage==='undefined'){
       recoveryPending=false;
       el('saveIndicator').hidden=false;
       el('saveIndicator').textContent='⚠ Este navegador no admite recuperación local.';
@@ -1220,7 +1220,7 @@ function bootHFClass(authorizedOwnerId=null){
       render();await loadSavedHFPresentation();return;
     }
     try{
-      recoverySnapshot=checkpointTools.readHFCheckpoint(localStorage,{now:Date.now()});
+      recoverySnapshot=checkpointTools.readHFCheckpoint(hfAccountStorage,{now:Date.now()});
       if(!recoverySnapshot){
         recoveryPending=false;render();
         await loadSavedHFPresentation();return;
@@ -1255,7 +1255,7 @@ function bootHFClass(authorizedOwnerId=null){
   el('resumeRecovery').onclick=()=>{
     if(!recoverySnapshot||!checkpointTools)return;
     try{
-      const data=checkpointTools.readHFCheckpoint(localStorage,{now:Date.now()});
+      const data=checkpointTools.readHFCheckpoint(hfAccountStorage,{now:Date.now()});
       if(!data||data.runId!==recoverySnapshot.runId||
         (data.profileId??'personal')!==hfProfileId)
         throw Error('La copia ha cambiado. Vuelve a abrir la pantalla.');
@@ -1278,10 +1278,10 @@ function bootHFClass(authorizedOwnerId=null){
     }
   };
   el('discardRecovery').onclick=()=>{
-    if(!checkpointTools||typeof localStorage==='undefined'||el('discardRecovery').disabled)return;
+    if(!checkpointTools||typeof hfAccountStorage==='undefined'||el('discardRecovery').disabled)return;
     if(!confirm('¿Descartar la copia de clase interrumpida? Solo se eliminará esta copia local de HF, nunca las rutinas guardadas.'))return;
     try{
-      checkpointTools.clearHFCheckpoint(localStorage);
+      checkpointTools.clearHFCheckpoint(hfAccountStorage);
       recoverySnapshot=null;checkpointRunId=null;checkpointError=null;
       recoveryPending=false;importBlocked=false;
       el('recoveryPanel').hidden=true;
