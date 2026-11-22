@@ -2014,10 +2014,10 @@ $('techniqueFile').addEventListener('change',async()=>{
  const type=ext==='gif'?'image/gif':ext==='mp4'?'video/mp4':ext==='webm'?'video/webm':null;
  if(!type){$('techniqueInfo').textContent='Solo se admiten GIF, MP4 y WebM';return}
  if(file.size>20*1024*1024){$('techniqueInfo').textContent='Archivo demasiado grande (máximo 20 MB)';return}
- try{await techniqueWrite({key,name:file.name,type,blob:file,lastModified:Date.now()});if(key===techniqueActiveKey)await techniqueRender()}
+ try{await techniqueWrite({key,name:file.name,type,blob:file,lastModified:Date.now()});if(key===techniqueActiveKey)await techniqueRender();if(view==='guided'&&document.body.classList.contains('tv-mode')){tvTechniqueIdentity='';renderTvExercises()}}
  catch(error){$('techniqueInfo').textContent='No se ha podido guardar el archivo: '+error.message}
 });
-$('techniqueRemove').onclick=async()=>{const key=techniqueActiveKey;if(!key||!confirm('¿Quitar la copia personal? Volverás a ver el GIF compartido de GG si está disponible.'))return;try{await techniqueDelete(key);if(key===techniqueActiveKey)await techniqueRender()}catch(error){$('techniqueInfo').textContent='Error al eliminar: '+error.message}};
+$('techniqueRemove').onclick=async()=>{const key=techniqueActiveKey;if(!key||!confirm('¿Quitar la copia personal? Volverás a ver el GIF compartido de GG si está disponible.'))return;try{await techniqueDelete(key);if(key===techniqueActiveKey)await techniqueRender();if(view==='guided'&&document.body.classList.contains('tv-mode')){tvTechniqueIdentity='';renderTvExercises()}}catch(error){$('techniqueInfo').textContent='Error al eliminar: '+error.message}};
 
 function setupCompactGuided(){
  const guided=$('guided'),strength=$('strengthPanel');
