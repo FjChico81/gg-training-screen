@@ -11,7 +11,7 @@ const checkpointPromise=import(pathToFileURL(resolve(root,'src/hf-class-checkpoi
 const organizationPromise=import(pathToFileURL(resolve(root,'src/hf-class-organization.mjs')).href);
 const source=src
  .replace("await import('./src/hf-class-checkpoint.mjs?v=2.9.64')","await __mockCheckpoint()")
- .replace("import('./src/hf-class-organization.mjs?v=2.9.64')","__mockOrganization()");
+ .replaceAll("import('./src/hf-class-organization.mjs?v=2.9.68')","__mockOrganization()");
 const marker='  updateDeviceUI();\n  loadForms();render();setInterval(tick,160);\n  void bootstrapRecovery();';
 assert.ok(source.includes(marker),'Expected HF screen bootstrap');
 const instrument='  window.__test={state:()=>JSON.parse(JSON.stringify(state)),start:startSession,next:nextPhase,finish:finish,tick:tick,save:saveCollectiveOutcome};\n';
@@ -72,7 +72,8 @@ async function boot(store,{profile='personal',time=1795270000000}={}){
 test('finishing a class creates one isolated collective history entry and only then clears checkpoint',async()=>{
  const storage=memory(),app=await boot(storage);
  storage.setItem('gg-training-screen-workouts-v1','IMPORTANT');
- app.click('start');app.advance(11000);
+ app.click('start');app.advance(10000); // 10s de preparación fuera del historial
+ app.advance(11000);
  const oldCheckpoint=storage.getItem('hf:collective-class:checkpoint:v1');
  assert.ok(oldCheckpoint);
  app.click('finishClass');await app.flush();
@@ -87,9 +88,26 @@ test('finishing a class creates one isolated collective history entry and only t
  app.app.save();await app.flush();
  assert.equal(JSON.parse(storage.getItem('hf:personal:hf-collective-history-v1')).items.length,1);
 });
+test('finishing class then saving feedback yields one archive entry and a complete summary',async()=>{
+ const storage=memory(),app=await boot(storage);
+ app.click('start');app.advance(10000);
+ app.click('finishClass');await app.flush();
+ app.el('classRpe').value='8';
+ app.el('classPain').value='No';
+ app.el('classNotes').value='Carrera cómoda, sin molestias.';
+ app.click('classSaveFeedback');await app.flush();
+ const raw=storage.getItem('hf:personal:hf-collective-history-v1');
+ const archived=JSON.parse(raw);
+ assert.equal(archived.items.length,1);
+ assert.deepEqual(JSON.parse(JSON.stringify(archived.items[0].feedback)),
+  {rpe:8,pain:'No',notes:'Carrera cómoda, sin molestias.'});
+ assert.equal(app.el('classFinalSummary').hidden,false);
+ assert.equal(app.el('classFeedback').hidden,true);
+ assert.ok(app.el('classFinalSummaryBody').children.length>=4);
+});
 test('natural completion is recorded once with full guided progress',async()=>{
  const storage=memory(),app=await boot(storage);
- app.click('start');
+ app.click('start');app.advance(10000);
  for(let i=0;i<6;i++)app.app.next();
  await app.flush();
  const entries=JSON.parse(storage.getItem('hf:personal:hf-collective-history-v1')).items;
@@ -100,7 +118,7 @@ test('natural completion is recorded once with full guided progress',async()=>{
 test('history write error keeps class checkpoint and offers retry without deleting stored records',async()=>{
  const storage=memory();
  storage.setItem('hf:personal:hf-collective-history-v1','CORRUPT_NOT_JSON');
- const app=await boot(storage);app.click('start');app.click('finishClass');await app.flush();
+ const app=await boot(storage);app.click('start');app.advance(10000);app.click('finishClass');await app.flush();
  assert.equal(app.el('retryCollectiveArchive').hidden,false);
  assert.match(app.el('collectiveArchiveStatus').textContent,/Historial no guardado/);
  assert.ok(storage.getItem('hf:collective-class:checkpoint:v1'));
@@ -109,7 +127,7 @@ test('history write error keeps class checkpoint and offers retry without deleti
 test('collective histories are scoped to the originating HF profile',async()=>{
  const storage=memory(),profile='abcdef0123456789abcdef0123456789';
  const app=await boot(storage,{profile});
- app.click('start');app.click('finishClass');await app.flush();
+ app.click('start');app.advance(10000);app.click('finishClass');await app.flush();
  assert.ok(storage.getItem('hf:'+profile+':hf-collective-history-v1'));
  assert.equal(storage.getItem('hf:personal:hf-collective-history-v1'),null);
 });
@@ -130,7 +148,7 @@ test('HF home loads organization only inside its edition guard and legacy indivi
 test('an interrupted class from another HF profile cannot be viewed, resumed or discarded',async()=>{
  const storage=memory();
  const guestProfile='abcdef0123456789abcdef0123456789';
- const guest=await boot(storage,{profile:guestProfile});guest.click('start');
+ const guest=await boot(storage,{profile:guestProfile});guest.click('start');guest.advance(10000);
  const checkpoint=storage.getItem('hf:collective-class:checkpoint:v1');
  assert.ok(checkpoint);
  const personal=await boot(storage,{profile:'personal',time:1795270002000});

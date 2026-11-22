@@ -13,7 +13,7 @@ assert.ok(js,'HF standalone class script exists');
 
 function boot(query='?mode=guided&view=mirror'){
   const nodes=new Map(),listeners=new Map(), bodyClasses=new Set();
-  let clock=1_000_000;
+  let clock=1_000_000,ticker=null;
   function node(id=''){
     let value='';
     const attrs=new Map(), cls=new Set();
@@ -61,12 +61,12 @@ function boot(query='?mode=guided&view=mirror'){
   const window={};
   const sandbox={
     document,window,location:{search:query},URLSearchParams,
-    Date:{now:()=>clock},console,confirm:()=>true,setInterval:()=>0
+    Date:{now:()=>clock},console,confirm:()=>true,setInterval:(fn,ms)=>{if(ms===160)ticker=fn;return 0}
   };
   vm.runInNewContext(js,sandbox,{filename:'hf-class-prototype',timeout:1000});
   return {
     el:id=>document.getElementById(id),bodyClasses,document,listeners,
-    advance(ms){clock+=ms;},click(id){const item=this.el(id);assert.equal(typeof item.onclick,'function');item.onclick();}
+    advance(ms){clock+=ms;ticker?.();},click(id){const item=this.el(id);assert.equal(typeof item.onclick,'function');item.onclick();}
   };
 }
 
@@ -93,6 +93,7 @@ test('tablet mode selected from URL can be changed locally without restarting cl
   const a=boot('?mode=stations&view=tablet');
   assert.ok(a.bodyClasses.has('session-mode-tablet'));
   a.click('start');
+  a.advance(10000); // preparation is not active training
   assert.equal(a.el('start').disabled,true);
   a.click('mirrorMode');
   assert.ok(a.bodyClasses.has('session-mode-mirror'));
@@ -133,6 +134,7 @@ test('class modes and programmed breaks work in both presentation modes',()=>{
   const a=boot('?mode=guided&view=mirror');
   a.click('togglePresentation');
   a.click('start');
+  a.advance(10000);
   assert.ok(a.el('pause').disabled===false);
   a.click('next'); // manually advance from timed warmup
   assert.match(a.el('progressText').textContent,/Ejercicio 2 de/);
