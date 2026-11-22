@@ -1268,11 +1268,48 @@ function isProgrammedRest(exercise){
 function isTvTimedRest(exercise){
  return document.body.classList.contains('tv-mode')&&isProgrammedRest(exercise);
 }
+let tvTechniqueGeneration=0,tvTechniqueBlobUrl=null,tvTechniqueIdentity='';
 function clearTvExerciseGif(){
- const image=$('tvExerciseGif');
- image.parentElement.classList.remove('has-gif');
- image.classList.add('hidden');
- image.removeAttribute('src');
+ tvTechniqueGeneration++;
+ const image=$('tvExerciseGif'),video=$('tvExerciseVideo'),card=image.parentElement;
+ if(tvTechniqueBlobUrl){URL.revokeObjectURL(tvTechniqueBlobUrl);tvTechniqueBlobUrl=null}
+ image.classList.add('hidden');image.removeAttribute('src');
+ video.pause();video.classList.add('hidden');video.removeAttribute('src');video.load();
+ card.classList.remove('has-gif');
+ $('tvGifUnavailable').classList.add('hidden');
+ tvTechniqueIdentity='';
+}
+async function loadTvTechnique(current,resting){
+ if(!document.body.classList.contains('tv-mode')||resting||!current){clearTvExerciseGif();return}
+ const label=current.label.replace(/\s+·\s+(?:(?:ronda|minuto)\s+\d+.*|\d+(?:[.,]\d+)?\s*kg.*)$/i,'');
+ const identity=String(sessionWorkout||active)+'|'+step+'|'+label+'|'+(current.techniqueId||'');
+ if(identity===tvTechniqueIdentity)return;
+ clearTvExerciseGif();
+ tvTechniqueIdentity=identity;
+ const generation=tvTechniqueGeneration,key=techniqueKey(label);
+ const shared=techniqueCatalogPath(current.techniqueId)||sharedTechniquePath(key);
+ let record=null;
+ try{record=await techniqueRead(key)}catch(error){/* IndexedDB puede no estar disponible */ }
+ if(generation!==tvTechniqueGeneration||!document.body.classList.contains('tv-mode'))return;
+ const image=$('tvExerciseGif'),video=$('tvExerciseVideo'),fallback=$('tvGifUnavailable');
+ if(record?.blob&&['image/gif','video/mp4','video/webm'].includes(record.type)){
+  try{
+   tvTechniqueBlobUrl=URL.createObjectURL(record.blob);
+   if(record.type.startsWith('video/')){
+    video.src=tvTechniqueBlobUrl;
+    video.setAttribute('aria-label','Vídeo de técnica de '+label);
+    void video.play().catch(()=>{});
+   }else{
+    image.alt='GIF de '+label;
+    image.src=tvTechniqueBlobUrl;
+   }
+   return;
+  }catch(error){if(tvTechniqueBlobUrl){URL.revokeObjectURL(tvTechniqueBlobUrl);tvTechniqueBlobUrl=null}}
+ }
+ if(shared){
+  image.alt='GIF de '+label;
+  image.src=shared;
+ }else fallback.classList.remove('hidden');
 }
 function renderTvExercises(exercises=steps(),amrap=getAmrapAt(step),ft=getForTimeAt(step)){
  if(!document.body.classList.contains('tv-mode')||!exercises[step])return;
@@ -1300,15 +1337,7 @@ function renderTvExercises(exercises=steps(),amrap=getAmrapAt(step),ft=getForTim
  $('tvNextTarget').textContent=seriesRest?'Serie '+((seriesLog[step]?.length||0)+1)+' de '+current.strength.sets:
    next?.vector?vectorDose(next.vector):target?target.sets+' × '+target.reps+' rep'+(target.weight===null?'':' · '+target.weight+' kg'):
    next?.duration?formatSeconds(next.duration):'';
- const image=$('tvExerciseGif');
- const label=current.label.replace(/\s+·\s+(?:(?:ronda|minuto)\s+\d+.*|\d+(?:[.,]\d+)?\s*kg.*)$/i,'');
- const path=resting||current.vector&&!$('vectorCurrentIllustration').classList.contains('hidden')?null:techniqueCatalogPath(current.techniqueId)||sharedTechniquePath(techniqueKey(label));
- if(!path){clearTvExerciseGif();return}
- image.alt='Demostración de '+label;
- if(image.getAttribute('src')!==path){
-   clearTvExerciseGif();
-   image.src=path;
- }
+ void loadTvTechnique(current,resting);
 }
 function renderRestUI(exercise){
  const a=currentStrength(),entries=seriesLog[step]||[];
@@ -1955,13 +1984,28 @@ for(const button of tvToggles)button.addEventListener('click',()=>{
  if(view==='guided'){renderRestUI();renderTvExercises()}
 });
 $('tvCompleteSet').onclick=()=> $('logSet').click();
-$('tvExerciseGif').onload=event=>{
- const image=event.currentTarget;
- if(!image.hasAttribute('src'))return;
- image.classList.remove('hidden');
- image.parentElement.classList.add('has-gif');
-};
-$('tvExerciseGif').onerror=clearTvExerciseGif;
+function displayTvTechniqueMedia(node){
+ if(!node.getAttribute('src'))return;
+ const other=node.id==='tvExerciseGif'?$('tvExerciseVideo'):$('tvExerciseGif');
+ other.classList.add('hidden');
+ node.classList.remove('hidden');
+ $('tvGifUnavailable').classList.add('hidden');
+ node.parentElement.classList.add('has-gif');
+ $('vectorCurrentIllustration').classList.add('hidden');
+ node.parentElement.classList.remove('has-vector-illustration');
+}
+function unavailableTvTechnique(event){
+ const isVideo=event?.currentTarget?.id==='tvExerciseVideo';
+ const current=steps()[step];
+ const shared=isVideo&&current&&(techniqueCatalogPath(current.techniqueId)||sharedTechniquePath(techniqueKey(current.label)));
+ clearTvExerciseGif();
+ if(shared){$('tvExerciseGif').src=shared;return}
+ if(document.body.classList.contains('tv-mode'))$('tvGifUnavailable').classList.remove('hidden');
+}
+$('tvExerciseGif').onload=event=>displayTvTechniqueMedia(event.currentTarget);
+$('tvExerciseGif').onerror=unavailableTvTechnique;
+$('tvExerciseVideo').onloadeddata=event=>displayTvTechniqueMedia(event.currentTarget);
+$('tvExerciseVideo').onerror=unavailableTvTechnique;
 setupHF();
 setupLocalProfiles();
 $('appVersion').textContent='Versión '+GG_APP_VERSION;
