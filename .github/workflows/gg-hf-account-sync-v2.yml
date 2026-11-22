@@ -1,0 +1,29 @@
+name: GG HF account sync v2 offline safety
+on:
+  pull_request:
+    paths:
+      - 'src/authenticated-sync-v2.mjs'
+      - 'src/account-entry-v2.mjs'
+      - 'src/hf-class-access-v2.mjs'
+      - 'infra/sql/authenticated-sync-v2.sql'
+      - 'tests/account-sync-v2-smoke.cjs'
+      - 'index.html'
+      - 'hf-class-display.html'
+      - '.github/workflows/gg-hf-account-sync-v2.yml'
+permissions:
+  contents: read
+jobs:
+  offline-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Test authenticated sync without external services
+        run: |
+          node --version
+          node --check src/authenticated-sync-v2.mjs
+          node --check src/account-entry-v2.mjs
+          node --check src/hf-class-access-v2.mjs
+          node --test tests/account-sync-v2-smoke.cjs
