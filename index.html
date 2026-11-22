@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.4</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.5</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -815,6 +815,7 @@ html[data-edition="hf"] #prestartValue{
 .fullscreen-toggle[aria-pressed="false"] .fullscreen-exit,
 .fullscreen-toggle[aria-pressed="true"] .fullscreen-enter{display:none}
 #fullscreenStatus:not(:empty){
+ pointer-events:none;
  position:absolute;right:0;top:calc(100% + 6px);z-index:19;width:max-content;max-width:min(290px,85vw);
  padding:8px 10px;border:1px solid var(--outline,#526574);border-radius:8px;
  background:var(--panel,#243440);color:var(--text,#f8fafc);font-size:14px
@@ -2191,26 +2192,42 @@ $('soundTest').onclick=async()=>{const ok=await initAudio();if(ok){playTone(fals
 $('start').addEventListener('click',()=>{void initAudio()});$('resume').addEventListener('click',()=>{void initAudio()});$('pause').addEventListener('click',()=>{void initAudio()});
 updateSoundButton();
 const fullscreenToggle=$('fullscreenToggle'),fullscreenStatus=$('fullscreenStatus');
+let fullscreenStatusTimer;
+function dismissFullscreenStatus(){
+ clearTimeout(fullscreenStatusTimer);
+ fullscreenStatus.textContent='';
+}
+function showFullscreenStatus(message){
+ dismissFullscreenStatus();
+ fullscreenStatus.textContent=message;
+ fullscreenStatusTimer=setTimeout(dismissFullscreenStatus,5000);
+}
+document.addEventListener('pointerdown',event=>{
+ if(!fullscreenToggle.contains(event.target))dismissFullscreenStatus();
+},{capture:true,passive:true});
+document.addEventListener('keydown',event=>{
+ if(event.key==='Escape')dismissFullscreenStatus();
+});
 function updateFullscreenToggle(){
  const active=Boolean(document.fullscreenElement);
  const label=active?'Salir de pantalla completa':'Activar pantalla completa';
  fullscreenToggle.setAttribute('aria-pressed',String(active));
  fullscreenToggle.setAttribute('aria-label',label);
  fullscreenToggle.title=label;
- fullscreenStatus.textContent='';
+ dismissFullscreenStatus();
 }
 fullscreenToggle.addEventListener('click',async()=>{
- fullscreenStatus.textContent='';
+ dismissFullscreenStatus();
  try{
   if(document.fullscreenElement){
    await document.exitFullscreen();
   }else if(document.fullscreenEnabled&&document.documentElement.requestFullscreen){
    await document.documentElement.requestFullscreen();
   }else{
-   fullscreenStatus.textContent='Este navegador no permite activar la pantalla completa.';
+   showFullscreenStatus('Este navegador no permite activar la pantalla completa.');
   }
  }catch{
-  fullscreenStatus.textContent='No se pudo cambiar la pantalla completa. Vuelve a intentarlo.';
+  showFullscreenStatus('No se pudo cambiar la pantalla completa. Vuelve a intentarlo.');
  }
 });
 document.addEventListener('fullscreenchange',updateFullscreenToggle);
@@ -2306,7 +2323,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.4', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.4';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.5', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.5';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
