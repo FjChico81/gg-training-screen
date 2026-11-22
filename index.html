@@ -1752,7 +1752,56 @@ function getAmrapAt(index){const w=workouts.find(x=>x.id===(session?sessionWorko
 function updateAmrapDisplay(){const info=getAmrapAt(step),out=$('amrapStatus');out.classList.toggle('hidden',!info);if(!info)return;const round=amrapRounds+1;out.textContent='AMRAP · '+info.name+' · Ronda '+round+' · Restante '+formatSeconds(Math.max(0,Math.ceil(info.limit-amrapElapsed)))}
 function finishAmrapBlock(info){amrapResults.push({name:info.name,limit:info.limit,rounds:amrapRounds,partial:step-info.start,exerciseCount:info.count,elapsed:Math.min(info.limit,amrapElapsed)});amrapElapsed=0;amrapRounds=0;amrapLastBlock=null;amrapCurrent=null;stepElapsed=0;restRemaining=0;restRunning=false;if(info.end>=steps().length-1){if(!archiveSession())return;session=false;paused=true;saveSession();void releaseWakeLock();openSessionSummary()}else{step=info.end+1;saveSession();show('guided')}}
 function finishExerciseTransition(){if(!session||transitionTo===null)return;const target=transitionTo;transitionTo=null;restRemaining=0;restRunning=false;step=target;stepElapsed=0;editingSet=-1;saveSession();if(view==='guided'){setSessionExtrasOpen(false);renderGuided()}else if(view==='board')renderBoard()}
-function nextStep(){if(transitionTo!==null)return;editingSet=-1;const ft=getForTimeAt(step);if(ft){if(step===ft.end)finishForTime(ft,true);else{step++;stepElapsed=0;saveSession();renderGuided()}return}const info=getAmrapAt(step);if(info){if(step===info.end){amrapRounds++;step=info.start}else step++;stepElapsed=0;restRemaining=0;restRunning=false;saveSession();renderGuided();return}const a=currentStrength();if(a&&(seriesLog[step]||[]).length<a.sets){alert('Completa las series programadas antes de avanzar');return}restRemaining=0;restRunning=false;if(step===steps().length-1){if(!archiveSession())return;session=false;paused=true;saveSession();openSessionSummary()}else{step++;stepElapsed=0;saveSession();if(view==='guided')renderGuided();else if(view==='board')renderBoard()}}$('start').onclick=()=>{resetHeartLimitAlert();if(soundEnabled&&workoutHeartLimit(active)!==null)void initAudio();step=0;elapsed=0;stepElapsed=0;amrapElapsed=0;amrapRounds=0;amrapResults=[];ftElapsed=0;ftResults=[];actualResults={};amrapLastBlock=null;amrapCurrent=null;editingSet=-1;seriesLog={};draftSets={};restRemaining=0;restRunning=false;transitionTo=null;paused=false;session=true;sessionWorkout=active;clockAnchor=Date.now();saveSession();show('guided');void syncWakeLock()};$('resume').onclick=()=>{if(session&&sessionWorkout===active){clockAnchor=Date.now();saveSession();show('guided');void syncWakeLock()}};$('prev').onclick=()=>{step=Math.max(0,step-1);stepElapsed=0;editingSet=-1;restRemaining=0;restRunning=false;transitionTo=null;saveSession();renderGuided()};$('pause').onclick=()=>{paused=!paused;if(!paused&&soundEnabled&&workoutHeartLimit(sessionWorkout)!==null)void initAudio();refreshHeart();clockAnchor=Date.now();saveSession();renderGuided();void syncWakeLock()};$('advance').onclick=nextStep;$('showBoard').onclick=()=>{saveSession();show('board')};$('finish').onclick=()=>{if(confirm('¿Finalizar el entrenamiento?')){if(!archiveSession())return;session=false;paused=true;saveSession();openSessionSummary()}};
+function nextStep(){if(!isHF&&prestartRemaining>0)return;if(transitionTo!==null)return;editingSet=-1;const ft=getForTimeAt(step);if(ft){if(step===ft.end)finishForTime(ft,true);else{step++;stepElapsed=0;saveSession();renderGuided()}return}const info=getAmrapAt(step);if(info){if(step===info.end){amrapRounds++;step=info.start}else step++;stepElapsed=0;restRemaining=0;restRunning=false;saveSession();renderGuided();return}const a=currentStrength();if(a&&(seriesLog[step]||[]).length<a.sets){alert('Completa las series programadas antes de avanzar');return}restRemaining=0;restRunning=false;if(step===steps().length-1){if(!archiveSession())return;session=false;paused=true;saveSession();openSessionSummary()}else{step++;stepElapsed=0;saveSession();if(view==='guided')renderGuided();else if(view==='board')renderBoard()}}function beginTrainingSession(){
+ resetHeartLimitAlert();
+ if(soundEnabled&&workoutHeartLimit(active)!==null)void initAudio();
+ step=0;elapsed=0;stepElapsed=0;amrapElapsed=0;amrapRounds=0;amrapResults=[];
+ ftElapsed=0;ftResults=[];actualResults={};amrapLastBlock=null;amrapCurrent=null;
+ editingSet=-1;seriesLog={};draftSets={};restRemaining=0;restRunning=false;transitionTo=null;
+ paused=!isHF;session=true;sessionWorkout=active;
+ prestartRemaining=isHF?0:10;prestartRunning=!isHF;
+ clockAnchor=Date.now();saveSession();show('guided');void syncWakeLock();
+}
+$('start').onclick=()=>{
+ if(!isHF&&session&&sessionWorkout===active
+   &&!confirm('¿Reiniciar desde cero? Se descartarán las series y resultados que aún no hayas finalizado.'))return;
+ beginTrainingSession();
+};
+$('restartTraining').classList.toggle('hidden',isHF);
+$('restartTraining').onclick=()=>{
+ if(isHF||!session)return;
+ if(!confirm('¿Reiniciar el entrenamiento desde el principio? Se perderá el progreso de la sesión en curso, pero el historial anterior se conservará.'))return;
+ active=sessionWorkout;
+ beginTrainingSession();
+};
+$('resume').onclick=()=>{
+ if(session&&sessionWorkout===active){
+  clockAnchor=Date.now();saveSession();show('guided');void syncWakeLock();
+ }
+};
+$('prev').onclick=()=>{
+ if(!isHF&&prestartRemaining>0)return;
+ step=Math.max(0,step-1);stepElapsed=0;editingSet=-1;
+ restRemaining=0;restRunning=false;transitionTo=null;
+ saveSession();renderGuided();
+};
+$('pause').onclick=()=>{
+ if(!isHF&&prestartRemaining>0){
+  prestartRunning=!prestartRunning;clockAnchor=Date.now();saveSession();syncPrestartOverlay();return;
+ }
+ paused=!paused;
+ if(!paused&&soundEnabled&&workoutHeartLimit(sessionWorkout)!==null)void initAudio();
+ refreshHeart();clockAnchor=Date.now();saveSession();renderGuided();void syncWakeLock();
+};
+$('advance').onclick=nextStep;
+$('showBoard').onclick=()=>{saveSession();show('board')};
+$('finish').onclick=()=>{
+ if(!isHF&&prestartRemaining>0)return;
+ if(confirm('¿Finalizar el entrenamiento?')){
+  if(!archiveSession())return;
+  session=false;paused=true;saveSession();openSessionSummary();
+ }
+};
 let wakeLock=null,wakeWanted=true,wakePending=false;
 try{wakeWanted=appStorage.getItem('gg-wake-enabled')!=='false'}catch(e){}
 function updateWakeButton(){$('wakeToggle').textContent='☀ Mantener pantalla activa: '+(wakeWanted?'activado':'desactivado')}
