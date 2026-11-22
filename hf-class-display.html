@@ -1226,10 +1226,9 @@
     classPrestartRunning=false;classPrestartDeadline=null;persistCheckpoint(true);
   });
   updateDeviceUI();
-  renderClassHeart();
   loadForms();render();setInterval(tick,160);
   void bootstrapRecovery();
-  setInterval(renderClassHeart,3000);
+  renderClassHeart();setInterval(renderClassHeart,3000);
 })();
 </script>
 </body>
