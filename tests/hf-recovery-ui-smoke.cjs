@@ -78,7 +78,8 @@ async function boot(store,{at=3000000000,token='?mode=guided&view=tablet'}={}){
 test('closing a timed class produces one HF-only checkpoint; reload shows explicit recovery prompt',async()=>{
  const store=memory(),first=await boot(store);
  assert.equal(first.el('start').disabled,false);
- first.click('start');first.advance(10000);first.click('pause');
+ first.click('start');first.advance(10000); // preparación, no se cuenta
+ first.advance(10000);first.click('pause');
  assert.equal(first.getState().paused,true);
  assert.equal(store.kv.size,1);
  assert.equal(store.kv.has('hf:collective-class:checkpoint:v1'),true);
@@ -96,7 +97,7 @@ test('closing a timed class produces one HF-only checkpoint; reload shows explic
 });
 test('recovery discard is explicit, clears HF checkpoint only and opens a new class',async()=>{
  const store=memory();store.setItem('gg-training-screen-workouts-v1','NEVER_DELETE');
- const first=await boot(store);first.click('start');
+ const first=await boot(store);first.click('start');first.advance(10000);
  const second=await boot(store,{at:first.now()+1000});
  assert.equal(second.el('recoveryPanel').hidden,false);
  second.click('discardRecovery');
