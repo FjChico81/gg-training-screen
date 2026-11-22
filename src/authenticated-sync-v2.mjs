@@ -192,7 +192,7 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
    const unresolved={};
    for(const [key,item] of Object.entries(pending)){
     const server=byKey.get(key),revision=shadow[key]?.revision??null;
-    const conflict=server&&(revision===null||Number(server.revision)!==Number(revision));
+    const conflict=Boolean(server)&&(revision===null||Number(server.revision)!==Number(revision));
     if(conflict||(!server&&revision!==null)){
      unresolved[key]=item;continue;
     }
@@ -238,7 +238,7 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
   if(!cloud.verified)throw Error('Debes iniciar sesión antes de cargar los entrenamientos.');
   const rows=await cloud.getRecords(profileId);
   const map={workout:{},history:{},active:{}};
-  for(const r of rows){const k=recordKey(r.kind,r.client_id);shadow[k]={revision:Number(r.revision)};
+  for(const r of rows){const k=recordKey(r.kind,r.client_id);if(!pending[k])shadow[k]={revision:Number(r.revision)};
    if(!r.deleted_at&&map[r.kind]&&r.payload&&typeof r.payload==='object')map[r.kind][r.client_id]=clone(r.payload)
   }
   for(const [k,item] of Object.entries(pending)){if(!map[item.kind])continue;
