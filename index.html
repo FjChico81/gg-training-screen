@@ -2719,11 +2719,65 @@ $('tvExerciseGif').onload=event=>displayTvTechniqueMedia(event.currentTarget);
 $('tvExerciseGif').onerror=unavailableTvTechnique;
 $('tvExerciseVideo').onloadeddata=event=>displayTvTechniqueMedia(event.currentTarget);
 $('tvExerciseVideo').onerror=unavailableTvTechnique;
+
+function restoreActiveSessionFromStorage(){
+  session=false;sessionWorkout=null;paused=true;step=0;elapsed=0;stepElapsed=0;seriesLog={};actualResults={};
+  try{const saved=JSON.parse(appStorage.getItem('gg-active-session-v1'));if(saved&&saved.session&&findWorkout(saved.active)){active=saved.active;sessionWorkout=saved.active;prestartRemaining=Number.isFinite(Number(saved.prestartRemaining))?Math.max(0,Math.min(10,Number(saved.prestartRemaining))):0;prestartRunning=false;step=Math.max(0,Math.min(saved.step,findWorkout(active).blocks.reduce((n,b)=>n+b.items.length,0)-1));paused=true;elapsed=saved.elapsed||0;stepElapsed=saved.stepElapsed||0;seriesLog=saved.seriesLog||{};restRemaining=saved.restRemaining||0;restRunning=!!saved.restRunning;transitionTo=Number.isInteger(saved.transitionTo)&&saved.transitionTo===step+1? saved.transitionTo:null;draftSets=saved.draftSets||{};vectorTargets=saved.vectorTargets||{};amrapElapsed=saved.amrapElapsed||0;amrapRounds=saved.amrapRounds||0;amrapResults=saved.amrapResults||[];ftElapsed=saved.ftElapsed||0;ftResults=saved.ftResults||[];actualResults=saved.actualResults||{};session=true}}catch(e){}
+}
+window.__secureAppV2={
+ setProfiles(ownerId,rows){
+  if(!SECURE_AUTH_V2)return;
+  if(!/^[a-f0-9-]{36}$/i.test(ownerId)||!Array.isArray(rows)||rows.some(p=>p.owner_id!==ownerId))
+   throw Error('Perfiles de una cuenta no autorizada.');
+  const cached=rows.filter(p=>!p.is_primary).map(p=>({id:p.id.replace(/-/g,''),name:p.name}));
+  localStorage.setItem(LOCAL_PROFILES_KEY,JSON.stringify(cached));
+  localProfiles.splice(1,localProfiles.length-1,...cached);
+  $('localProfileSelect').replaceChildren();
+  for(const p of localProfiles){const option=node('option',p.name);option.value=p.id;$('localProfileSelect').append(option)}
+  $('localProfileSelect').value=localProfile.id;
+ },
+ useProfile(ownerId,profileId){
+  if(!SECURE_AUTH_V2||!/^[a-f0-9-]{36}$/i.test(ownerId))throw Error('Cuenta inválida.');
+  if(profileId!==localProfile.id){
+   location.replace(location.href);return false;
+  }
+  secureNamespace=(isHF?'hf-v2:':'gg-v2:')+ownerId+':'+profileId+':';
+  load();restoreActiveSessionFromStorage();
+  return true;
+ },
+ storagePrefix(){if(!secureNamespace)throw Error('Perfil sin autenticar.');return secureNamespace},
+ snapshot(){
+  return {
+   workouts:Array.isArray(JSON.parse(appStorage.getItem(KEY)||'[]'))?JSON.parse(appStorage.getItem(KEY)||'[]'):[],
+   history:Array.isArray(JSON.parse(appStorage.getItem('gg-strength-history-v1')||'[]'))?JSON.parse(appStorage.getItem('gg-strength-history-v1')||'[]'):[],
+   active:JSON.parse(appStorage.getItem('gg-active-session-v1')||'null')
+  };
+ },
+ async apply(payload){
+  if(session&&view==='guided')throw Error('No se sobrescribe una sesión activa.');
+  secureApply=true;
+  try{
+   appStorage.setItem(KEY,JSON.stringify(payload.workouts||[]));
+   appStorage.setItem('gg-strength-history-v1',JSON.stringify(payload.history||[]));
+   if(payload.active)appStorage.setItem('gg-active-session-v1',JSON.stringify(payload.active));
+   else appStorage.removeItem('gg-active-session-v1');
+  }finally{secureApply=false}
+  load();restoreActiveSessionFromStorage();
+  if(view==='library')renderLibrary();
+  if(view==='board'&&active)renderBoard();
+ },
+ busy(){return session||view==='editor'||view==='guided'},
+ setController(c){secureSyncController=c},
+};
 setupHF();
 setupLocalProfiles();
 $('appVersion').textContent='Versión '+GG_APP_VERSION;
 for(const id of ['v2Name','ftLines','circuitLines','amrapLines','emomExercises','visualName','timerName'])setupExercisePicker(id);
-setupExerciseLibrary();setupVectorHome();setupCompactGuided();load();try{const saved=JSON.parse(appStorage.getItem('gg-active-session-v1'));if(saved&&saved.session&&findWorkout(saved.active)){active=saved.active;sessionWorkout=saved.active;prestartRemaining=Number.isFinite(Number(saved.prestartRemaining))?Math.max(0,Math.min(10,Number(saved.prestartRemaining))):0;prestartRunning=false;step=Math.max(0,Math.min(saved.step,findWorkout(active).blocks.reduce((n,b)=>n+b.items.length,0)-1));paused=true;elapsed=saved.elapsed||0;stepElapsed=saved.stepElapsed||0;seriesLog=saved.seriesLog||{};restRemaining=saved.restRemaining||0;restRunning=!!saved.restRunning;transitionTo=Number.isInteger(saved.transitionTo)&&saved.transitionTo===step+1? saved.transitionTo:null;draftSets=saved.draftSets||{};vectorTargets=saved.vectorTargets||{};amrapElapsed=saved.amrapElapsed||0;amrapRounds=saved.amrapRounds||0;amrapResults=saved.amrapResults||[];ftElapsed=saved.ftElapsed||0;ftResults=saved.ftResults||[];actualResults=saved.actualResults||{};session=true}}catch(e){}show('library');void checkForUpdates();
+setupExerciseLibrary();setupVectorHome();setupCompactGuided();
+load();
+if(!SECURE_AUTH_V2)restoreActiveSessionFromStorage();
+show('library');
+void checkForUpdates();
 </script><script type="module">
 if(usesWorkoutCloud&&!SECURE_AUTH_V2){
   if(isHF){
@@ -2754,4 +2808,4 @@ if(usesWorkoutCloud&&!SECURE_AUTH_V2){
 }else{
   document.getElementById('ggCloudPanel')?.remove();
 }
-</script></body></html>
+</script><script type="module" src="src/account-entry-v2.mjs"></script></body></html>
