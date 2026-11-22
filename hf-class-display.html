@@ -497,7 +497,7 @@ function bootHFClass(authorizedOwnerId=null){
 
   // Independent, device-local HF checkpoint; never reads or writes GG storage.
   let checkpointTools=null,checkpointRunId=null,recoverySnapshot=null,checkpointError=null;
-  let recoveryPending=typeof hfAccountStorage!=='undefined',lastCheckpointAt=0;
+  let recoveryPending=Boolean(hfAccountStorage),lastCheckpointAt=0;
   let checkpointWarned=false;
   const hfProfileId=params.get('hfProfile')||'personal';
   let historyArchived=false,historySaving=false,historyOutcome='completed';
@@ -581,7 +581,7 @@ function bootHFClass(authorizedOwnerId=null){
   }
   function saveCollectiveOutcome(){
     if(historyArchived||historySaving)return;
-    if(typeof hfAccountStorage==='undefined'||!checkpointRunId){
+    if(!hfAccountStorage||!checkpointRunId){
       el('collectiveArchiveStatus').hidden=false;
       el('collectiveArchiveStatus').textContent='⚠ El historial no se puede guardar sin almacenamiento local o identificador de sesión.';
       el('retryCollectiveArchive').hidden=false;
@@ -678,7 +678,7 @@ function bootHFClass(authorizedOwnerId=null){
     });
   }
   function persistCheckpoint(force=false){
-    if(typeof hfAccountStorage==='undefined'||!checkpointTools||!checkpointRunId||
+    if(!hfAccountStorage||!checkpointTools||!checkpointRunId||
       recoveryPending||importBlocked||!['work','change'].includes(state.phase))return;
     const now=Date.now();
     if(!force&&now-lastCheckpointAt<2000)return;
@@ -699,7 +699,7 @@ function bootHFClass(authorizedOwnerId=null){
     }
   }
   function clearCurrentCheckpoint(){
-    if(!checkpointTools||!checkpointRunId||typeof hfAccountStorage==='undefined')return;
+    if(!checkpointTools||!checkpointRunId||!hfAccountStorage)return;
     try{
       const saved=checkpointTools.readHFCheckpoint(hfAccountStorage,{now:Date.now()});
       if(saved?.runId===checkpointRunId)checkpointTools.clearHFCheckpoint(hfAccountStorage);
@@ -1212,7 +1212,7 @@ function bootHFClass(authorizedOwnerId=null){
     }
   }
   async function bootstrapRecovery(){
-    if(typeof hfAccountStorage==='undefined'){
+    if(!hfAccountStorage){
       recoveryPending=false;
       el('saveIndicator').hidden=false;
       el('saveIndicator').textContent='⚠ Este navegador no admite recuperación local.';
@@ -1285,7 +1285,7 @@ function bootHFClass(authorizedOwnerId=null){
     }
   };
   el('discardRecovery').onclick=()=>{
-    if(!checkpointTools||typeof hfAccountStorage==='undefined'||el('discardRecovery').disabled)return;
+    if(!checkpointTools||!hfAccountStorage||el('discardRecovery').disabled)return;
     if(!confirm('¿Descartar la copia de clase interrumpida? Solo se eliminará esta copia local de HF, nunca las rutinas guardadas.'))return;
     try{
       checkpointTools.clearHFCheckpoint(hfAccountStorage);
