@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-access="locked">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1c1c1e">
 <title>HF · Clases colectivas</title>
+<script id="hfAccountBoot">window.__HF_V2_ENTRY_GATE=true;</script>
 <style>
 :root{--bg:#171719;--panel:#28282c;--panel2:#323237;--ink:#f8f6f4;--muted:#bbb7b6;--hot:#ff671d;--hot2:#ffad78;--line:#55545a;--work:#ff671d;--rest:#55c1c4}
 *{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:var(--bg);color:var(--ink);font:16px system-ui,-apple-system,"Segoe UI",sans-serif}button,input,textarea{font:inherit}button{min-height:44px;padding:11px 17px;border:1px solid transparent;border-radius:12px;background:var(--hot);color:#1e1714;font-weight:800;cursor:pointer}button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid #ffb188;outline-offset:2px}button:hover:not(:disabled){filter:brightness(1.1)}button:disabled{opacity:.45;cursor:not-allowed}.secondary{background:#424248;color:var(--ink);border-color:#646369}.outline{background:transparent;color:var(--ink);border-color:#66646a}.danger{background:#633b40;color:#fff}.top{max-width:1700px;margin:0 auto;padding:18px 20px 12px}.topline{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}.identity{display:flex;align-items:center;gap:16px}.brand{font-size:clamp(40px,5vw,70px);line-height:1;font-weight:1000;font-style:italic;letter-spacing:-.1em;color:var(--hot);padding-right:10px}.brandname{font-size:clamp(14px,2vw,19px);font-weight:800;line-height:1.2}.eyebrow{font-size:12px;color:var(--hot2);font-weight:850;letter-spacing:.12em}.sub{color:var(--muted);font-size:13px}.prototype{border:1px solid #84644c;border-radius:100px;padding:7px 11px;color:var(--hot2);font-weight:800;font-size:12px}.switcher{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.switcher button[aria-pressed="true"]{background:var(--hot);color:#191513}.switcher button[aria-pressed="false"]{background:#34343a;color:#f4f0ee}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}.config{max-width:1700px;margin:8px auto 0;padding:12px 20px}.config form{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:16px}.config h2{margin:0 0 8px;font-size:22px}.config label{display:block;margin:12px 0 6px;font-weight:800;color:#ffb38e}.config textarea{width:100%;height:150px;background:#1b1b1e;color:#fff;border:1px solid #73737a;border-radius:10px;padding:11px;resize:vertical}.config input{width:100%;background:#1b1b1e;color:#fff;border:1px solid #73737a;border-radius:9px;padding:10px}.config .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.config .hint{font-size:13px;color:#c1bcba;margin:5px 0 0}.config .error{color:#ffab9c;min-height:20px}.config-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.screen{max-width:1700px;margin:12px auto 0;padding:14px 20px 22px;min-height:65vh}.screen-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.screen h1{margin:0;font-size:clamp(21px,3vw,39px);letter-spacing:-.035em}.screen .status{display:inline-block;border:1px solid #82654e;border-radius:100px;padding:8px 13px;font-size:13px;font-weight:850;color:var(--hot2)}.display{min-height:390px}.card{border-radius:17px;border:1px solid var(--line);background:var(--panel);padding:clamp(14px,2vw,26px)}.guided-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:12px;min-height:min(61vh,610px)}.main-card{display:flex;flex-direction:column;border-color:#8c533c;background:linear-gradient(145deg,#312523,#242329)}.main-card .exercise-name{font-size:clamp(36px,5.8vw,86px);font-weight:1000;line-height:1.04;letter-spacing:-.048em;margin:12px 0}.main-card .exercise-target{font-size:clamp(25px,3.8vw,57px);color:var(--hot2);font-weight:900}.main-card .media{flex:1;display:flex;align-items:center;justify-content:center;min-height:150px;margin-top:10px}.media img{display:block;max-width:100%;max-height:min(26vh,265px);object-fit:contain;border-radius:10px}.media .placeholder{display:grid;place-items:center;font-size:clamp(54px,9vw,115px);opacity:.74}.side-stack{display:grid;grid-template-rows:minmax(0,1.15fr) minmax(0,1fr);gap:12px}.time-card{border-color:#994e2c;background:#35271f;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}.clock{font-variant-numeric:tabular-nums;letter-spacing:-.055em;font-size:clamp(56px,10vw,148px);line-height:1.05;font-weight:1000}.next-card{display:flex;flex-direction:column;justify-content:center;gap:8px}.next-card .exercise-name{font-size:clamp(27px,3.4vw,54px);line-height:1.1;font-weight:900}.next-card .exercise-target{font-size:clamp(18px,2.3vw,32px);font-weight:850;color:var(--hot2)}.stations-layout{display:flex;flex-direction:column;gap:12px}.station-clock{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#35271f;border-color:#9b5934}.station-clock .clock{font-size:clamp(55px,7.2vw,114px)}.station-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}.station{min-height:270px;display:flex;flex-direction:column;gap:7px;background:#27272b}.station .number{font-size:12px;color:var(--hot2);font-weight:850;letter-spacing:.1em}.station .group{background:#4a3a30;color:#ffdbbf;border-radius:100px;padding:5px 11px;font-size:14px;font-weight:850;align-self:start}.station .exercise-name{font-size:clamp(21px,2.7vw,38px);font-weight:950;line-height:1.06;margin:5px 0}.station .exercise-target{font-size:clamp(19px,2.3vw,30px);font-weight:850;color:var(--hot2)}.station .media{flex:1;display:grid;place-items:center;min-height:70px}.station .media img{max-height:min(12vh,138px)}.station .placeholder{font-size:62px;opacity:.6}.progress{color:var(--muted);font-size:clamp(13px,1.5vw,18px);font-weight:800}.coach{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px;padding:13px;border-radius:14px;background:#242428;border:1px solid #4a4a50}.coach button{flex:1;min-width:130px} .nav-back{min-height:44px;display:inline-flex;align-items:center;text-decoration:none;color:#fff;padding:10px 12px;border-radius:12px;border:1px solid #66646a;background:#424248;font-weight:800}.nav-back:focus-visible{outline:3px solid #ffb188;outline-offset:2px}.coach-label{margin:15px 2px 0;color:#ffb38e;font-weight:900;font-size:12px;letter-spacing:.11em}.notice{color:#bbb8b6;font-size:13px;margin:10px 4px 0;line-height:1.45}.session-total{font-variant-numeric:tabular-nums;color:var(--hot2)}#exitPresentation{display:none}.presentation .top,.presentation .config,.presentation .coach,.presentation .coach-label,.presentation .notice{display:none}.presentation .screen{margin:0;max-width:none;min-height:100vh;padding:clamp(10px,1.6vw,25px)}.presentation .display{min-height:calc(100vh - 105px)}.presentation .guided-layout{min-height:calc(100vh - 120px)}.presentation #exitPresentation{display:block;position:fixed;right:18px;bottom:16px;z-index:2;background:#3f3f43ed;color:#fff;opacity:.78;font-size:13px;min-height:38px}.presentation .screen-head{padding-right:90px}.presentation .station{min-height:clamp(170px,27vh,360px)}.presentation .station-grid{flex:1}.presentation .stations-layout{min-height:calc(100vh - 125px)}.presentation .station .media img{max-height:min(15vh,160px)}.presentation .main-card .media img{max-height:36vh}.presentation .main-card .exercise-name{font-size:clamp(42px,6vw,98px)}.presentation .next-card .exercise-name{font-size:clamp(30px,3.6vw,65px)}.work-phase .status{color:#ffb38e;border-color:#a45b39}.change-phase .status{color:#7cf0e1;border-color:#509d98}.change-phase .station-clock{background:#20383a;border-color:#4c9d9b}.change-phase .station .group{background:#244243;color:#9bf3e8}.rest-phase .time-card{background:#20383a;border-color:#4c9d9b}.rest-phase .main-card{border-color:#4c9d9b}.rest-phase .main-card .exercise-target{color:#98ece5}
@@ -247,9 +248,23 @@
 .presentation .hf-class-heart{padding-top:8px}
 .presentation .hf-class-heart-top strong{line-height:1.25;white-space:nowrap}
 .presentation .hf-class-zone-bar{gap:0!important}
+
+html[data-access="locked"] body > :not(#hfAccountWall):not(script){
+ visibility:hidden!important;pointer-events:none!important
+}
+#hfAccountWall{position:fixed;inset:0;z-index:9999;background:#1b1b1f;
+ color:white;padding:25px;display:grid;place-items:center}
+#hfAccountWall .card{width:min(100%,440px);padding:26px;text-align:center}
+#hfAccountWall a{display:inline-block;min-height:48px;padding:13px 19px;
+ background:#ff671d;color:#191919;border-radius:10px;text-decoration:none;font-weight:800}
+html[data-access="unlocked"] #hfAccountWall{display:none!important}
 </style>
 </head>
 <body>
+<div id="hfAccountWall"><div class="card"><h2>HF · Acceso personal obligatorio</h2>
+<p id="hfAccessStatus">Comprobando la sesión de HF TRAINING…</p>
+<a href="index.html?app=hf">Volver a HF e iniciar sesión</a>
+</div></div>
 <header class="top">
   <div class="topline">
     <div class="identity"><div class="brand" aria-label="HF">HF</div><div><div class="brandname">ENTRENAMIENTO HÍBRIDO</div><div class="sub">Fuerza · Ergómetros · Carrera · Funcional</div></div></div>
@@ -362,7 +377,15 @@
 </section>
 <script>
 'use strict';
-(function(){
+function bootHFClass(authorizedOwnerId=null){
+  // The user's verified account gets an isolated local checkpoint/history scope.
+  // Never migrate or read another account's legacy local class records.
+  const originalStore=globalThis.localStorage;
+  const localStorage=authorizedOwnerId?{
+    getItem:key=>originalStore.getItem('hf-auth-v2:'+authorizedOwnerId+':'+key),
+    setItem:(key,value)=>originalStore.setItem('hf-auth-v2:'+authorizedOwnerId+':'+key,value),
+    removeItem:key=>originalStore.removeItem('hf-auth-v2:'+authorizedOwnerId+':'+key)
+  }:originalStore;
   const el=id=>document.getElementById(id);
   // HF collective: optional BLE monitor, independent of BUHARDILLA's working BLE module.
   let classHrDevice=null,classHrCharacteristic=null,classHrValue=null,classHrAt=0,classHrError='';
@@ -1285,7 +1308,10 @@
   loadForms();render();setInterval(tick,160);
   void bootstrapRecovery();
   renderClassHeart();setInterval(renderClassHeart,3000);
-})();
+}
+if(window.__HF_V2_ENTRY_GATE){window.__HF_V2_BOOT=bootHFClass;}
+else bootHFClass();
 </script>
+<script type="module" src="src/hf-class-access-v2.mjs"></script>
 </body>
 </html>
