@@ -158,3 +158,51 @@ test('offline account scope and HF collective profiles do not overlap',()=>{
  assert.match(gate,/window\.__HF_V2_BOOT\(user\.id,requested\)/);
  assert.match(gate,/const root='hf-auth-v2:'\+user\.id\+':'\+requested\+':'/);
 });
+
+test('two devices see the same authenticated workout and completed history',async()=>{
+ const api=await mod,transport=server(),mobile=memory(),tablet=memory();
+ const mobileCloud=client(api,transport,mobile),tabletCloud=client(api,transport,tablet);
+ await mobileCloud.login('test@example.com','test-pass');
+ await tabletCloud.login('test@example.com','test-pass');
+ await mobileCloud.profiles();await tabletCloud.profiles();
+ let mobileView=null,tabletView=null;
+ const first=api.createProfileSync({cloud:mobileCloud,profileId,storage:mobile,prefix:'phone:',onApply:async x=>{mobileView=x}});
+ const second=api.createProfileSync({cloud:tabletCloud,profileId,storage:tablet,prefix:'tablet:',onApply:async x=>{tabletView=x}});
+ await first.initial();await second.initial();
+ first.changed('workout',JSON.stringify([{id:'w-iphone',name:'Carrera en cinta',blocks:[{name:'Inicio',items:['5 min']}] }]));
+ await first.synchronize();await second.synchronize();
+ assert.equal(tabletView.workouts.length,1);
+ assert.equal(tabletView.workouts[0].name,'Carrera en cinta');
+ second.changed('history',JSON.stringify([{id:'h-tablet',name:'Carrera en cinta',rpe:6,notes:'Sin molestias'}]));
+ await second.synchronize();await first.synchronize();
+ assert.equal(mobileView.history.length,1);
+ assert.equal(mobileView.history[0].notes,'Sin molestias');
+ assert.equal(transport.rows.filter(x=>x.kind==='history').length,1);
+});
+test('queued edit is not discarded after response to a previous edit',async()=>{
+ const api=await mod,transport=server(),storage=memory();
+ const cloud=client(api,transport,storage);
+ await cloud.login('test@example.com','test-pass');await cloud.profiles();
+ let releaseFirst=null,posted=false;
+ const delayedFetch=async (url,opts)=>{
+  const path=new URL(url).pathname;
+  if(path==='/rest/v1/training_records_v2' && opts.method==='POST' && !posted){
+    posted=true;await new Promise(resolve=>{releaseFirst=resolve});
+  }
+  return transport.fetch(url,opts);
+ };
+ const delayedCloud=api.createEditionCloud({url:'https://example.supabase.co',publishableKey:'sb_publishable_mock',
+  edition:'gg',storage,fetchImpl:delayedFetch,now:()=>100000});
+ await delayedCloud.verify();
+ const control=api.createProfileSync({cloud:delayedCloud,profileId,storage,prefix:'race:',onApply:async()=>{}});
+ await control.initial();
+ control.changed('workout',JSON.stringify([{id:'r1',name:'Edición inicial',blocks:[]}]));
+ const first=control.synchronize();
+ for(let attempt=0;attempt<50&&!releaseFirst;attempt++)await Promise.resolve();
+ assert.equal(typeof releaseFirst,'function');
+ control.changed('workout',JSON.stringify([{id:'r1',name:'Edición posterior',blocks:[]}]));
+ releaseFirst();await first;
+ for(let attempt=0;attempt<50 && transport.rows[0]?.payload.name!=='Edición posterior';attempt++)await Promise.resolve();
+ assert.equal(transport.rows[0]?.payload.name,'Edición posterior');
+ assert.equal(control.pendingCount(),0);
+});
