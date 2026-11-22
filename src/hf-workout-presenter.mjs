@@ -16,6 +16,7 @@ const INTERVALS=/\bintervalos?\b/i;
 const RESERVED=/^\s*(?:descanso|recuperaci[oó]n)\b/i;
 const timematch=/^(.*)\s+@([0-9]+)$/;
 const gifmatch=/ \| GIF ([a-z0-9-]+)(?= @\d+$|$)/;
+const instructionMatch=/ \| INSTRUCCIONES ([^ |]+)(?=(?: \| GIF [a-z0-9-]+)?(?: @\d+)?$)/;
 const number=/\d+(?:[.,]\d+)?/;
 const units='(?:km|kcal|metros?|kil[oó]metros?|min(?:utos?)?\\.?|seg(?:undos?)?\\.?|s|m)';
 function validateSource(w) {
@@ -35,9 +36,17 @@ function validateSource(w) {
   if(count>MAX_STEPS)fail('Esta rutina supera el límite de 200 ejercicios.');
 }
 function decodeLine(raw) {
-  const matchedGif=raw.match(gifmatch);
+  const noteMatch=raw.match(instructionMatch);
+  let instructions='';
+  if(noteMatch){
+    try{instructions=decodeURIComponent(noteMatch[1])}
+    catch(error){fail('Las instrucciones del ejercicio no tienen un formato válido.')}
+    if(instructions.length>200)fail('Las instrucciones superan 200 caracteres.');
+  }
+  const withoutNote=noteMatch?raw.replace(noteMatch[0],''):raw;
+  const matchedGif=withoutNote.match(gifmatch);
   const gifId=matchedGif?.[1]||null;
-  const cleaned=matchedGif?raw.replace(matchedGif[0],''):raw;
+  const cleaned=matchedGif?withoutNote.replace(matchedGif[0],''):withoutNote;
   const t=cleaned.match(timematch);
   let label=(t?t[1]:cleaned).trim();
   const seconds=t?Number(t[2]):0;
@@ -46,7 +55,7 @@ function decodeLine(raw) {
   if(label.length===0||label.length>220)fail('El nombre del ejercicio está vacío o es demasiado largo.');
   const rest=RESERVED.test(label);
   if(rest&&!t)fail('Hay un descanso sin tiempo @segundos; revísalo en el editor HF.');
-  return {label,seconds,rest,gifId};
+  return {label,seconds,rest,gifId,...(instructions?{instructions}:{})};
 }
 function short(value,max,label){
   const text=String(value||'').trim();
@@ -96,10 +105,10 @@ function strengthOf(label){
   return {name,sets,reps,weight,rir,rest};
 }
 function itemToSteps(raw,block) {
-  const {label,seconds,rest,gifId}=decodeLine(raw);
+  const {label,seconds,rest,gifId,instructions}=decodeLine(raw);
   if(rest) {
     const title=label.length>70?label.slice(0,70):label;
-    return [{name:'DESCANSO',target:short(title+' · '+seconds+' s',85,'Descanso'),seconds,gifId:null,block,kind:'rest'}];
+    return [{name:'DESCANSO',target:short(title+' · '+seconds+' s',85,'Descanso'),seconds,gifId:null,block,kind:'rest',...(instructions?{instructions}:{})}];
   }
   const strength=strengthOf(label);
   if(strength) {
@@ -110,7 +119,7 @@ function itemToSteps(raw,block) {
       out.push({
         name:short(strength.name,60,'Ejercicio'),
         target:short('Serie '+(i+1)+'/'+strength.sets+' · '+details,85,'Objetivo'),
-        seconds:0,gifId,block,kind:'exercise'
+        seconds:0,gifId,block,kind:'exercise',...(instructions?{instructions}:{})
       });
       // Strictly only a rest EXPLICITLY present in the stored workout.
       if(i<strength.sets-1&&strength.rest>0){
@@ -125,7 +134,7 @@ function itemToSteps(raw,block) {
   const target=seconds?
     short((metric.target==='Avance manual'?'':metric.target+' · ')+seconds+' segundos',85,'Objetivo'):
     short(metric.target,85,'Objetivo');
-  return [{name,target,seconds,gifId,block,kind:'exercise'}];
+  return [{name,target,seconds,gifId,block,kind:'exercise',...(instructions?{instructions}:{})}];
 }
 function checkComplex(w){
   const names=w.blocks.map(b=>b.name);
@@ -159,7 +168,7 @@ export function toHFPresentation(workout,mode='guided') {
       const m=strength?{name:strength.name,target:
           [strength.sets+'×'+strength.reps,strength.weight,strength.rir].filter(Boolean).join(' · ')}:
           targetOf(d.label);
-      return {name:short(m.name,60,'Estación'),target:short(m.target,85,'Objetivo'),gifId:d.gifId};
+      return {name:short(m.name,60,'Estación'),target:short(m.target,85,'Objetivo'),gifId:d.gifId,...(d.instructions?{instructions:d.instructions}:{})};
     });
     return {version:1,mode,title,plan:{stations,rounds:3,work:60,change:20},requiresReview:true,
       warnings:['Los valores 3 vueltas, 60 s de trabajo y 20 s de cambio son una propuesta, NO provienen de la rutina. Revísalos y confírmalos antes de iniciar.']};
@@ -204,7 +213,8 @@ export function consumeHFHandoff(id,{store,now=()=>Date.now()}={}){
     for(const e of data.plan.guided) {
       if(!e||typeof e.name!=='string'||e.name.length>60||typeof e.target!=='string'||e.target.length>85
         ||!Number.isInteger(e.seconds)||e.seconds<0||e.seconds>7200
-        ||(e.gifId!==null&&e.gifId!==undefined&&!/^[a-z0-9-]+$/.test(e.gifId)))
+        ||(e.gifId!==null&&e.gifId!==undefined&&!/^[a-z0-9-]+$/.test(e.gifId))
+        ||(e.instructions!==undefined&&(typeof e.instructions!=='string'||e.instructions.length>200)))
         fail('La clase contiene un ejercicio inválido.');
     }
     try{validateHFAdvancedSegments(data.plan.guided,data.plan.segments??[])}
@@ -213,7 +223,8 @@ export function consumeHFHandoff(id,{store,now=()=>Date.now()}={}){
     if(!Array.isArray(data.plan.stations)||data.plan.stations.length<2||data.plan.stations.length>8
       ||!Number.isInteger(data.plan.rounds)||data.plan.rounds<1||data.plan.rounds>12
       ||!Number.isInteger(data.plan.work)||data.plan.work<10||data.plan.work>1800
-      ||!Number.isInteger(data.plan.change)||data.plan.change<0||data.plan.change>300)fail('Estaciones incompatibles.');
+      ||!Number.isInteger(data.plan.change)||data.plan.change<0||data.plan.change>300
+      ||data.plan.stations.some(e=>e.instructions!==undefined&&(typeof e.instructions!=='string'||e.instructions.length>200)))fail('Estaciones incompatibles.');
   }
   // Read-only of saved HF routines: do not touch their localStorage/Cloud records.
   return data;
