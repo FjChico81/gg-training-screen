@@ -997,7 +997,7 @@
       render();
     }
   };
-  el('classPrestartCancel').onclick=()=>el('cancelClass').click();
+  el('classPrestartCancel').onclick=()=>el('cancelClass').onclick?.();
   el('classPrestartContinue').onclick=()=>{
     if(classPrestartMs<=0||state.phase!=='ready')return;
     classPrestartRunning=true;classPrestartDeadline=Date.now()+classPrestartMs;
