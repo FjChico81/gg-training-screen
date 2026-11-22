@@ -461,6 +461,71 @@ html:not([data-edition="hf"]) body:has(.vector-home:not(.hidden)) .header-settin
 }
 #vectorEditorLibrary{margin:12px 0}
 #vectorEditorLibrary #exerciseLibrary{margin:8px 0 0}
+
+/* VECTOR · Correcciones de editor y modo TV (HF mantiene su diseño) */
+html:not([data-edition="hf"]) .v2-block-actions{align-items:center;flex-wrap:wrap;gap:6px}
+html:not([data-edition="hf"]) .v2-block-actions button{min-height:40px}
+html:not([data-edition="hf"]) .tv-mode #guided .tv-upcoming{
+ display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+ gap:clamp(4px,1vh,12px);background:#fff8ed;border-color:#e5c9a3
+}
+html:not([data-edition="hf"]) .tv-mode #guided .tv-upcoming .tv-caption{color:#964010}
+html:not([data-edition="hf"]) .tv-mode #guided #tvNextPosition{font-size:clamp(12px,1.8vmin,19px);color:#666}
+html:not([data-edition="hf"]) .tv-mode #guided #tvNextName{
+ font-size:clamp(23px,4.1vmin,58px);line-height:1.14;font-weight:850;overflow-wrap:anywhere;
+}
+html:not([data-edition="hf"]) .tv-mode #guided #tvNextTarget{
+ font-size:clamp(18px,3vmin,35px);font-weight:750;color:#8e4419
+}
+html:not([data-edition="hf"]) .tv-mode #guided .heart-rate-value{
+ font-size:clamp(86px,15vmin,190px);line-height:1.01
+}
+html:not([data-edition="hf"]) .tv-mode #guided .tv-timing #stepTimer{
+ font-size:clamp(66px,13vmin,175px)
+}
+html:not([data-edition="hf"]) .tv-mode #guided #tvExerciseVideo,
+html:not([data-edition="hf"]) .tv-mode #guided #tvExerciseGif{
+ display:block;width:100%;height:clamp(115px,28vmin,320px);
+ object-fit:contain;background:#f9f9f9;border-radius:10px
+}
+html:not([data-edition="hf"]) .tv-mode #guided .tv-gif-unavailable{
+ display:inline-block;width:fit-content;margin-top:8px;padding:5px 10px;
+ border-radius:7px;border:1px dashed #b8b8b8;background:#ededed;color:#555;font-size:13px;
+}
+#guided .tv-return-training{
+ display:block;position:sticky;z-index:4;top:0;width:100%;margin:0 0 12px;
+ border:1px solid var(--outline,#536874);background:#141414;color:#fff;
+ text-align:center;font-size:16px;min-height:47px
+}
+html:not([data-edition="hf"]) .tv-mode #guided #moreSession{
+ background:#171717!important;color:#fff!important;border:1px solid #666
+}
+@media(orientation:landscape){
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided{
+  grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)
+ }
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided .tv-timing #stepTimer{
+  font-size:clamp(60px,15.3vh,165px)
+ }
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided .tv-timing:not(.is-timed) #clock{
+  font-size:clamp(55px,14vh,145px)
+ }
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided .heart-rate-value{
+  font-size:clamp(70px,18vh,190px)
+ }
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided #tvNextName{
+  font-size:clamp(22px,5.8vh,64px)
+ }
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided #tvNextTarget{
+  font-size:clamp(16px,3.5vh,37px)
+ }
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided #tvExerciseVideo,
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided #tvExerciseGif{
+  height:100%;min-height:0
+ }
+ .tv-mode.guided-active #guided .guided-controls{position:relative;z-index:4}
+ .tv-mode.guided-active #guided #sessionExtras{z-index:3}
+}
 </style></head><body>
 <header class="row" style="margin-bottom:18px"><div><h1 id="brandTitle" class="gold"><span class="gg-brand-mark"><img class="gg-brand-wordmark" src="assets/icons/gg-vector-wordmark.png" width="969" height="168" alt="Vector Fitness"></span></h1><span id="brandSubtitle" class="muted small hidden">GO ALL OUT</span></div><div class="header-settings"><button id="settingsToggle" type="button" aria-label="Abrir ajustes" aria-expanded="false" aria-controls="settingsPanel" class="settings-gear">⚙</button><div id="settingsPanel" class="tools-inner hidden"><button id="closeSettings" class="alt" type="button" style="grid-column:1/-1">✕ Cerrar ajustes</button><button id="soundToggle" class="alt">🔊 Avisos activados</button><button id="soundTest" class="alt">♪ Probar sonido</button><button id="wakeToggle" class="alt" type="button" style="grid-column:1/-1">☀ Mantener pantalla activa: activado</button><span id="wakeStatus" class="muted small" style="grid-column:1/-1" aria-live="polite">Pendiente de iniciar sesión</span><button id="connectHr" class="alt" type="button" style="grid-column:1/-1">♥ Conectar pulsómetro Bluetooth</button><button id="disconnectHr" class="alt hidden" type="button" style="grid-column:1/-1">Desconectar pulsómetro</button><span id="hrConnectionStatus" class="muted small" style="grid-column:1/-1" aria-live="polite">Sensor no conectado</span><button id="checkUpdates" class="alt" type="button" style="grid-column:1/-1">↻ Buscar actualizaciones</button><span id="updateStatus" class="muted small" style="grid-column:1/-1" aria-live="polite"></span><span id="audioStatus" class="muted small" aria-live="polite">Audio sin comprobar</span><details class="settings-data"><summary>Datos</summary><div class="settings-data-actions"><button id="backupButton" class="alt">↓ Copia de seguridad</button><button id="restoreButton" class="alt" type="button">↑ Restaurar copia</button><input id="restoreFile" class="hidden" type="file" accept=".json,application/json" aria-label="Seleccionar copia de seguridad GG Mobile"></div></details><button id="addLocalProfile" type="button" class="alt settings-wide">Añadir perfil</button><p id="appVersion" class="muted small settings-wide"></p></div></div></header><div id="updateBanner" class="panel hidden" style="border:1px solid var(--accent,#dbc396)"><div class="row"><span id="updateBannerText">Hay una versión nueva de GG Mobile</span><button id="applyUpdate" type="button">Actualizar ahora</button></div></div>
 <section id="library"><div class="panel"><h2 class="library-title">Mis entrenamientos</h2><div id="localProfilePanel">
@@ -519,10 +584,11 @@ html:not([data-edition="hf"]) body:has(.vector-home:not(.hidden)) .header-settin
 <div class="tv-only tv-caption">AHORA</div>
 <div id="position" class="gold"></div><div id="current" class="focus"></div>
 <button id="techniqueToggle" type="button" class="alt technique-button">▶ Ver técnica</button>
-</div><div id="vectorCurrentIllustration" class="vector-illustration hidden" role="img"></div><img id="tvExerciseGif" class="tv-only hidden" alt="" decoding="async"></div>
+<span id="tvGifUnavailable" class="tv-only tv-gif-unavailable hidden" aria-live="polite">GIF no disponible</span>
+</div><div id="vectorCurrentIllustration" class="vector-illustration hidden" role="img"></div><img id="tvExerciseGif" class="tv-only hidden" alt="" decoding="async"><video id="tvExerciseVideo" class="tv-only hidden" muted loop autoplay playsinline preload="metadata" aria-label="Vídeo de técnica del ejercicio"></video></div>
 <p id="next" class="muted"></p>
 <div class="tv-only tv-card tv-upcoming">
-<div class="tv-caption">SIGUIENTE</div>
+<div class="tv-caption">SIGUIENTE</div><div id="tvNextPosition" class="muted small"></div>
 <p id="tvNextTiming" class="muted hidden"></p>
 <div id="tvNextName"></div><div id="tvNextTarget" class="gold"></div>
 </div>
@@ -541,7 +607,7 @@ html:not([data-edition="hf"]) body:has(.vector-home:not(.hidden)) .header-settin
 </div>
 <div id="guidedElapsed" class="elapsed-display"><div class="guided-metric-label muted">TIEMPO TOTAL</div><div id="clock" class="metric">00:00</div></div>
 </div></div>
-<div id="restCard" class="panel hidden" role="status" aria-live="polite"><div id="restLabel" class="gold small">DESCANSO AUTOMÁTICO</div><strong id="restCountdown" aria-live="off">00:00</strong><div id="restNext" class="muted small hidden"></div><button id="skipRest" type="button" class="alt">Omitir</button></div><div class="guided-controls"><div class="guided-primary"><button id="tvCompleteSet" type="button" class="tv-only">✓ Completar serie</button><button id="quickAdvance" type="button">✓ Ejercicio completado</button><button id="quickPause" type="button" class="alt">Pausar</button></div><div class="guided-view-controls"><button type="button" class="alt tv-toggle" data-tv-toggle aria-pressed="false">Modo TV</button><button id="moreSession" type="button" class="alt session-more" aria-expanded="false">▾ Registros y controles</button></div></div><div id="sessionExtras" class="hidden"><div id="actualPanel" class="panel hidden"><h3>RESULTADO REAL DEL EJERCICIO</h3><p id="actualPlanned" class="muted small"></p><label>Cantidad realizada<input id="actualValue" type="number" min="0" step="any" placeholder="Opcional"></label><label>Unidad<select id="actualUnit"><option value="m">Metros</option><option value="km">Kilómetros</option><option value="kcal">Calorías</option><option value="reps">Repeticiones</option><option value="s">Segundos</option></select></label><div class="buttons"><button id="actualSave" class="alt" type="button">Guardar resultado</button></div><p id="actualMessage" class="gold small"></p></div><div id="strengthPanel" class="panel"><div class="row"><h3>REGISTRO DE FUERZA</h3><span class="muted small">Datos reales de cada serie</span></div><div class="setgrid"><label>Repeticiones<input id="reps" type="number" min="0" max="500" step="1" value="10"></label><label>Peso (kg)<input id="weight" type="number" min="0" max="1000" step="0.25" value="0"></label><label>RIR<input id="rir" type="number" min="0" max="15" step="1" value="2"></label><label>Descanso (s)<input id="rest" type="number" min="0" max="1800" step="5" value="90"></label></div><div id="previousSession" class="notice" style="margin:12px 0"></div><div id="seriesProgress" class="gold"></div><div class="buttons"><button id="saveSet" class="alt">Guardar datos</button><button id="cancelEdit" class="alt hidden">Cancelar edición</button><button id="logSet">✓ Completar serie</button><button id="undoSet" class="alt">Deshacer última</button></div><div id="seriesList" class="small"></div></div><div class="panel"><div class="actions"><button id="prev" class="alt">◀ Anterior</button><button id="pause" class="alt">Pausar</button><button id="advance">Siguiente ▶</button><button id="showBoard" class="alt">Ver pizarra</button><button id="finish" class="danger">Finalizar</button></div><p id="status" class="gold" aria-live="polite"></p></div></div></section>
+<div id="restCard" class="panel hidden" role="status" aria-live="polite"><div id="restLabel" class="gold small">DESCANSO AUTOMÁTICO</div><strong id="restCountdown" aria-live="off">00:00</strong><div id="restNext" class="muted small hidden"></div><button id="skipRest" type="button" class="alt">Omitir</button></div><div class="guided-controls"><div class="guided-primary"><button id="tvCompleteSet" type="button" class="tv-only">✓ Completar serie</button><button id="quickAdvance" type="button">✓ Ejercicio completado</button><button id="quickPause" type="button" class="alt">Pausar</button></div><div class="guided-view-controls"><button type="button" class="alt tv-toggle" data-tv-toggle aria-pressed="false">Modo TV</button><button id="moreSession" type="button" class="alt session-more" aria-expanded="false">▾ Registros y controles</button></div></div><div id="sessionExtras" class="hidden"><button id="tvReturnToTraining" type="button" class="alt tv-return-training">← Volver al entrenamiento</button><div id="actualPanel" class="panel hidden"><h3>RESULTADO REAL DEL EJERCICIO</h3><p id="actualPlanned" class="muted small"></p><label>Cantidad realizada<input id="actualValue" type="number" min="0" step="any" placeholder="Opcional"></label><label>Unidad<select id="actualUnit"><option value="m">Metros</option><option value="km">Kilómetros</option><option value="kcal">Calorías</option><option value="reps">Repeticiones</option><option value="s">Segundos</option></select></label><div class="buttons"><button id="actualSave" class="alt" type="button">Guardar resultado</button></div><p id="actualMessage" class="gold small"></p></div><div id="strengthPanel" class="panel"><div class="row"><h3>REGISTRO DE FUERZA</h3><span class="muted small">Datos reales de cada serie</span></div><div class="setgrid"><label>Repeticiones<input id="reps" type="number" min="0" max="500" step="1" value="10"></label><label>Peso (kg)<input id="weight" type="number" min="0" max="1000" step="0.25" value="0"></label><label>RIR<input id="rir" type="number" min="0" max="15" step="1" value="2"></label><label>Descanso (s)<input id="rest" type="number" min="0" max="1800" step="5" value="90"></label></div><div id="previousSession" class="notice" style="margin:12px 0"></div><div id="seriesProgress" class="gold"></div><div class="buttons"><button id="saveSet" class="alt">Guardar datos</button><button id="cancelEdit" class="alt hidden">Cancelar edición</button><button id="logSet">✓ Completar serie</button><button id="undoSet" class="alt">Deshacer última</button></div><div id="seriesList" class="small"></div></div><div class="panel"><div class="actions"><button id="prev" class="alt">◀ Anterior</button><button id="pause" class="alt">Pausar</button><button id="advance">Siguiente ▶</button><button id="showBoard" class="alt">Ver pizarra</button><button id="finish" class="danger">Finalizar</button></div><p id="status" class="gold" aria-live="polite"></p></div></div></section>
 <section id="sessionSummary" class="hidden"><div class="panel"><div class="gold">RESUMEN DE SESIÓN</div><h2>Entrenamiento terminado</h2><div id="summaryWorkout" class="muted"></div><div id="summaryDuration" class="metric"></div><label for="summaryRpe">Esfuerzo percibido (RPE 1–10)</label><input id="summaryRpe" type="number" min="1" max="10" step="1" placeholder="Ej.: 8"><label for="summaryPain">¿Has tenido molestias?</label><select id="summaryPain"><option value="">Seleccionar</option><option value="No">No</option><option value="Sí">Sí</option></select><label for="summaryNotes">Observaciones</label><textarea id="summaryNotes" rows="3" placeholder="Respiración, técnica, sensaciones..."></textarea><div class="buttons"><button id="summarySave">Guardar resumen</button><button id="summarySkip" class="alt">Omitir</button></div><p id="summaryMessage" class="gold"></p></div></section>
 <div id="techniqueOverlay" class="technique-overlay hidden" role="presentation">
  <div class="technique-dialog" role="dialog" aria-modal="true" aria-labelledby="techniqueTitle">
@@ -1166,10 +1232,16 @@ function plannedTransition(current,next){
 function renderGuided(){const a=steps();if(!a.length){show('library');return}const info=getAmrapAt(step),ft=getForTimeAt(step);updateAmrapDisplay();$('ftStatus').classList.toggle('hidden',!ft);if(ft)$('ftStatus').textContent='FOR TIME · '+formatSeconds(Math.floor(ftElapsed))+(ft.limit?' / '+formatSeconds(ft.limit):'');$('position').textContent=info?'AMRAP · RONDA '+(amrapRounds+1)+' · EJERCICIO '+(step-info.start+1)+' DE '+info.count:'EJERCICIO '+(step+1)+' DE '+a.length+' · '+a[step].block.toUpperCase();$('current').textContent=a[step].strength?a[step].label.split(/\s+[·•]\s+/)[0]:a[step].label;const drawing=$('vectorCurrentIllustration');drawing.parentElement.classList.toggle('has-vector-illustration',renderVectorIllustration(drawing,active,step,a[step].label));$('targetSummary').textContent=a[step].vector?vectorDose(a[step].vector):a[step].strength?(a[step].strength.sets+' series × '+a[step].strength.reps+' rep · '+(a[step].strength.weight===null?'Peso libre':a[step].strength.weight+' kg')+' · RIR '+(a[step].strength.rir??'—')):'';const d=a[step].duration;$('stepTimer').classList.toggle('hidden',!d);$('stepTimeValue').textContent=d?formatSeconds(Math.max(0,Math.ceil(d-stepElapsed))):'';$('next').textContent='Siguiente: '+(info?(step===info.end?a[info.start].label+' · siguiente ronda':a[step+1].label):(a[step+1]?.label||'Fin del entrenamiento'));$('prev').disabled=step===0;$('pause').textContent=paused?'Reanudar':'Pausar';$('advance').textContent=info?'✓ Ejercicio completado':step===a.length-1?'Terminar sesión':'Siguiente ▶';$('status').textContent=paused?'Sesión pausada':'Sesión en curso';renderSeries();renderActual();$('quickAdvance').textContent=$('advance').textContent;$('quickAdvance').disabled=$('advance').disabled;$('quickPause').textContent=$('pause').textContent;renderTvExercises(a,info,ft)}
 let visualEditing=null;function visualParse(){const text=$('workoutBlocks').value;const blocks=[];let current=null;for(const raw of text.split(/\r?\n/)){const line=raw.trim();if(!line)continue;if(line.endsWith(':')){current={name:line.slice(0,-1).trim(),items:[]};blocks.push(current)}else if(current)current.items.push(line)}return blocks}
 function visualSync(blocks){$('workoutBlocks').value=blocks.map(b=>b.name+':\n'+b.items.join('\n')).join('\n\n');renderVisual()}
-function renderVisual(){const blocks=visualParse(),list=$('visualList'),select=$('visualBlock'),v2select=$('v2Block');const prev=Number(select.value)||0,prevV2=Number(v2select.value)||0;select.replaceChildren();v2select.replaceChildren();list.replaceChildren();let count=0;blocks.forEach((block,bi)=>{for(const target of [select,v2select]){const option=document.createElement('option');option.value=bi;option.textContent=block.name;target.append(option)}const card=node('div','','v2-block');const head=node('div','','row');head.append(node('h3',block.name));const blockTools=node('div','','v2-block-actions');const rename=node('button','Renombrar','alt');rename.type='button';rename.onclick=()=>{const value=prompt('Nombre del bloque',block.name);if(value===null)return;const name=value.trim().replace(/:/g,'');if(!name)return;const arr=visualParse();arr[bi].name=name;visualSync(arr)};const remove=node('button','Eliminar bloque','danger');remove.type='button';remove.onclick=()=>{if(!confirm('¿Eliminar este bloque y todos sus ejercicios?'))return;const arr=visualParse();arr.splice(bi,1);visualSync(arr)};blockTools.append(rename,remove);head.append(blockTools);card.append(head);block.items.forEach((line,ei)=>{if(line==='Ejercicio pendiente')return;count++;const d=decode(FOR_TIME_BLOCK.test(block.name)?forTimeLine(line):line),row=node('div','','v2-exercise'),body=node('div','','v2-exercise-body');body.append(node('strong',d.label),node('div',d.strength?d.strength.sets+' × '+d.strength.reps+' · '+(d.strength.weight??0)+' kg · RIR '+(d.strength.rir??2):d.duration?d.duration+' segundos':'Avance manual','muted small'));const actions=node('div','','v2-exercise-actions');const editBtn=node('button','Editar','alt');editBtn.type='button';editBtn.onclick=()=>openV2Editor(bi,ei,line);actions.append(editBtn);const match=block.name.match(/^(.*) · Ronda (\d+)\/(\d+)$/);if(match){const all=node('button','Todas','alt');all.type='button';all.title='Modificar este ejercicio en todas las rondas';all.onclick=()=>{const replacement=prompt('Editar este ejercicio en todas las rondas del circuito',line);if(replacement===null)return;const clean=replacement.trim();if(!clean||clean.endsWith(':')||/\n/.test(clean)){alert('Introduce un ejercicio válido');return}const duration=clean.match(/@(\d+)$/);if(duration&&(Number(duration[1])<1||Number(duration[1])>7200)){alert('Duración fuera de rango');return}const arr=visualParse();let changed=0;for(const b of arr){const m=b.name.match(/^(.*) · Ronda (\d+)\/(\d+)$/);if(m&&m[1]===match[1]&&m[3]===match[3]&&b.items[ei]!==undefined){b.items[ei]=clean;changed++}}if(changed!==Number(match[3])){alert('No se han encontrado todas las rondas. No se ha modificado nada.');return}visualSync(arr);$('editorMessage').textContent='Ejercicio actualizado en '+changed+' rondas'};actions.append(all)}for(const [label,delta] of [['↑',-1],['↓',1]]){const button=node('button',label,'alt');button.type='button';button.disabled=ei+delta<0||ei+delta>=block.items.length;button.onclick=()=>{const arr=visualParse();[arr[bi].items[ei],arr[bi].items[ei+delta]]=[arr[bi].items[ei+delta],arr[bi].items[ei]];visualSync(arr)};actions.append(button)}const del=node('button','×','danger');del.type='button';del.onclick=()=>{if(!confirm('¿Eliminar este ejercicio?'))return;const arr=visualParse();arr[bi].items.splice(ei,1);visualSync(arr)};actions.append(del);row.append(body,actions);card.append(row)});list.append(card)});select.value=String(Math.min(prev,blocks.length-1));v2select.value=String(Math.min(prevV2,blocks.length-1));$('v2Count').textContent=count+' ejercicios';if(!blocks.length)list.append(node('p','Empieza añadiendo tu primer ejercicio. No necesitas crear un bloque.','muted'))}
+function renderVisual(){const blocks=visualParse(),list=$('visualList'),select=$('visualBlock'),v2select=$('v2Block');const prev=Number(select.value)||0,prevV2=Number(v2select.value)||0;select.replaceChildren();v2select.replaceChildren();list.replaceChildren();let count=0;blocks.forEach((block,bi)=>{for(const target of [select,v2select]){const option=document.createElement('option');option.value=bi;option.textContent=block.name;target.append(option)}const card=node('div','','v2-block');const head=node('div','','row');head.append(node('h3',block.name));const blockTools=node('div','','v2-block-actions');const rename=node('button','Renombrar','alt');rename.type='button';rename.onclick=()=>{const value=prompt('Nombre del bloque',block.name);if(value===null)return;const name=value.trim().replace(/:/g,'');if(!name)return;const arr=visualParse();arr[bi].name=name;visualSync(arr)};const remove=node('button','Eliminar bloque','danger');remove.type='button';remove.onclick=()=>{if(!confirm('¿Eliminar este bloque y todos sus ejercicios?'))return;const arr=visualParse();arr.splice(bi,1);visualSync(arr)};const blockMoveUp=node('button','↑ Bloque','alt');blockMoveUp.type='button';blockMoveUp.disabled=bi===0;
+blockMoveUp.setAttribute('aria-label','Mover bloque '+block.name+' hacia arriba');
+blockMoveUp.onclick=()=>{const arr=visualParse();[arr[bi-1],arr[bi]]=[arr[bi],arr[bi-1]];visualSync(arr);$('v2Block').value=String(bi-1)};
+const blockMoveDown=node('button','↓ Bloque','alt');blockMoveDown.type='button';blockMoveDown.disabled=bi===blocks.length-1;
+blockMoveDown.setAttribute('aria-label','Mover bloque '+block.name+' hacia abajo');
+blockMoveDown.onclick=()=>{const arr=visualParse();[arr[bi],arr[bi+1]]=[arr[bi+1],arr[bi]];visualSync(arr);$('v2Block').value=String(bi+1)};
+blockTools.append(blockMoveUp,blockMoveDown,rename,remove);head.append(blockTools);card.append(head);block.items.forEach((line,ei)=>{if(line==='Ejercicio pendiente')return;count++;const d=decode(FOR_TIME_BLOCK.test(block.name)?forTimeLine(line):line),row=node('div','','v2-exercise'),body=node('div','','v2-exercise-body');body.append(node('strong',d.label),node('div',d.strength?d.strength.sets+' × '+d.strength.reps+' · '+(d.strength.weight??0)+' kg · RIR '+(d.strength.rir??2):d.duration?d.duration+' segundos':'Avance manual','muted small'));const actions=node('div','','v2-exercise-actions');const editBtn=node('button','Editar','alt');editBtn.type='button';editBtn.onclick=()=>openV2Editor(bi,ei,line);actions.append(editBtn);const match=block.name.match(/^(.*) · Ronda (\d+)\/(\d+)$/);if(match){const all=node('button','Todas','alt');all.type='button';all.title='Modificar este ejercicio en todas las rondas';all.onclick=()=>{const replacement=prompt('Editar este ejercicio en todas las rondas del circuito',line);if(replacement===null)return;const clean=replacement.trim();if(!clean||clean.endsWith(':')||/\n/.test(clean)){alert('Introduce un ejercicio válido');return}const duration=clean.match(/@(\d+)$/);if(duration&&(Number(duration[1])<1||Number(duration[1])>7200)){alert('Duración fuera de rango');return}const arr=visualParse();let changed=0;for(const b of arr){const m=b.name.match(/^(.*) · Ronda (\d+)\/(\d+)$/);if(m&&m[1]===match[1]&&m[3]===match[3]&&b.items[ei]!==undefined){b.items[ei]=clean;changed++}}if(changed!==Number(match[3])){alert('No se han encontrado todas las rondas. No se ha modificado nada.');return}visualSync(arr);$('editorMessage').textContent='Ejercicio actualizado en '+changed+' rondas'};actions.append(all)}for(const [label,delta] of [['↑',-1],['↓',1]]){const button=node('button',label,'alt');button.type='button';button.disabled=ei+delta<0||ei+delta>=block.items.length;button.onclick=()=>{const arr=visualParse();[arr[bi].items[ei],arr[bi].items[ei+delta]]=[arr[bi].items[ei+delta],arr[bi].items[ei]];visualSync(arr)};actions.append(button)}const del=node('button','×','danger');del.type='button';del.onclick=()=>{if(!confirm('¿Eliminar este ejercicio?'))return;const arr=visualParse();arr[bi].items.splice(ei,1);visualSync(arr)};actions.append(del);row.append(body,actions);card.append(row)});list.append(card)});select.value=String(Math.min(prev,blocks.length-1));v2select.value=String(Math.min(prevV2,blocks.length-1));$('v2Count').textContent=count+' ejercicios';if(!blocks.length)list.append(node('p','Empieza añadiendo tu primer ejercicio. No necesitas crear un bloque.','muted'))}
 $('cancelVisualEdit').onclick=()=>{visualEditing=null;$('addExercise').textContent='＋ Añadir ejercicio';$('cancelVisualEdit').classList.add('hidden');$('visualName').value='';$('editorMessage').textContent='Edición cancelada'};function visualNumber(id,min,max){const raw=$(id).value;if(raw.trim()==='')throw Error('Falta completar '+id);const n=Number(raw);if(!Number.isFinite(n)||n<min||n>max)throw Error('Valor incorrecto en '+id);return n}
 $('visualType').onchange=()=>{$('strengthFields').classList.toggle('hidden',$('visualType').value!=='strength');$('timedFields').classList.toggle('hidden',$('visualType').value!=='timed')};
-$('addBlock').onclick=()=>{const name=prompt('Nombre del nuevo bloque (ej.: Calentamiento, Fuerza, Cardio)');if(!name)return;const clean=name.trim().replace(/:/g,'');if(!clean)return;const blocks=visualParse();blocks.push({name:clean,items:['Ejercicio pendiente']});visualSync(blocks);$('visualBlock').value=String(blocks.length-1)};
+$('addBlock').onclick=()=>{const name=prompt('Nombre del nuevo bloque (ej.: Calentamiento, Fuerza, Cardio)');if(!name)return;const clean=name.trim().replace(/:/g,'');if(!clean)return;const blocks=visualParse();blocks.push({name:clean,items:['Ejercicio pendiente']});visualSync(blocks);$('visualBlock').value=String(blocks.length-1);$('v2Block').value=String(blocks.length-1)};
 $('addExercise').onclick=()=>{try{const name=$('visualName').value.trim();if(!name||name.includes('|')||name.includes('@')||name.endsWith(':'))throw Error('Introduce un nombre válido');const type=$('visualType').value;let line=name;if(type==='strength'){const sets=visualNumber('visualSets',1,30),reps=visualNumber('visualReps',1,500),kg=visualNumber('visualKg',0,1000),rir=visualNumber('visualRir',0,15),rest=visualNumber('visualRest',0,1800);if(!Number.isInteger(sets)||!Number.isInteger(reps)||!Number.isInteger(rir)||!Number.isInteger(rest))throw Error('Series, repeticiones, RIR y descanso deben ser enteros');line=name+' | '+sets+'x'+reps+' | '+kg+'kg | RIR '+rir+' | descanso '+rest+'s'}else if(type==='timed'){const duration=visualNumber('visualDuration',1,7200);if(!Number.isInteger(duration))throw Error('La duración debe ser un número entero');line=name+' @'+duration}const blocks=visualParse();if(!blocks.length)throw Error('Primero añade un bloque');const idx=Math.min(Number($('visualBlock').value)||0,blocks.length-1);if(!$('v2Fields').classList.contains('hidden'))line=addTechniqueLink(line,v2TechniqueId);if(visualEditing){const src=blocks[visualEditing.block];if(!src||!src.items[visualEditing.index])throw Error('El ejercicio original ha cambiado; cancela y vuelve a editar');src.items.splice(visualEditing.index,1);if(blocks[idx].items.length===1&&blocks[idx].items[0]==='Ejercicio pendiente')blocks[idx].items=[];blocks[idx].items.push(line);if(src!==blocks[idx]&&!src.items.length)blocks.splice(visualEditing.block,1)}else{if(blocks[idx].items.length===1&&blocks[idx].items[0]==='Ejercicio pendiente')blocks[idx].items=[];blocks[idx].items.push(line)}visualEditing=null;$('addExercise').textContent='＋ Añadir ejercicio';$('cancelVisualEdit').classList.add('hidden');visualSync(blocks);$('visualName').value='';$('editorMessage').textContent='Ejercicio guardado'}catch(e){$('editorMessage').textContent=e.message}};
 $('timerMode').onchange=()=>{const emom=$('timerMode').value==='emom';$('timerRestLabel').classList.toggle('hidden',emom);$('timerHint').textContent=emom?'Cada ronda dura 60 s: trabajo programado y descanso durante el tiempo restante.':'Los intervalos alternan trabajo y recuperación. El descanso final se omite.'};
 $('addTimerBlock').onclick=()=>{try{const mode=$('timerMode').value,name=$('timerName').value.trim();if(!name||/[|@:\n]/.test(name))throw Error('Escribe un nombre de ejercicio válido');const rounds=visualNumber('timerRounds',1,50),work=visualNumber('timerWork',1,3600),rest=mode==='emom'?60-work:visualNumber('timerRest',0,3600);if(!Number.isInteger(rounds)||!Number.isInteger(work)||!Number.isInteger(rest))throw Error('Los tiempos y las rondas deben ser enteros');if(mode==='emom'&&(work>=60||work<1))throw Error('En este EMOM el trabajo debe durar entre 1 y 59 segundos');if(rounds*(1+(rest>0?1:0))>200)throw Error('Demasiados pasos para una rutina');const blocks=visualParse(),block={name:(mode==='emom'?'EMOM':'Intervalos')+' · '+name,items:[]};for(let i=1;i<=rounds;i++){block.items.push(name+' · Ronda '+i+'/'+rounds+' @'+work);if(rest>0&&(mode==='emom'||i<rounds))block.items.push('Recuperación · Ronda '+i+'/'+rounds+' @'+rest)}if(blocks.reduce((n,b)=>n+b.items.length,0)+block.items.length>200)throw Error('El entrenamiento supera los 200 pasos');blocks.push(block);visualSync(blocks);$('visualBlock').value=String(blocks.length-1);$('editorMessage').textContent='Bloque temporizado añadido. Guarda el entrenamiento para conservarlo.'}catch(e){$('editorMessage').textContent=e.message}};
@@ -1194,11 +1266,17 @@ $('cardioTarget').onchange=()=>{
   if($('cardioTarget').value==='time')setTimeFields('cardioAmount','cardioTimeUnit',60);
   cardioTargetChange();
 };cardioTargetChange();
-function saveCardioExercise(){const activity=$('cardioActivity').value,target=$('cardioTarget').value,amount=Number($('cardioAmount').value),notes=$('cardioNotes').value.trim();if(notes&&/[|@:\\n]/.test(notes))throw Error('Las indicaciones no pueden contener |, @ o dos puntos');if(activity==='Otro')throw Error('Selecciona una actividad de la lista; la opción Otro se añadirá más adelante');if(target!=='free'&&(!Number.isFinite(amount)||amount<=0||$('cardioAmount').value.trim()===''))throw Error('Introduce una cantidad válida');if(target==='calories'&&(!Number.isInteger(amount)||amount>100000))throw Error('Las calorías deben ser un número entero');if(target==='distance'&&amount>100000)throw Error('Distancia fuera de rango');const suffix=notes?' · '+notes:'';let line=activity+suffix;if(target==='distance')line=amount+' '+$('cardioUnit').value+' '+activity+suffix;else if(target==='calories')line=amount+' kcal '+activity+suffix;else if(target==='time')line=activity+suffix+' @'+durationSeconds(amount,$('cardioTimeUnit').value);const blocks=visualParse(),bi=Number($('v2Block').value);if(!blocks[bi])throw Error('Selecciona un bloque');if(v2Editing){const src=blocks[v2Editing.bi];if(!src||src.items[v2Editing.ei]===undefined)throw Error('El ejercicio original ya no existe');src.items.splice(v2Editing.ei,1);blocks[bi].items.push(line);if(src!==blocks[bi]&&!src.items.length)blocks.splice(v2Editing.bi,1)}else blocks[bi].items.push(line);visualSync(blocks);$('editorMessage').textContent='Ejercicio de cardio guardado';closeV2Wizard()}
+function ensureExerciseBlockAfterSequence(blocks,index,mode,editing){
+ if(editing||!blocks[index])return index;
+ if(!/^(?:EMOM(?:\s*·|$)|Intervalos(?:\s*·|$)|AMRAP(?:\s|$)|FOR TIME(?:\s|$))/i.test(blocks[index].name))return index;
+ blocks.push({name:mode==='cardio'?'Carrera':mode==='strength'?'Fuerza':'Entrenamiento',items:[]});
+ return blocks.length-1;
+}
+function saveCardioExercise(){const activity=$('cardioActivity').value,target=$('cardioTarget').value,amount=Number($('cardioAmount').value),notes=$('cardioNotes').value.trim();if(notes&&/[|@:\\n]/.test(notes))throw Error('Las indicaciones no pueden contener |, @ o dos puntos');if(activity==='Otro')throw Error('Selecciona una actividad de la lista; la opción Otro se añadirá más adelante');if(target!=='free'&&(!Number.isFinite(amount)||amount<=0||$('cardioAmount').value.trim()===''))throw Error('Introduce una cantidad válida');if(target==='calories'&&(!Number.isInteger(amount)||amount>100000))throw Error('Las calorías deben ser un número entero');if(target==='distance'&&amount>100000)throw Error('Distancia fuera de rango');const suffix=notes?' · '+notes:'';let line=activity+suffix;if(target==='distance')line=amount+' '+$('cardioUnit').value+' '+activity+suffix;else if(target==='calories')line=amount+' kcal '+activity+suffix;else if(target==='time')line=activity+suffix+' @'+durationSeconds(amount,$('cardioTimeUnit').value);const blocks=visualParse(),selectedBi=Number($('v2Block').value),bi=ensureExerciseBlockAfterSequence(blocks,selectedBi,'cardio',v2Editing);if(!blocks[bi])throw Error('Selecciona un bloque');if(v2Editing){const src=blocks[v2Editing.bi];if(!src||src.items[v2Editing.ei]===undefined)throw Error('El ejercicio original ya no existe');src.items.splice(v2Editing.ei,1);blocks[bi].items.push(line);if(src!==blocks[bi]&&!src.items.length)blocks.splice(v2Editing.bi,1)}else blocks[bi].items.push(line);visualSync(blocks);if(bi!==selectedBi)$('v2Block').value=String(bi);$('editorMessage').textContent='Ejercicio de cardio guardado';closeV2Wizard()}
 function openV2Editor(bi,ei,line){if(FOR_TIME_BLOCK.test(visualParse()[bi]?.name||''))line=forTimeLine(line);const d=decode(line);const cardioMatch=readTechniqueLink(line).text.match(/^(?:(\d+(?:[.,]\d+)?)\s*(m|km|kcal)\s+)?(Carrera en cinta|Carrera|SkiErg|Remo|Bicicleta)(?:\s*·\s*(.*?))?(?:\s+@(\d+))?$/i);const mode=d.strength?'strength':cardioMatch?'cardio':d.duration?'timed':'manual';openV2(mode,bi);if(mode==='cardio'){const cm=cardioMatch;$('cardioActivity').value=[...$('cardioActivity').options].find(option=>option.value.toLowerCase()===cm[3].toLowerCase()).value;$('cardioTarget').value=cm[5]?'time':cm[2]==='kcal'?'calories':cm[1]?'distance':'free';if(cm[5])setTimeFields('cardioAmount','cardioTimeUnit',Number(cm[5]));else $('cardioAmount').value=cm[1]||500;$('cardioUnit').value=cm[2]==='km'?'km':'m';$('cardioNotes').value=cm[4]||'';cardioTargetChange()}v2Editing={bi,ei};$('v2Name').value=d.label;setTechniquePickerLink(d.techniqueId);if(d.strength){$('v2Sets').value=d.strength.sets;$('v2Reps').value=d.strength.reps;$('v2Kg').value=d.strength.weight??0;$('v2Rir').value=d.strength.rir??2;$('v2Rest').value=d.strength.rest??90}else if(d.duration&&mode==='timed')setTimeFields('v2Duration','v2DurationUnit',d.duration);$('v2WizardTitle').textContent='Editar ejercicio';$('v2Confirm').textContent='Guardar cambios'}
 $('v2Add').onclick=()=>{$('v2Emom').classList.add('hidden');$('v2ForTime').classList.add('hidden');$('v2Wizard').classList.remove('hidden');$('v2Choices').classList.remove('hidden');$('v2Fields').classList.add('hidden');$('v2Circuit').classList.add('hidden');$('v2Amrap').classList.add('hidden');v2Mode=null;v2Editing=null;$('v2WizardTitle').textContent='¿Qué quieres añadir?';$('v2Wizard').scrollIntoView({behavior:'smooth',block:'start'})};
 $('v2Close').onclick=closeV2Wizard;$('v2Cancel').onclick=closeV2Wizard;
-document.querySelectorAll('[data-v2]').forEach(btn=>btn.onclick=()=>{const mode=btn.dataset.v2;if(mode==='emom'){$('v2Choices').classList.add('hidden');$('v2Emom').classList.remove('hidden');$('v2WizardTitle').textContent='Nuevo EMOM';$('emomExercises').focus();return}if(mode==='fortime'){$('v2Choices').classList.add('hidden');$('v2ForTime').classList.remove('hidden');$('v2WizardTitle').textContent='Nuevo For Time';return}if(mode==='amrap'){$('v2Choices').classList.add('hidden');$('v2Amrap').classList.remove('hidden');$('v2WizardTitle').textContent='Nuevo AMRAP';return}if(mode==='circuit'){$('v2Choices').classList.add('hidden');$('v2Circuit').classList.remove('hidden');$('v2WizardTitle').textContent='Circuito por rondas';return}if(mode==='block'){const name=prompt('Nombre del nuevo bloque');if(name===null)return;const clean=name.trim().replace(/:/g,'');if(!clean)return;const arr=visualParse();arr.push({name:clean,items:[]});visualSync(arr);closeV2Wizard();return}const blocks=visualParse();if(!blocks.length)visualSync([{name:'Entrenamiento',items:[]}]);openV2(mode)});
+document.querySelectorAll('[data-v2]').forEach(btn=>btn.onclick=()=>{const mode=btn.dataset.v2;if(mode==='emom'){$('v2Choices').classList.add('hidden');$('v2Emom').classList.remove('hidden');$('v2WizardTitle').textContent='Nuevo EMOM';$('emomExercises').focus();return}if(mode==='fortime'){$('v2Choices').classList.add('hidden');$('v2ForTime').classList.remove('hidden');$('v2WizardTitle').textContent='Nuevo For Time';return}if(mode==='amrap'){$('v2Choices').classList.add('hidden');$('v2Amrap').classList.remove('hidden');$('v2WizardTitle').textContent='Nuevo AMRAP';return}if(mode==='circuit'){$('v2Choices').classList.add('hidden');$('v2Circuit').classList.remove('hidden');$('v2WizardTitle').textContent='Circuito por rondas';return}if(mode==='block'){const name=prompt('Nombre del nuevo bloque');if(name===null)return;const clean=name.trim().replace(/:/g,'');if(!clean)return;const arr=visualParse();arr.push({name:clean,items:[]});visualSync(arr);$('v2Block').value=String(arr.length-1);$('visualBlock').value=String(arr.length-1);$('editorMessage').textContent='Bloque añadido al final. Los siguientes ejercicios se añadirán aquí.';closeV2Wizard();return}const blocks=visualParse();if(!blocks.length)visualSync([{name:'Entrenamiento',items:[]}]);openV2(mode)});
 $('emomCancel').onclick=closeV2Wizard;
 $('emomAdd').onclick=()=>{
   try{
@@ -1223,8 +1301,9 @@ $('emomAdd').onclick=()=>{
     }
     blocks.push(block);
     visualSync(blocks);
+    $('v2Block').value=String(blocks.length-1);
     closeV2Wizard();
-    $('editorMessage').textContent='EMOM añadido. Guarda el entrenamiento para conservarlo.';
+    $('editorMessage').textContent='EMOM añadido al final. Crea otro bloque para continuar después del EMOM.';
   }catch(error){$('editorMessage').textContent=error.message}
 };
 $('ftCancel').onclick=closeV2Wizard;
@@ -1234,7 +1313,8 @@ $('amrapAdd').onclick=()=>{try{const name=$('amrapName').value.trim().replace(/[
 $('circuitCancel').onclick=closeV2Wizard;
 $('circuitAdd').onclick=()=>{try{const title=$('circuitTitle').value.trim().replace(/:/g,''),rounds=visualNumber('circuitRounds',1,20),rest=visualNumber('circuitRest',0,1800);if(!title||!Number.isInteger(rounds)||!Number.isInteger(rest))throw Error('Revisa nombre, rondas y descanso');const lines=$('circuitLines').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(!lines.length)throw Error('Añade al menos un ejercicio');if(lines.some(x=>x.endsWith(':')))throw Error('Los ejercicios no pueden terminar en dos puntos');if(lines.some(x=>{const m=x.match(/@(\d+)$/);return m&&(Number(m[1])<1||Number(m[1])>7200)}))throw Error('Duración fuera de rango');const arr=visualParse(),count=arr.reduce((n,b)=>n+b.items.length,0)+rounds*lines.length+(rounds-1)*(rest>0?1:0);if(count>200)throw Error('El circuito supera el límite de 200 pasos');for(let i=1;i<=rounds;i++){arr.push({name:title+' · Ronda '+i+'/'+rounds,items:lines.slice()});if(i<rounds&&rest>0)arr.push({name:'Descanso entre rondas',items:['Recuperación · antes de ronda '+(i+1)+' @'+rest]})}visualSync(arr);closeV2Wizard();$('editorMessage').textContent='Circuito añadido: '+rounds+' rondas. Guarda la rutina.'}catch(e){$('editorMessage').textContent=e.message}};
 $('v2Confirm').onclick=()=>{try{const mode=v2Mode,name=$('v2Name').value.trim();if(mode==='cardio'){saveCardioExercise();return}if(!name||/[|@:\n]/.test(name))throw Error('Introduce un nombre válido');const blocks=visualParse(),bi=Number($('v2Block').value);if(!blocks[bi])throw Error('Selecciona un bloque');if(['intervals','emom'].includes(mode)){if(v2Editing)throw Error('Este bloque no puede editarse como un ejercicio');$('timerMode').value=mode;$('timerName').value=name;$('timerRounds').value=$('v2Rounds').value;$('timerWork').value=$('v2Work').value;$('timerRest').value=$('v2Recovery').value;$('addTimerBlock').click();if($('editorMessage').textContent.startsWith('Bloque temporizado añadido'))closeV2Wizard();return}
-$('visualType').value=mode;$('visualType').onchange();$('visualName').value=name;if(mode==='strength'){for(const [a,b] of [['visualSets','v2Sets'],['visualReps','v2Reps'],['visualKg','v2Kg'],['visualRir','v2Rir'],['visualRest','v2Rest']])$(a).value=$(b).value}else if(mode==='timed')$('visualDuration').value=durationSeconds($('v2Duration').value,$('v2DurationUnit').value);$('visualBlock').value=String(bi);visualEditing=v2Editing?{block:v2Editing.bi,index:v2Editing.ei}:null;$('addExercise').click();if($('editorMessage').textContent==='Ejercicio guardado')closeV2Wizard()}catch(e){$('editorMessage').textContent=e.message}};
+const selectedBi=bi,actualBi=ensureExerciseBlockAfterSequence(blocks,bi,mode,v2Editing);if(actualBi!==selectedBi){visualSync(blocks);$('v2Block').value=String(actualBi)}
+$('visualType').value=mode;$('visualType').onchange();$('visualName').value=name;if(mode==='strength'){for(const [a,b] of [['visualSets','v2Sets'],['visualReps','v2Reps'],['visualKg','v2Kg'],['visualRir','v2Rir'],['visualRest','v2Rest']])$(a).value=$(b).value}else if(mode==='timed')$('visualDuration').value=durationSeconds($('v2Duration').value,$('v2DurationUnit').value);$('visualBlock').value=String(actualBi);visualEditing=v2Editing?{block:v2Editing.bi,index:v2Editing.ei}:null;$('addExercise').click();if($('editorMessage').textContent==='Ejercicio guardado')closeV2Wizard()}catch(e){$('editorMessage').textContent=e.message}};
 function serialize(w){return w.blocks.map(b=>b.name+':\n'+b.items.join('\n')).join('\n\n')}
 function validHeartLimit(value){
  return Number.isInteger(value)&&value>=25&&value<=240?value:null;
@@ -1260,11 +1340,48 @@ function isProgrammedRest(exercise){
 function isTvTimedRest(exercise){
  return document.body.classList.contains('tv-mode')&&isProgrammedRest(exercise);
 }
+let tvTechniqueGeneration=0,tvTechniqueBlobUrl=null,tvTechniqueIdentity='';
 function clearTvExerciseGif(){
- const image=$('tvExerciseGif');
- image.parentElement.classList.remove('has-gif');
- image.classList.add('hidden');
- image.removeAttribute('src');
+ tvTechniqueGeneration++;
+ const image=$('tvExerciseGif'),video=$('tvExerciseVideo'),card=image.parentElement;
+ if(tvTechniqueBlobUrl){URL.revokeObjectURL(tvTechniqueBlobUrl);tvTechniqueBlobUrl=null}
+ image.classList.add('hidden');image.removeAttribute('src');
+ video.pause();video.classList.add('hidden');video.removeAttribute('src');video.load();
+ card.classList.remove('has-gif');
+ $('tvGifUnavailable').classList.add('hidden');
+ tvTechniqueIdentity='';
+}
+async function loadTvTechnique(current,resting){
+ if(!document.body.classList.contains('tv-mode')||resting||!current){clearTvExerciseGif();return}
+ const label=current.label.replace(/\s+·\s+(?:(?:ronda|minuto)\s+\d+.*|\d+(?:[.,]\d+)?\s*kg.*)$/i,'');
+ const identity=String(sessionWorkout||active)+'|'+step+'|'+label+'|'+(current.techniqueId||'');
+ if(identity===tvTechniqueIdentity)return;
+ clearTvExerciseGif();
+ tvTechniqueIdentity=identity;
+ const generation=tvTechniqueGeneration,key=techniqueKey(label);
+ const shared=techniqueCatalogPath(current.techniqueId)||sharedTechniquePath(key);
+ let record=null;
+ try{record=await techniqueRead(key)}catch(error){/* IndexedDB puede no estar disponible */ }
+ if(generation!==tvTechniqueGeneration||!document.body.classList.contains('tv-mode'))return;
+ const image=$('tvExerciseGif'),video=$('tvExerciseVideo'),fallback=$('tvGifUnavailable');
+ if(record?.blob&&['image/gif','video/mp4','video/webm'].includes(record.type)){
+  try{
+   tvTechniqueBlobUrl=URL.createObjectURL(record.blob);
+   if(record.type.startsWith('video/')){
+    video.src=tvTechniqueBlobUrl;
+    video.setAttribute('aria-label','Vídeo de técnica de '+label);
+    void video.play().catch(()=>{});
+   }else{
+    image.alt='GIF de '+label;
+    image.src=tvTechniqueBlobUrl;
+   }
+   return;
+  }catch(error){if(tvTechniqueBlobUrl){URL.revokeObjectURL(tvTechniqueBlobUrl);tvTechniqueBlobUrl=null}}
+ }
+ if(shared){
+  image.alt='GIF de '+label;
+  image.src=shared;
+ }else fallback.classList.remove('hidden');
 }
 function renderTvExercises(exercises=steps(),amrap=getAmrapAt(step),ft=getForTimeAt(step)){
  if(!document.body.classList.contains('tv-mode')||!exercises[step])return;
@@ -1288,18 +1405,11 @@ function renderTvExercises(exercises=steps(),amrap=getAmrapAt(step),ft=getForTim
  $('tvNextTiming').classList.toggle('hidden',!timing);
  $('tvNextTiming').textContent=timing;
  $('tvNextName').textContent=next?.label||'Fin del entrenamiento';
+ $('tvNextPosition').textContent=next?'Ejercicio '+(nextIndex+1)+' de '+exercises.length:'Último paso de la sesión';
  $('tvNextTarget').textContent=seriesRest?'Serie '+((seriesLog[step]?.length||0)+1)+' de '+current.strength.sets:
    next?.vector?vectorDose(next.vector):target?target.sets+' × '+target.reps+' rep'+(target.weight===null?'':' · '+target.weight+' kg'):
    next?.duration?formatSeconds(next.duration):'';
- const image=$('tvExerciseGif');
- const label=current.label.replace(/\s+·\s+(?:(?:ronda|minuto)\s+\d+.*|\d+(?:[.,]\d+)?\s*kg.*)$/i,'');
- const path=resting||current.vector&&!$('vectorCurrentIllustration').classList.contains('hidden')?null:techniqueCatalogPath(current.techniqueId)||sharedTechniquePath(techniqueKey(label));
- if(!path){clearTvExerciseGif();return}
- image.alt='Demostración de '+label;
- if(image.getAttribute('src')!==path){
-   clearTvExerciseGif();
-   image.src=path;
- }
+ void loadTvTechnique(current,resting);
 }
 function renderRestUI(exercise){
  const a=currentStrength(),entries=seriesLog[step]||[];
@@ -1349,13 +1459,19 @@ $('summarySkip').onclick=()=>{pendingSummaryId=null;show('board')};
 $('summarySave').onclick=()=>{try{const rpe=$('summaryRpe').value.trim(),pain=$('summaryPain').value,notes=$('summaryNotes').value.trim();if(rpe&&(!Number.isInteger(Number(rpe))||Number(rpe)<1||Number(rpe)>10))throw Error('RPE debe estar entre 1 y 10');const key='gg-strength-history-v1',history=getHistory(),record=history.find(x=>x.id===pendingSummaryId);if(!record)throw Error('No se encuentra la sesión guardada');record.rpe=rpe?Number(rpe):null;record.pain=pain||null;record.notes=notes;appStorage.setItem(key,JSON.stringify(history));pendingSummaryId=null;show('board')}catch(e){$('summaryMessage').textContent=e.message}};
 function renderActual(){const item=steps()[step],panel=$('actualPanel');panel.classList.toggle('hidden',!session||!item||!!item.strength);if(!session||!item||item.strength)return;$('actualPlanned').textContent='Programado: '+item.label+(item.duration?' · '+item.duration+' segundos':'');const record=actualResults[step];$('actualValue').value=record?.value??'';$('actualUnit').value=record?.unit||(/kcal/i.test(item.label)?'kcal':/\bkm\b/i.test(item.label)?'km':/\b\d+\s*m\b/i.test(item.label)?'m':item.duration?'s':'reps');$('actualMessage').textContent=record?'Resultado guardado':'Puedes avanzar sin registrar un resultado'}
 $('actualSave').onclick=()=>{const value=$('actualValue').value.trim();if(value===''||!Number.isFinite(Number(value))||Number(value)<0){$('actualMessage').textContent='Introduce una cantidad válida';return}actualResults[step]={value:Number(value),unit:$('actualUnit').value};saveSession();$('actualMessage').textContent='Resultado guardado'};
-$('skipRest').onclick=()=>{if(!session||paused||!restRunning)return;if(transitionTo!==null){finishExerciseTransition();return}restRemaining=0;restRunning=false;saveSession();renderSeries();$('status').textContent='Descanso omitido. Ya puedes hacer la siguiente serie.'};$('quickAdvance').onclick=()=>$('advance').click();$('quickPause').onclick=()=>$('pause').click();$('moreSession').onclick=()=>{const extra=$('sessionExtras'),opening=extra.classList.contains('hidden');extra.classList.toggle('hidden',!opening);$('moreSession').textContent=opening?'▴ Ocultar opciones':'⚙ Más opciones';$('moreSession').setAttribute('aria-expanded',String(opening))};
+$('skipRest').onclick=()=>{if(!session||paused||!restRunning)return;if(transitionTo!==null){finishExerciseTransition();return}restRemaining=0;restRunning=false;saveSession();renderSeries();$('status').textContent='Descanso omitido. Ya puedes hacer la siguiente serie.'};$('quickAdvance').onclick=()=>$('advance').click();$('quickPause').onclick=()=>$('pause').click();function setSessionExtrasOpen(open){
+ $('sessionExtras').classList.toggle('hidden',!open);
+ $('moreSession').textContent=open?'← Volver al entrenamiento':'⚙ Más opciones';
+ $('moreSession').setAttribute('aria-expanded',String(open));
+}
+$('moreSession').onclick=()=>setSessionExtrasOpen($('sessionExtras').classList.contains('hidden'));
+$('tvReturnToTraining').onclick=()=>setSessionExtrasOpen(false);
 function getForTimeAt(index){const w=workouts.find(x=>x.id===(session?sessionWorkout:active));if(!w)return null;let offset=0;for(let i=0;i<w.blocks.length;i++){const b=w.blocks[i],m=b.name.match(/^FOR TIME (\d+)s · (.+) · Ronda (\d+)\/(\d+)$/);if(m){let end=offset+b.items.length-1;for(let j=i+1;j<w.blocks.length;j++){const n=w.blocks[j].name.match(/^FOR TIME (\d+)s · (.+) · Ronda (\d+)\/(\d+)$/);if(!n||n[1]!==m[1]||n[2]!==m[2]||n[4]!==m[4])break;end+=w.blocks[j].items.length}if(index>=offset&&index<=end)return{start:offset,end,limit:Number(m[1]),name:m[2],total:end-offset+1}}offset+=b.items.length}return null}
 function finishForTime(info,complete){ftResults.push({name:info.name,seconds:ftElapsed,complete,steps:complete?info.total:step-info.start,total:info.total});ftElapsed=0;if(info.end===steps().length-1){if(!archiveSession())return;session=false;paused=true;saveSession();void releaseWakeLock();openSessionSummary()}else{step=info.end+1;stepElapsed=0;saveSession();show('guided')}}
 function getAmrapAt(index){const w=workouts.find(x=>x.id===(session?sessionWorkout:active));if(!w)return null;let offset=0;for(const block of w.blocks){const length=block.items.length,match=block.name.match(/^AMRAP (\d+)s · (.+)$/);if(index>=offset&&index<offset+length&&match)return{start:offset,end:offset+length-1,count:length,limit:Number(match[1]),name:match[2],key:offset};offset+=length}return null}
 function updateAmrapDisplay(){const info=getAmrapAt(step),out=$('amrapStatus');out.classList.toggle('hidden',!info);if(!info)return;const round=amrapRounds+1;out.textContent='AMRAP · '+info.name+' · Ronda '+round+' · Restante '+formatSeconds(Math.max(0,Math.ceil(info.limit-amrapElapsed)))}
 function finishAmrapBlock(info){amrapResults.push({name:info.name,limit:info.limit,rounds:amrapRounds,partial:step-info.start,exerciseCount:info.count,elapsed:Math.min(info.limit,amrapElapsed)});amrapElapsed=0;amrapRounds=0;amrapLastBlock=null;amrapCurrent=null;stepElapsed=0;restRemaining=0;restRunning=false;if(info.end>=steps().length-1){if(!archiveSession())return;session=false;paused=true;saveSession();void releaseWakeLock();openSessionSummary()}else{step=info.end+1;saveSession();show('guided')}}
-function finishExerciseTransition(){if(!session||transitionTo===null)return;const target=transitionTo;transitionTo=null;restRemaining=0;restRunning=false;step=target;stepElapsed=0;editingSet=-1;saveSession();if(view==='guided'){$('sessionExtras').classList.add('hidden');$('moreSession').textContent='⚙ Más opciones';$('moreSession').setAttribute('aria-expanded','false');renderGuided()}else if(view==='board')renderBoard()}
+function finishExerciseTransition(){if(!session||transitionTo===null)return;const target=transitionTo;transitionTo=null;restRemaining=0;restRunning=false;step=target;stepElapsed=0;editingSet=-1;saveSession();if(view==='guided'){setSessionExtrasOpen(false);renderGuided()}else if(view==='board')renderBoard()}
 function nextStep(){if(transitionTo!==null)return;editingSet=-1;const ft=getForTimeAt(step);if(ft){if(step===ft.end)finishForTime(ft,true);else{step++;stepElapsed=0;saveSession();renderGuided()}return}const info=getAmrapAt(step);if(info){if(step===info.end){amrapRounds++;step=info.start}else step++;stepElapsed=0;restRemaining=0;restRunning=false;saveSession();renderGuided();return}const a=currentStrength();if(a&&(seriesLog[step]||[]).length<a.sets){alert('Completa las series programadas antes de avanzar');return}restRemaining=0;restRunning=false;if(step===steps().length-1){if(!archiveSession())return;session=false;paused=true;saveSession();openSessionSummary()}else{step++;stepElapsed=0;saveSession();if(view==='guided')renderGuided();else if(view==='board')renderBoard()}}$('start').onclick=()=>{resetHeartLimitAlert();if(soundEnabled&&workoutHeartLimit(active)!==null)void initAudio();step=0;elapsed=0;stepElapsed=0;amrapElapsed=0;amrapRounds=0;amrapResults=[];ftElapsed=0;ftResults=[];actualResults={};amrapLastBlock=null;amrapCurrent=null;editingSet=-1;seriesLog={};draftSets={};restRemaining=0;restRunning=false;transitionTo=null;paused=false;session=true;sessionWorkout=active;clockAnchor=Date.now();saveSession();show('guided');void syncWakeLock()};$('resume').onclick=()=>{if(session&&sessionWorkout===active){clockAnchor=Date.now();saveSession();show('guided');void syncWakeLock()}};$('prev').onclick=()=>{step=Math.max(0,step-1);stepElapsed=0;editingSet=-1;restRemaining=0;restRunning=false;transitionTo=null;saveSession();renderGuided()};$('pause').onclick=()=>{paused=!paused;if(!paused&&soundEnabled&&workoutHeartLimit(sessionWorkout)!==null)void initAudio();refreshHeart();clockAnchor=Date.now();saveSession();renderGuided();void syncWakeLock()};$('advance').onclick=nextStep;$('showBoard').onclick=()=>{saveSession();show('board')};$('finish').onclick=()=>{if(confirm('¿Finalizar el entrenamiento?')){if(!archiveSession())return;session=false;paused=true;saveSession();openSessionSummary()}};
 let wakeLock=null,wakeWanted=true,wakePending=false;
 try{wakeWanted=appStorage.getItem('gg-wake-enabled')!=='false'}catch(e){}
@@ -1905,10 +2021,10 @@ $('techniqueFile').addEventListener('change',async()=>{
  const type=ext==='gif'?'image/gif':ext==='mp4'?'video/mp4':ext==='webm'?'video/webm':null;
  if(!type){$('techniqueInfo').textContent='Solo se admiten GIF, MP4 y WebM';return}
  if(file.size>20*1024*1024){$('techniqueInfo').textContent='Archivo demasiado grande (máximo 20 MB)';return}
- try{await techniqueWrite({key,name:file.name,type,blob:file,lastModified:Date.now()});if(key===techniqueActiveKey)await techniqueRender()}
+ try{await techniqueWrite({key,name:file.name,type,blob:file,lastModified:Date.now()});if(key===techniqueActiveKey)await techniqueRender();if(view==='guided'&&document.body.classList.contains('tv-mode')){tvTechniqueIdentity='';renderTvExercises()}}
  catch(error){$('techniqueInfo').textContent='No se ha podido guardar el archivo: '+error.message}
 });
-$('techniqueRemove').onclick=async()=>{const key=techniqueActiveKey;if(!key||!confirm('¿Quitar la copia personal? Volverás a ver el GIF compartido de GG si está disponible.'))return;try{await techniqueDelete(key);if(key===techniqueActiveKey)await techniqueRender()}catch(error){$('techniqueInfo').textContent='Error al eliminar: '+error.message}};
+$('techniqueRemove').onclick=async()=>{const key=techniqueActiveKey;if(!key||!confirm('¿Quitar la copia personal? Volverás a ver el GIF compartido de GG si está disponible.'))return;try{await techniqueDelete(key);if(key===techniqueActiveKey)await techniqueRender();if(view==='guided'&&document.body.classList.contains('tv-mode')){tvTechniqueIdentity='';renderTvExercises()}}catch(error){$('techniqueInfo').textContent='Error al eliminar: '+error.message}};
 
 function setupCompactGuided(){
  const guided=$('guided'),strength=$('strengthPanel');
@@ -1940,13 +2056,28 @@ for(const button of tvToggles)button.addEventListener('click',()=>{
  if(view==='guided'){renderRestUI();renderTvExercises()}
 });
 $('tvCompleteSet').onclick=()=> $('logSet').click();
-$('tvExerciseGif').onload=event=>{
- const image=event.currentTarget;
- if(!image.hasAttribute('src'))return;
- image.classList.remove('hidden');
- image.parentElement.classList.add('has-gif');
-};
-$('tvExerciseGif').onerror=clearTvExerciseGif;
+function displayTvTechniqueMedia(node){
+ if(!node.getAttribute('src'))return;
+ const other=node.id==='tvExerciseGif'?$('tvExerciseVideo'):$('tvExerciseGif');
+ other.classList.add('hidden');
+ node.classList.remove('hidden');
+ $('tvGifUnavailable').classList.add('hidden');
+ node.parentElement.classList.add('has-gif');
+ $('vectorCurrentIllustration').classList.add('hidden');
+ node.parentElement.classList.remove('has-vector-illustration');
+}
+function unavailableTvTechnique(event){
+ const isVideo=event?.currentTarget?.id==='tvExerciseVideo';
+ const current=steps()[step];
+ const shared=isVideo&&current&&(techniqueCatalogPath(current.techniqueId)||sharedTechniquePath(techniqueKey(current.label)));
+ clearTvExerciseGif();
+ if(shared){$('tvExerciseGif').src=shared;return}
+ if(document.body.classList.contains('tv-mode'))$('tvGifUnavailable').classList.remove('hidden');
+}
+$('tvExerciseGif').onload=event=>displayTvTechniqueMedia(event.currentTarget);
+$('tvExerciseGif').onerror=unavailableTvTechnique;
+$('tvExerciseVideo').onloadeddata=event=>displayTvTechniqueMedia(event.currentTarget);
+$('tvExerciseVideo').onerror=unavailableTvTechnique;
 setupHF();
 setupLocalProfiles();
 $('appVersion').textContent='Versión '+GG_APP_VERSION;
