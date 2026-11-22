@@ -1290,7 +1290,7 @@ async function presentHFPreparedWorkout(workout,mode='guided'){
   url.searchParams.set('mode',mode);
   url.searchParams.set('view','mirror');
   url.searchParams.set('hfProfile',localProfile.id);
-  url.searchParams.set('_hf_v','2.9.64');
+  url.searchParams.set('_hf_v','2.9.68');
   url.searchParams.set('hfTransfer',transferId);
   // Short-lived transfer in the same tab. Neither saved routines nor cloud revisions change.
   location.assign(url.href);
