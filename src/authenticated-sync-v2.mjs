@@ -23,7 +23,7 @@ function requestError(data,status){
 export class SecureSyncConflict extends Error {
  constructor(message){super(message);this.name='SecureSyncConflict'}
 }
-export function createEditionCloud({url,publishableKey,edition,storage,fetchImpl=fetch,now=Date.now}){
+export function createEditionCloud({url,publishableKey,edition,storage,fetchImpl=fetch,now=Date.now,offline=isOffline}){
  if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)||!/^sb_publishable_[\w-]+$/.test(publishableKey)||!['gg','hf'].includes(edition))
   throw Error('Configuración pública independiente GG/HF incompleta.');
  if(!storage?.getItem||!storage?.setItem)throw Error('Almacenamiento no disponible.');
@@ -57,7 +57,7 @@ export function createEditionCloud({url,publishableKey,edition,storage,fetchImpl
  async function verify(){
   if(!auth){verified=false;return null}
   assertUUID(auth.user?.id);
-  if(isOffline()){
+  if(offline()){
    if(!Number.isFinite(auth.lastVerifiedAt)||now()-auth.lastVerifiedAt<0||now()-auth.lastVerifiedAt>OFFLINE_MAX_AGE_MS)
     throw Error('Es necesario conectarte a Internet al menos una vez para autorizar el acceso sin conexión.');
    verified=true;return {id:auth.user.id,email:auth.user.email||'',offline:true};
@@ -90,7 +90,7 @@ export function createEditionCloud({url,publishableKey,edition,storage,fetchImpl
  async function profiles(){
   const uid=owner();
   const cacheKey=authKey+':profiles:'+uid;
-  if(isOffline()){
+  if(offline()){
    const cache=safeJSON(storage.getItem(cacheKey),null);
    if(!cache||cache.uid!==uid||!Array.isArray(cache.rows)||!Number.isFinite(cache.at)||
      now()-cache.at<0||now()-cache.at>OFFLINE_MAX_AGE_MS)
