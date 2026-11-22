@@ -36,7 +36,11 @@ function goToProfile(localId,replace=false){
  else location.assign(url.href);
 }
 by('accountBrand').textContent=title;
-const locked=()=>{document.documentElement.dataset.access='locked';wall.classList.remove('hidden')};
+function locked(phase='login'){
+ document.documentElement.dataset.access='locked';
+ wall.dataset.phase=phase;
+ wall.classList.remove('hidden');
+}
 const unlock=()=>{document.documentElement.dataset.access='unlocked';wall.classList.add('hidden')};
 function setBusy(busy){running=busy;for(const name of ['accountLogin','accountRegister','accountRetry'])by(name).disabled=busy}
 const checkedProfile=()=>{
@@ -80,7 +84,7 @@ async function refreshProfiles(){
  }
 }
 async function ready(){
- message('Verificando cuenta y permisos…');
+ locked('loading');
  const user=await cloud.verify();
  if(!user){locked();message('Inicia sesión para acceder a tus entrenamientos y a tu historial.');return false}
  currentUser=user;
@@ -97,7 +101,7 @@ async function ready(){
  if(localId!==requested){
   goToProfile(localId,true);return false;
  }
- if(!bridge.useProfile(user.id,localId))return false;
+ if(!bridge.useProfile(user.id,localId))throw Error('No se ha podido abrir el perfil. Vuelve a intentarlo.');
  const prefix=bridge.storagePrefix();
  const existing=bridge.snapshot();
  // Backup only in the authenticated namespace. Legacy local workouts are
@@ -206,4 +210,4 @@ window.addEventListener('focus',schedule);
 document.addEventListener('visibilitychange',schedule);
 window.addEventListener('pagehide',()=>{});
 setInterval(schedule,30000);
-locked();void run(ready);
+void run(ready);
