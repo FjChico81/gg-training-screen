@@ -383,10 +383,17 @@ function bootHFClass(authorizedOwnerId=null){
   const originalStore=typeof localStorage==='undefined'?null:localStorage;
   const hfAccountStorage=authorizedOwnerId&&originalStore?{
     getItem:key=>originalStore.getItem('hf-auth-v2:'+authorizedOwnerId+':'+key),
-    setItem:(key,value)=>originalStore.setItem('hf-auth-v2:'+authorizedOwnerId+':'+key,value),
-    removeItem:key=>originalStore.removeItem('hf-auth-v2:'+authorizedOwnerId+':'+key)
+    setItem:(key,value)=>{
+      originalStore.setItem('hf-auth-v2:'+authorizedOwnerId+':'+key,value);
+      window.__HF_CLASS_SYNC_HOOK?.(key,value,false);
+    },
+    removeItem:key=>{
+      originalStore.removeItem('hf-auth-v2:'+authorizedOwnerId+':'+key);
+      window.__HF_CLASS_SYNC_HOOK?.(key,null,true);
+    }
   }:originalStore;
   const el=id=>document.getElementById(id);
+  if(authorizedOwnerId)window.__HF_CLASS_BUSY=()=>!['ready','finished'].includes(state.phase);
   // HF collective: optional BLE monitor, independent of BUHARDILLA's working BLE module.
   let classHrDevice=null,classHrCharacteristic=null,classHrValue=null,classHrAt=0,classHrError='';
   const classZones=[
