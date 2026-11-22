@@ -11,7 +11,7 @@ const checkpointPromise=import(pathToFileURL(resolve(root,'src/hf-class-checkpoi
 const organizationPromise=import(pathToFileURL(resolve(root,'src/hf-class-organization.mjs')).href);
 const source=src
  .replace("await import('./src/hf-class-checkpoint.mjs?v=2.9.64')","await __mockCheckpoint()")
- .replace("import('./src/hf-class-organization.mjs?v=2.9.64')","__mockOrganization()");
+ .replaceAll("import('./src/hf-class-organization.mjs?v=2.9.64')","__mockOrganization()");
 const marker='  updateDeviceUI();\n  loadForms();render();setInterval(tick,160);\n  void bootstrapRecovery();';
 assert.ok(source.includes(marker),'Expected HF screen bootstrap');
 const instrument='  window.__test={state:()=>JSON.parse(JSON.stringify(state)),start:startSession,next:nextPhase,finish:finish,tick:tick,save:saveCollectiveOutcome};\n';
@@ -87,6 +87,23 @@ test('finishing a class creates one isolated collective history entry and only t
  assert.equal(storage.getItem('gg-training-screen-workouts-v1'),'IMPORTANT');
  app.app.save();await app.flush();
  assert.equal(JSON.parse(storage.getItem('hf:personal:hf-collective-history-v1')).items.length,1);
+});
+test('finishing class then saving feedback yields one archive entry and a complete summary',async()=>{
+ const storage=memory(),app=await boot(storage);
+ app.click('start');app.advance(10000);
+ app.click('finishClass');await app.flush();
+ app.el('classRpe').value='8';
+ app.el('classPain').value='No';
+ app.el('classNotes').value='Carrera cómoda, sin molestias.';
+ app.click('classSaveFeedback');await app.flush();
+ const raw=storage.getItem('hf:personal:hf-collective-history-v1');
+ const archived=JSON.parse(raw);
+ assert.equal(archived.items.length,1);
+ assert.deepEqual(JSON.parse(JSON.stringify(archived.items[0].feedback)),
+  {rpe:8,pain:'No',notes:'Carrera cómoda, sin molestias.'});
+ assert.equal(app.el('classFinalSummary').hidden,false);
+ assert.equal(app.el('classFeedback').hidden,true);
+ assert.ok(app.el('classFinalSummaryBody').children.length>=4);
 });
 test('natural completion is recorded once with full guided progress',async()=>{
  const storage=memory(),app=await boot(storage);
