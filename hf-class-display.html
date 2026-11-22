@@ -316,7 +316,7 @@
 (function(){
   const el=id=>document.getElementById(id);
   // HF collective: optional BLE monitor, independent of BUHARDILLA's working BLE module.
-  let classHrDevice=null,classHrCharacteristic=null,classHrValue=null,classHrAt=0;
+  let classHrDevice=null,classHrCharacteristic=null,classHrValue=null,classHrAt=0,classHrError='';
   const classZones=[
     {number:5,min:185,label:'Máximo'}, {number:4,min:178,label:'Umbral'},
     {number:3,min:165,label:'Aeróbica'}, {number:2,min:152,label:'Suave'},
@@ -332,7 +332,7 @@
     }
     el('classConnectHr').textContent=connected?'♥ Desconectar pulsómetro':'♥ Conectar pulsómetro';
     el('classHrStatus').textContent=live?(zone?'Z'+zone.number+' · '+zone.label:'Por debajo de Z1'):
-      connected?'Conectado · esperando pulsaciones':'Sin lectura Bluetooth';
+      connected?'Conectado · esperando pulsaciones':(classHrError||'Sin lectura Bluetooth');
   }
   function onClassHrReading(event){
     const d=event.target?.value;
@@ -344,11 +344,12 @@
     classHrValue=value;classHrAt=Date.now();renderClassHeart();
   }
   el('classConnectHr').onclick=async()=>{
+    classHrError='';
     if(classHrDevice?.gatt?.connected){
       classHrDevice.gatt.disconnect();classHrValue=null;renderClassHeart();return;
     }
     if(typeof navigator==='undefined'||!navigator.bluetooth?.requestDevice){
-      el('classHrStatus').textContent='Este navegador no admite Bluetooth LE. Prueba un navegador compatible o utiliza HF sin sensor.';
+      classHrError='Este navegador no admite Bluetooth LE. Prueba un navegador compatible o utiliza HF sin sensor.';renderClassHeart();
       return;
     }
     try{
@@ -365,8 +366,8 @@
       classHrCharacteristic=characteristic;renderClassHeart();
     }catch(error){
       classHrValue=null;
-      el('classHrStatus').textContent=error.name==='NotFoundError'?'No se ha seleccionado ningún pulsómetro':
-        'No se pudo conectar: '+(error?.message||'Error Bluetooth');
+      classHrError=error.name==='NotFoundError'?'No se ha seleccionado ningún pulsómetro':
+        'No se pudo conectar: '+(error?.message||'Error Bluetooth');renderClassHeart();
     }
   };
   const assetBase='assets/technique/';
