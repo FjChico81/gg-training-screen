@@ -61,6 +61,16 @@ async function ready(){
   onState:text=>{const el=by('accountSyncState');if(el)el.textContent=text}
  });
  bridge.setController(controller);
+ if(user.offline){
+  // Only already-verified accounts/profile caches can enter offline. Work remains
+  // under the authenticated namespace; local edits queue automatically.
+  controller.seedLocal(existing);
+  by('accountUser').textContent=user.email||'Cuenta personal';
+  by('accountSyncState').textContent='Sin conexión · los cambios quedarán pendientes de sincronizar.';
+  window.__secureAccount={logout:signOut,schedule,createProfile:addProfile,edition};
+  unlock();
+  return true;
+ }
  await controller.initial();
  window.__secureAccount={logout:signOut,schedule,createProfile:addProfile,edition};
  by('accountUser').textContent=user.email||'Cuenta personal';
