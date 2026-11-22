@@ -8,6 +8,8 @@
  */
 const VALID_UUID=/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/i;
 const KINDS=new Set(['workout','history','active','preferences','collective','class_state']);
+const OFFLINE_MAX_AGE_MS=7*24*60*60*1000;
+const isOffline=()=>typeof navigator!=='undefined'&&navigator.onLine===false;
 const safeJSON=(raw,fallback)=>{try{return raw?JSON.parse(raw):fallback}catch{return fallback}};
 const clone=x=>JSON.parse(JSON.stringify(x));
 const encode=encodeURIComponent;
@@ -55,10 +57,18 @@ export function createEditionCloud({url,publishableKey,edition,storage,fetchImpl
  async function verify(){
   if(!auth){verified=false;return null}
   assertUUID(auth.user?.id);
+  if(isOffline()){
+   if(!Number.isFinite(auth.lastVerifiedAt)||now()-auth.lastVerifiedAt<0||now()-auth.lastVerifiedAt>OFFLINE_MAX_AGE_MS)
+    throw Error('Es necesario conectarte a Internet al menos una vez para autorizar el acceso sin conexión.');
+   verified=true;return {id:auth.user.id,email:auth.user.email||'',offline:true};
+  }
   if(auth.expiresAt<=now()+60_000)await refresh();
   const data=await request('/auth/v1/user');
   if(data?.id!==auth.user.id)throw Error('La cuenta ha cambiado. Vuelve a iniciar sesión.');
-  verified=true;return {id:data.id,email:data.email||auth.user.email||''};
+  auth.user.email=data.email||auth.user.email||'';
+  auth.lastVerifiedAt=now();
+  storage.setItem(authKey,JSON.stringify(auth));
+  verified=true;return {id:data.id,email:auth.user.email};
  }
  async function login(email,password){
   if(typeof email!=='string'||!email.includes('@')||typeof password!=='string'||!password)throw Error('Introduce correo y contraseña.');
@@ -79,14 +89,26 @@ export function createEditionCloud({url,publishableKey,edition,storage,fetchImpl
  function owner(){check();return auth.user.id}
  async function profiles(){
   const uid=owner();
+  const cacheKey=authKey+':profiles:'+uid;
+  if(isOffline()){
+   const cache=safeJSON(storage.getItem(cacheKey),null);
+   if(!cache||cache.uid!==uid||!Array.isArray(cache.rows)||!Number.isFinite(cache.at)||
+     now()-cache.at<0||now()-cache.at>OFFLINE_MAX_AGE_MS)
+    throw Error('Los perfiles necesitan sincronizarse una vez con Internet antes de usarlos sin conexión.');
+   return clone(cache.rows);
+  }
   let rows=await request('/rest/v1/training_profiles_v2?select=id,owner_id,name,is_primary,updated_at&owner_id=eq.'+uid+'&order=created_at.asc');
   if(!Array.isArray(rows))throw Error('No se pudieron recuperar los perfiles.');
   if(!rows.length){
-   await request('/rest/v1/training_profiles_v2',{method:'POST',
-    headers:{Prefer:'return=minimal'},body:{id:uid,owner_id:uid,name:'Principal',is_primary:true}});
+   try{
+    await request('/rest/v1/training_profiles_v2',{method:'POST',
+     headers:{Prefer:'return=minimal'},body:{id:uid,owner_id:uid,name:'Principal',is_primary:true}});
+   }catch(error){if(error.code!=='23505')throw error}
    rows=await request('/rest/v1/training_profiles_v2?select=id,owner_id,name,is_primary,updated_at&owner_id=eq.'+uid+'&order=created_at.asc');
   }
-  if(!Array.isArray(rows)||rows.some(p=>p.owner_id!==uid||!VALID_UUID.test(p.id)))throw Error('Perfil devuelto sin autorización.');
+  if(!Array.isArray(rows)||!rows.length||rows.some(p=>p.owner_id!==uid||!VALID_UUID.test(p.id)))
+   throw Error('Perfil devuelto sin autorización.');
+  storage.setItem(cacheKey,JSON.stringify({uid,rows,at:now()}));
   return rows;
  }
  async function createProfile(name){
@@ -97,6 +119,10 @@ export function createEditionCloud({url,publishableKey,edition,storage,fetchImpl
    method:'POST',headers:{Prefer:'return=representation'},
    body:{id,owner_id:uid,name:clean,is_primary:false}});
   if(!Array.isArray(rows)||rows[0]?.id!==id)throw Error('No se ha podido crear el perfil.');
+  const cacheKey=authKey+':profiles:'+uid;
+  const cache=safeJSON(storage.getItem(cacheKey),null);
+  if(cache?.uid===uid&&Array.isArray(cache.rows))storage.setItem(cacheKey,
+   JSON.stringify({uid,rows:[...cache.rows,rows[0]],at:now()}));
   return rows[0];
  }
  async function getRecords(profileId){
