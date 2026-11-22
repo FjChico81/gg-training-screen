@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v2.9.77</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.0</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -1146,7 +1146,7 @@ function setupHF(){
  const links=node('div','','hf-class-links');
  for(const [text,mode] of [['Clase guiada','guided'],['Circuito por estaciones','stations']]){
   const link=node('a',text,'hf-class-link');
-  link.href='hf-class-display.html?mode='+mode+'&view=mirror&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v=2.9.64';
+  link.href='hf-class-display.html?mode='+mode+'&view=mirror&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v=3.0.0';
   link.setAttribute('aria-label','Abrir '+text.toLowerCase()+' y elegir presentación');
   links.append(link);
  }
@@ -1155,7 +1155,7 @@ function setupHF(){
  const resumeTitle=node('strong','Clase interrumpida');
  const resumeDescription=node('p','La clase guardada en este dispositivo se recuperará en pausa.','muted small');
  const resumeLink=node('a','▶ Continuar clase','hf-resume-link');
- resumeLink.href='hf-class-display.html?recover=1&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v=2.9.64';
+ resumeLink.href='hf-class-display.html?recover=1&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v=3.0.0';
  resume.append(resumeTitle,resumeDescription,resumeLink);
  section.append(title,resume,note,links);
  intro.after(section);
@@ -1218,12 +1218,12 @@ function setupHF(){
      if(!saved||(saved.profileId??'personal')!==localProfile.id)return;
      resumeTitle.textContent=saved.title;
      resumeDescription.textContent='Guardada en este dispositivo. Al abrir se recuperará en pausa.';
-     resumeLink.href='hf-class-display.html?recover=1&view='+saved.deviceMode+'&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v=2.9.64';
+     resumeLink.href='hf-class-display.html?recover=1&view='+saved.deviceMode+'&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v=3.0.0';
      resume.classList.remove('hidden');
    }catch(error){
      resumeTitle.textContent='Hay una copia de clase que necesita revisión';
      resumeDescription.textContent='La nueva pantalla te permitirá revisar o descartar la copia sin alterar las rutinas.';
-     resumeLink.href='hf-class-display.html?recover=1&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v=2.9.64';
+     resumeLink.href='hf-class-display.html?recover=1&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v=3.0.0';
      resume.classList.remove('hidden');
    }finally{
      refreshHFHome();
@@ -2202,7 +2202,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='2.9.69', GG_APP_VERSION=isHF?HF_APP_VERSION:'2.9.77';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.0', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.0';let lastUpdateCheck=0,remoteVersion=null;
 function versionIsNewer(remote,local){const a=remote.split('.').map(Number),b=local.split('.').map(Number);return a.some((v,i)=>v>(b[i]||0)&&a.slice(0,i).every((n,j)=>n===(b[j]||0)))}
 async function checkForUpdates(force=false){if(!navigator.onLine)return;if(!force&&Date.now()-lastUpdateCheck<120000)return;lastUpdateCheck=Date.now();const status=$('updateStatus');if(force)status.textContent='Comprobando…';try{const url=new URL(location.pathname,location.origin);url.searchParams.set('_gg_check',String(Date.now()));const response=await fetch(url.toString(),{cache:'no-store',redirect:'follow'});if(!response.ok)throw Error('No se ha podido consultar la web');const html=await response.text(),match=isHF?html.match(/HF_APP_VERSION='([0-9.]+)'/):html.match(/<title>GG Mobile v([0-9.]+)<\/title>/);if(!match)throw Error('Versión no identificada');remoteVersion=match[1];const newer=versionIsNewer(remoteVersion,GG_APP_VERSION);$('updateBanner').classList.toggle('hidden',!newer);if(newer){$('updateBannerText').textContent='Disponible '+editionName+' v'+remoteVersion+(session?' · termina la sesión antes de actualizar':'');$('applyUpdate').disabled=!!session;status.textContent='Nueva versión: '+remoteVersion}else if(force)status.textContent='Ya tienes la versión más reciente ('+GG_APP_VERSION+')'}catch(e){if(force)status.textContent='No se pudo comprobar: '+e.message}}
 $('checkUpdates').onclick=()=>void checkForUpdates(true);
