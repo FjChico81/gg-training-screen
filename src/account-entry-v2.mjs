@@ -47,7 +47,7 @@ async function ready(){
   else url.searchParams.set('perfil',localId);
   location.replace(url.href);return false;
  }
- bridge.useProfile(user.id,localId);
+ if(!bridge.useProfile(user.id,localId))return false;
  const prefix=bridge.storagePrefix();
  const existing=bridge.snapshot();
  // Backup only in the authenticated namespace. Legacy local workouts are
