@@ -32,7 +32,7 @@ function boot(){
     'setGuided:(plan)=>{config.guided=JSON.parse(JSON.stringify(plan.guided));',
     'config.segments=JSON.parse(JSON.stringify(plan.segments));',
     'state.mode="guided";resetSession(true);},',
-    'start:startSession,pause:pauseSession,next:nextPhase,tick:tick,',
+    'start:()=>startSession(true),pause:pauseSession,next:nextPhase,tick:tick,',
     '};',marker].join(''));
  const context={document,window:{},location:{search:'?mode=guided'},URLSearchParams,
     Date:VirtualDate,setInterval:()=>0,console,confirm:()=>true,alert:()=>{}};
