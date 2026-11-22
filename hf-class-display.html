@@ -347,6 +347,20 @@
   let deviceMode=params.get('view')==='tablet'?'tablet':'mirror';
   let state={mode:requestedMode==='stations'?'stations':'guided',phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0,specialIndex:-1,specialElapsedMs:0,specialAnchor:0,amrapRounds:0,results:[]};
   let sound=true;
+  let classPrestartMs=0,classPrestartDeadline=null,classPrestartRunning=false;
+  let classFeedbackDone=false,classFeedbackValue=null,classFinishedRunId=null;
+  function syncClassPrestart(){
+    const showing=state.phase==='ready'&&classPrestartMs>0;
+    el('classPrestart').hidden=!showing;
+    el('classPrestartContinue').hidden=!showing||classPrestartRunning;
+    if(showing){
+      el('classPrestartNumber').textContent=String(Math.max(1,Math.ceil(classPrestartMs/1000)));
+      el('classPrestartInfo').textContent=classPrestartRunning
+        ?'El entrenamiento empezará al finalizar la cuenta atrás.'
+        :'Cuenta atrás pausada. Pulsa continuar cuando estés preparado.';
+    }
+  }
+
   // Independent, device-local HF checkpoint; never reads or writes GG storage.
   let checkpointTools=null,checkpointRunId=null,recoverySnapshot=null,checkpointError=null;
   let recoveryPending=typeof localStorage!=='undefined',lastCheckpointAt=0;
@@ -560,9 +574,15 @@
     }
     checkpointRunId=null;
   }
-  function startSession(){
+  function startSession(afterPreparation=false){
     if(state.phase==='finished'||importBlocked||importReviewPending||recoveryPending)return;
+    if(state.phase==='ready'&&!afterPreparation){
+      if(classPrestartMs<=0)classPrestartMs=10000;
+      classPrestartRunning=true;classPrestartDeadline=Date.now()+classPrestartMs;
+      notify();syncClassPrestart();render();return;
+    }
     if(state.phase==='ready'){
+      classPrestartMs=0;classPrestartRunning=false;classPrestartDeadline=null;syncClassPrestart();
       state.phase='work';
       state.sessionElapsedMs=0;
       state.sessionAnchor=Date.now();
@@ -595,6 +615,7 @@
     persistCheckpoint(true);
   }
   function resetSession(force=false){
+    if(classPrestartMs>0){classPrestartMs=0;classPrestartRunning=false;classPrestartDeadline=null;syncClassPrestart()}
     if(state.phase==='finished'&&checkpointRunId&&!historyArchived){
       alert('Primero guarda el resultado de la clase colectiva. Si falla, pulsa Reintentar guardar. No se descartará automáticamente la copia.');
       return false;
@@ -603,13 +624,23 @@
     const mode=state.mode;
     state={mode,phase:'ready',step:0,turn:0,paused:false,deadline:null,remainingMs:null,phaseElapsedMs:0,phaseAnchor:0,sessionElapsedMs:0,sessionAnchor:0,specialIndex:-1,specialElapsedMs:0,specialAnchor:0,amrapRounds:0,results:[]};
     clearCurrentCheckpoint();
-    historyArchived=false;historySaving=false;historyOutcome='completed';
+    historyArchived=false;historySaving=false;historyOutcome='completed';classFeedbackDone=false;classFeedbackValue=null;classFinishedRunId=null;
     el('saveIndicator').hidden=true;
     el('collectiveArchiveStatus').hidden=true;
     el('retryCollectiveArchive').hidden=true;
     render();return true;
   }
   function tick(){
+    if(state.phase==='ready'&&classPrestartMs>0){
+      if(classPrestartRunning&&document.visibilityState!=='hidden'){
+        const previous=Math.ceil(classPrestartMs/1000);
+        classPrestartMs=Math.max(0,classPrestartDeadline-Date.now());
+        const current=Math.ceil(classPrestartMs/1000);
+        if(current!==previous&&current<=3&&current>0)notify();
+        if(classPrestartMs===0){classPrestartRunning=false;classPrestartDeadline=null;startSession(true);}
+      }
+      syncClassPrestart();return;
+    }
     let count=0,now=Date.now();
     while(!state.paused&&state.phase!=='ready'&&state.phase!=='finished'&&count++<200){
       const seg=activeSpecial();
@@ -818,6 +849,21 @@
   el('pause').onclick=pauseSession;
   el('next').onclick=()=>{if(!state.paused&&!recoveryPending&&!importBlocked)nextPhase();};
   el('reset').onclick=()=>resetSession();
+  el('restartClass').onclick=()=>{
+    if(state.phase==='finished'){
+      alert('La clase ya ha terminado. Puedes preparar una nueva tras guardar el resultado.');return;
+    }
+    if(state.phase!=='ready'&&!confirm('¿Reiniciar desde el principio? Se descartará el progreso de la clase actual. El historial anterior no se borrará.'))return;
+    if(resetSession(true))startSession();
+  };
+  el('classPrestartCancel').onclick=()=>{
+    classPrestartMs=0;classPrestartRunning=false;classPrestartDeadline=null;syncClassPrestart();render();
+  };
+  el('classPrestartContinue').onclick=()=>{
+    if(classPrestartMs<=0||state.phase!=='ready')return;
+    classPrestartRunning=true;classPrestartDeadline=Date.now()+classPrestartMs;
+    notify();syncClassPrestart();
+  };
   el('retryCollectiveArchive').onclick=()=>saveCollectiveOutcome();
   el('finishClass').onclick=()=>{
     if(state.phase==='ready'||state.phase==='finished'||recoveryPending||importBlocked)return;
@@ -1056,9 +1102,17 @@
     }
   };
   if(document.addEventListener)document.addEventListener('visibilitychange',()=>{
-    if(document.visibilityState==='hidden')persistCheckpoint(true);
+    if(document.visibilityState==='hidden'){
+      if(classPrestartMs>0&&classPrestartRunning){
+        classPrestartMs=Math.max(0,classPrestartDeadline-Date.now());
+        classPrestartRunning=false;classPrestartDeadline=null;syncClassPrestart();
+      }
+      persistCheckpoint(true);
+    }
   });
-  if(window.addEventListener)window.addEventListener('pagehide',()=>persistCheckpoint(true));
+  if(window.addEventListener)window.addEventListener('pagehide',()=>{
+    classPrestartRunning=false;classPrestartDeadline=null;persistCheckpoint(true);
+  });
   updateDeviceUI();
   loadForms();render();setInterval(tick,160);
   void bootstrapRecovery();
