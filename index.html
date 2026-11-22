@@ -1928,7 +1928,7 @@ document.addEventListener('keydown',event=>{if(event.key==='Escape')closeSetting
 function formatSeconds(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}function tick(){const now=Date.now(),delta=clockAnchor?Math.max(0,(now-clockAnchor)/1000):0;clockAnchor=now;if(!isHF&&session&&prestartRemaining>0){
   if(prestartRunning&&document.visibilityState==='visible'){
     const before=prestartRemaining;
-    prestartRemaining=Math.max(0,prestartRemaining-delta);
+    prestartRemaining=Math.max(0,Math.round((prestartRemaining-delta)*1000)/1000);
     updateCountdownSignal(10,10-before,10-prestartRemaining);
     if(Math.ceil(before)!==Math.ceil(prestartRemaining)||prestartRemaining===0){
       syncPrestartOverlay();saveSession();
