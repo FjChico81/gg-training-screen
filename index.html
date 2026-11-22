@@ -1031,7 +1031,7 @@ function loadLocalProfiles(){
 }
 const localProfiles=loadLocalProfiles();
 const requestedProfile=new URLSearchParams(location.search).get('perfil');
-const localProfile=localProfiles.find(profile=>profile.id===requestedProfile)??localProfiles[0];
+let localProfile=localProfiles.find(profile=>profile.id===requestedProfile)??localProfiles[0];
 const usesWorkoutCloud=localProfile.id==='personal';
 const storagePrefix=isHF?'hf:'+localProfile.id+':':usesWorkoutCloud?'':'gg:'+localProfile.id+':';
 const appStorage={
@@ -2732,6 +2732,9 @@ window.__secureAppV2={
   const cached=rows.filter(p=>!p.is_primary).map(p=>({id:p.id.replace(/-/g,''),name:p.name}));
   localStorage.setItem(LOCAL_PROFILES_KEY,JSON.stringify(cached));
   localProfiles.splice(1,localProfiles.length-1,...cached);
+  // A new device may not yet know the requested profile in its local cache.
+  // Once Supabase confirms its ownership, resolve it without a reload loop.
+  localProfile=localProfiles.find(profile=>profile.id===requestedProfile)??localProfiles[0];
   $('localProfileSelect').replaceChildren();
   for(const p of localProfiles){const option=node('option',p.name);option.value=p.id;$('localProfileSelect').append(option)}
   $('localProfileSelect').value=localProfile.id;
@@ -2739,7 +2742,7 @@ window.__secureAppV2={
  useProfile(ownerId,profileId){
   if(!SECURE_AUTH_V2||!/^[a-f0-9-]{36}$/i.test(ownerId))throw Error('Cuenta inválida.');
   if(profileId!==localProfile.id){
-   location.replace(location.href);return false;
+   throw Error('No se ha podido seleccionar el perfil autorizado. Vuelve al inicio.');
   }
   secureNamespace=(isHF?'hf-v2:':'gg-v2:')+ownerId+':'+profileId+':';
   load();restoreActiveSessionFromStorage();
