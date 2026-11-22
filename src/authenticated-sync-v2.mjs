@@ -7,7 +7,7 @@
  * local data. Only authenticated users can reach v2 tables (server RLS).
  */
 const VALID_UUID=/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/i;
-const KINDS=new Set(['workout','history','active','preferences']);
+const KINDS=new Set(['workout','history','active','preferences','collective','class_state']);
 const safeJSON=(raw,fallback)=>{try{return raw?JSON.parse(raw):fallback}catch{return fallback}};
 const clone=x=>JSON.parse(JSON.stringify(x));
 const encode=encodeURIComponent;
