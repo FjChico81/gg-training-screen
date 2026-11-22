@@ -97,6 +97,7 @@ export function createEditionCloud({url,publishableKey,edition,storage,fetchImpl
     throw Error('Los perfiles necesitan sincronizarse una vez con Internet antes de usarlos sin conexión.');
    return clone(cache.rows);
   }
+  if(auth.expiresAt<=now()+60_000)await verify();
   let rows=await request('/rest/v1/training_profiles_v2?select=id,owner_id,name,is_primary,updated_at&owner_id=eq.'+uid+'&order=created_at.asc');
   if(!Array.isArray(rows))throw Error('No se pudieron recuperar los perfiles.');
   if(!rows.length){
@@ -124,6 +125,21 @@ export function createEditionCloud({url,publishableKey,edition,storage,fetchImpl
   if(cache?.uid===uid&&Array.isArray(cache.rows))storage.setItem(cacheKey,
    JSON.stringify({uid,rows:[...cache.rows,rows[0]],at:now()}));
   return rows[0];
+ }
+ async function deleteProfile(profileId){
+  const uid=owner();
+  assertUUID(profileId);
+  if(profileId===uid)throw Error('El perfil Principal no se puede eliminar.');
+  if(offline())throw Error('Conéctate a Internet para eliminar un perfil.');
+  if(auth.expiresAt<=now()+60_000)await verify();
+  const deleted=await request('/rest/v1/rpc/delete_training_profile_v2',{
+   method:'POST',body:{target_profile_id:profileId}});
+  if(typeof deleted!=='boolean')throw Error('No se pudo confirmar la eliminación del perfil.');
+  const cacheKey=authKey+':profiles:'+uid;
+  const cache=safeJSON(storage.getItem(cacheKey),null);
+  if(deleted&&cache?.uid===uid&&Array.isArray(cache.rows))storage.setItem(cacheKey,
+   JSON.stringify({...cache,rows:cache.rows.filter(profile=>profile.id!==profileId)}));
+  return deleted;
  }
  async function getRecords(profileId){
   const uid=owner();assertUUID(profileId);
@@ -162,7 +178,7 @@ export function createEditionCloud({url,publishableKey,edition,storage,fetchImpl
   return expectedRevision+1;
  }
  return {edition,authKey,get verified(){return verified},get user(){return verified?auth?.user:null},
-  verify,login,register,logout,profiles,createProfile,getRecords,upsertRevision};
+  verify,login,register,logout,profiles,createProfile,deleteProfile,getRecords,upsertRevision};
 }
 export function profileUUID(uid,profileId){
  assertUUID(uid);

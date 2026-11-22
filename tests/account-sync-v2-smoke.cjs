@@ -26,6 +26,14 @@ function server(){
     if(verb==='GET')return reply(profiles);
     if(verb==='POST'){profiles.push(JSON.parse(options.body));return reply(null,201)}
    }
+   if(dest.pathname==='/rest/v1/rpc/delete_training_profile_v2'&&verb==='POST'){
+    const {target_profile_id:id}=JSON.parse(options.body);
+    const index=profiles.findIndex(p=>p.id===id&&p.owner_id===userId&&!p.is_primary);
+    if(index===-1)return reply(false);
+    profiles.splice(index,1);
+    for(let index=rows.length-1;index>=0;index--)if(rows[index].profile_id===id)rows.splice(index,1);
+    return reply(true);
+   }
    if(dest.pathname==='/rest/v1/training_records_v2'){
     if(verb==='GET')return reply(rows.map(x=>JSON.parse(JSON.stringify(x))));
     if(verb==='POST'){
@@ -119,7 +127,7 @@ test('login wall protects both apps and HF class direct URL',()=>{
  const sql=readFileSync(resolve(root,'infra/sql/authenticated-sync-v2.sql'),'utf8');
  assert.match(html,/document\.documentElement\.dataset\.access='locked'/);
  assert.match(html,/id="accountWall"/);
- assert.match(html,/src="src\/account-entry-v2\.mjs"/);
+ assert.match(html,/src="src\/account-entry-v2\.mjs(?:\?v=[0-9.]+)?"/);
  assert.match(hf,/data-access="locked"/);
  assert.match(hf,/src="src\/hf-class-access-v2\.mjs"/);
  assert.match(sql,/alter table public\.training_records_v2 enable row level security/);
@@ -206,4 +214,29 @@ test('queued edit is not discarded after response to a previous edit',async()=>{
   await new Promise(resolve=>setImmediate(resolve));
  assert.equal(transport.rows[0]?.payload.name,'Edición posterior');
  assert.equal(control.pendingCount(),0);
+});
+
+test('profile deletion is scoped, reflected on two devices and updates its verified offline list',async()=>{
+ const api=await mod,transport=server(),phone=memory(),tablet=memory();
+ const first=client(api,transport,phone),second=client(api,transport,tablet);
+ const secondary='aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee';
+ await assert.rejects(first.deleteProfile(secondary),/Inicia sesión/);
+ await first.login('test@example.com','test-pass');await first.profiles();
+ await second.login('test@example.com','test-pass');
+ transport.profiles.push({id:secondary,owner_id:userId,name:'Secundario',is_primary:false});
+ assert.equal((await first.profiles()).length,2);
+ assert.equal((await second.profiles()).length,2);
+ transport.rows.push({profile_id:userId},{profile_id:secondary});
+ phone.setItem('existing-local-history','kept');
+ await assert.rejects(first.deleteProfile(userId),/Principal/);
+ const offline=api.createEditionCloud({url:'https://example.supabase.co',publishableKey:'sb_publishable_mock',
+  edition:'gg',storage:phone,fetchImpl:transport.fetch,now:()=>100500,offline:()=>true});
+ await offline.verify();
+ await assert.rejects(offline.deleteProfile(secondary),/Internet/);
+ assert.equal(await first.deleteProfile(secondary),true);
+ assert.equal(await first.deleteProfile(secondary),false);
+ assert.deepEqual((await offline.profiles()).map(p=>p.id),[userId]);
+ assert.deepEqual((await second.profiles()).map(p=>p.id),[userId]);
+ assert.deepEqual(transport.rows,[{profile_id:userId}]);
+ assert.equal(phone.getItem('existing-local-history'),'kept');
 });
