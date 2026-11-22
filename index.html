@@ -2,6 +2,8 @@
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
+// Candidate only: do not ship until both dedicated Supabase projects pass RLS checks.
+document.documentElement.dataset.access='locked';
 if(new URLSearchParams(location.search).get('app')==='hf'){
   document.documentElement.dataset.edition='hf';
   document.querySelector('meta[name="apple-mobile-web-app-title"]').remove();
@@ -769,9 +771,58 @@ html[data-edition="hf"] #prestartValue{
   min-height:clamp(18px,3.3vh,26px)
  }
 }
+
+/* Secure v2 gate. Until authenticated by GG FAMILY / HF TRAINING, no app UI is visible. */
+html[data-access="locked"] body > :not(#accountWall):not(script){
+ visibility:hidden!important;pointer-events:none!important;
+}
+html[data-access="locked"] body{background:#17191f!important}
+#accountWall{
+ position:fixed;z-index:10000;inset:0;overflow:auto;
+ display:grid;place-items:center;padding:clamp(18px,5vw,44px);
+ background:#17191ff5;color:#fff
+}
+#accountWall.hidden{display:none!important}
+#accountWall .account-panel{
+ width:min(100%,480px);padding:clamp(20px,5vw,36px);
+ background:#fff;border-radius:18px;color:#141414;
+ box-shadow:0 18px 60px #0008
+}
+#accountWall h1{font-size:clamp(23px,5vw,33px);margin:0 0 6px;line-height:1.2}
+#accountWall p{font-size:14px;line-height:1.5;margin:8px 0 14px}
+#accountWall label{display:block;font-size:14px;font-weight:750;margin:13px 0 6px}
+#accountWall input{
+ width:100%;background:#fff;color:#111;border:1px solid #888;
+ min-height:48px;font-size:16px
+}
+#accountWall .account-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
+#accountWall .account-actions button{font-size:15px;min-height:50px}
+#accountWall .account-actions #accountLogin{background:#ff4d20;color:#fff}
+#accountWall .account-actions #accountRegister{background:#171717;color:#fff}
+#accountWall #accountRetry{width:100%;margin-top:9px}
+#accountWall #accountMessage{padding:8px 0;color:#444;min-height:25px}
+#accountWall #accountMessage[data-error="true"]{color:#b81e1e;font-weight:700}
+#accountWall .account-foot{font-size:12px;color:#555}
 </style></head><body>
+<div id="accountWall" role="region" aria-label="Acceso obligatorio">
+ <div class="account-panel">
+  <h1 id="accountBrand">Acceso personal</h1>
+  <p>Inicia sesión para acceder a tus perfiles, entrenamientos e historial sincronizados.</p>
+  <label for="accountEmail">Correo electrónico</label>
+  <input id="accountEmail" type="email" autocomplete="username" inputmode="email" required>
+  <label for="accountPassword">Contraseña</label>
+  <input id="accountPassword" type="password" autocomplete="current-password" required>
+  <div class="account-actions">
+   <button id="accountLogin" type="button">Iniciar sesión</button>
+   <button id="accountRegister" type="button">Crear cuenta</button>
+  </div>
+  <button id="accountRetry" type="button" class="alt">Reintentar conexión</button>
+  <p id="accountMessage" role="status" aria-live="polite">Comprobando tu sesión…</p>
+  <p class="account-foot">GG FAMILY y HF TRAINING utilizan cuentas y bases de datos independientes. No se importan tus rutinas antiguas.</p>
+ </div>
+</div>
 <header class="row" style="margin-bottom:18px"><div><h1 id="brandTitle" class="gold"><span class="gg-brand-mark" aria-label="BUHARDILLA Fitness"><span class="buhardilla-wordmark"><strong>BUHARDILLA</strong><em>Fitness</em></span></span></h1><span id="brandSubtitle" class="muted small hidden">GO ALL OUT</span></div><div class="header-settings"><button id="settingsToggle" type="button" aria-label="Abrir ajustes" aria-expanded="false" aria-controls="settingsPanel" class="settings-gear">⚙</button><div id="settingsPanel" class="tools-inner hidden"><button id="closeSettings" class="alt" type="button" style="grid-column:1/-1">✕ Cerrar ajustes</button><button id="soundToggle" class="alt">🔊 Avisos activados</button><button id="soundTest" class="alt">♪ Probar sonido</button><button id="wakeToggle" class="alt" type="button" style="grid-column:1/-1">☀ Mantener pantalla activa: activado</button><span id="wakeStatus" class="muted small" style="grid-column:1/-1" aria-live="polite">Pendiente de iniciar sesión</span><button id="connectHr" class="alt" type="button" style="grid-column:1/-1">♥ Conectar pulsómetro Bluetooth</button><button id="disconnectHr" class="alt hidden" type="button" style="grid-column:1/-1">Desconectar pulsómetro</button><span id="hrConnectionStatus" class="muted small" style="grid-column:1/-1" aria-live="polite">Sensor no conectado</span><button id="checkUpdates" class="alt" type="button" style="grid-column:1/-1">↻ Buscar actualizaciones</button>
-<button id="forceRefresh" class="alt" type="button" style="grid-column:1/-1">↻ Recargar versión sin borrar datos</button><span id="updateStatus" class="muted small" style="grid-column:1/-1" aria-live="polite"></span><span id="audioStatus" class="muted small" aria-live="polite">Audio sin comprobar</span><details class="settings-data"><summary>Datos</summary><div class="settings-data-actions"><button id="backupButton" class="alt">↓ Copia de seguridad</button><button id="restoreButton" class="alt" type="button">↑ Restaurar copia</button><input id="restoreFile" class="hidden" type="file" accept=".json,application/json" aria-label="Seleccionar copia de seguridad GG Mobile"></div></details><button id="addLocalProfile" type="button" class="alt settings-wide">Añadir perfil</button><p id="appVersion" class="muted small settings-wide"></p></div></div></header><div id="updateBanner" class="panel hidden" style="border:1px solid var(--accent,#dbc396)"><div class="row"><span id="updateBannerText">Hay una versión nueva de GG Mobile</span><button id="applyUpdate" type="button">Actualizar ahora</button></div></div>
+<button id="forceRefresh" class="alt" type="button" style="grid-column:1/-1">↻ Recargar versión sin borrar datos</button><button id="accountLogout" class="alt" type="button" style="grid-column:1/-1">Cerrar sesión</button><p id="accountUser" class="muted small" style="grid-column:1/-1"></p><p id="accountSyncState" class="muted small" role="status" style="grid-column:1/-1"></p><span id="updateStatus" class="muted small" style="grid-column:1/-1" aria-live="polite"></span><span id="audioStatus" class="muted small" aria-live="polite">Audio sin comprobar</span><details class="settings-data"><summary>Datos</summary><div class="settings-data-actions"><button id="backupButton" class="alt">↓ Copia de seguridad</button><button id="restoreButton" class="alt" type="button">↑ Restaurar copia</button><input id="restoreFile" class="hidden" type="file" accept=".json,application/json" aria-label="Seleccionar copia de seguridad GG Mobile"></div></details><button id="addLocalProfile" type="button" class="alt settings-wide">Añadir perfil</button><p id="appVersion" class="muted small settings-wide"></p></div></div></header><div id="updateBanner" class="panel hidden" style="border:1px solid var(--accent,#dbc396)"><div class="row"><span id="updateBannerText">Hay una versión nueva de GG Mobile</span><button id="applyUpdate" type="button">Actualizar ahora</button></div></div>
 <section id="library"><div class="panel"><h2 class="library-title">Mis entrenamientos</h2><div id="localProfilePanel">
 <label for="localProfileSelect">Perfil<select id="localProfileSelect"></select></label>
 <span id="localProfileNotice" class="muted small hidden">Solo en este dispositivo</span>
@@ -896,6 +947,8 @@ html[data-edition="hf"] #prestartValue{
 'use strict';
 const KEY='gg-training-screen-workouts-v1', $=id=>document.getElementById(id);
 const isHF=document.documentElement.dataset.edition==='hf';
+const SECURE_AUTH_V2=true; // Candidate: DO NOT MERGE before verified dedicated GG/HF projects.
+let secureNamespace=null,secureApply=false,secureSyncController=null;
 const editionName=isHF?'HF':'BUHARDILLA Fitness';
 const vectorRoutines=isHF?[]:globalThis.vectorRoutineCatalog??[];
 const vectorDays=new Map(vectorRoutines.flatMap(routine=>routine.days.map(day=>{
@@ -978,13 +1031,29 @@ function loadLocalProfiles(){
 }
 const localProfiles=loadLocalProfiles();
 const requestedProfile=new URLSearchParams(location.search).get('perfil');
-const localProfile=localProfiles.find(profile=>profile.id===requestedProfile)??localProfiles[0];
+let localProfile=localProfiles.find(profile=>profile.id===requestedProfile)??localProfiles[0];
 const usesWorkoutCloud=localProfile.id==='personal';
 const storagePrefix=isHF?'hf:'+localProfile.id+':':usesWorkoutCloud?'':'gg:'+localProfile.id+':';
 const appStorage={
- getItem(key){return localStorage.getItem(storagePrefix+key)},
- setItem(key,value){localStorage.setItem(storagePrefix+key,value)},
- removeItem(key){localStorage.removeItem(storagePrefix+key)}
+ getItem(key){
+  if(SECURE_AUTH_V2)return secureNamespace?localStorage.getItem(secureNamespace+key):null;
+  return localStorage.getItem(storagePrefix+key)
+ },
+ setItem(key,value){
+  if(SECURE_AUTH_V2&&!secureNamespace)throw Error('Inicia sesión para guardar datos.');
+  localStorage.setItem((SECURE_AUTH_V2?secureNamespace:storagePrefix)+key,value);
+  if(SECURE_AUTH_V2&&!secureApply&&secureSyncController){
+   const kind=key===KEY?'workout':key==='gg-strength-history-v1'?'history':key==='gg-active-session-v1'?'active':null;
+   if(kind){
+    secureSyncController.changed(kind,kind==='active'?JSON.parse(value):value);
+    if(navigator.onLine)void secureSyncController.synchronize();
+   }
+  }
+ },
+ removeItem(key){
+  if(SECURE_AUTH_V2&&!secureNamespace)throw Error('Inicia sesión para modificar datos.');
+  localStorage.removeItem((SECURE_AUTH_V2?secureNamespace:storagePrefix)+key)
+ }
 };
 function openLocalProfile(id){
  if(id===localProfile.id)return;
@@ -1014,7 +1083,7 @@ function setupVectorHome(){
  const profileRow=node('div','','vector-profile-row');
  profile.before(profileRow);
  profileRow.append(profile);
- if(usesWorkoutCloud){
+ if(usesWorkoutCloud&&!SECURE_AUTH_V2){
    const cloud=$('ggCloudPanel');
    cloud.querySelector('summary').classList.add('hidden');
    profileRow.after(cloud);
@@ -1086,7 +1155,7 @@ function setupHF(){
  const resumeTitle=node('strong','Clase interrumpida');
  const resumeDescription=node('p','La clase guardada en este dispositivo se recuperará en pausa.','muted small');
  const resumeLink=node('a','▶ Continuar clase','hf-resume-link');
- resumeLink.href='hf-class-display.html?recover=1';
+ resumeLink.href='hf-class-display.html?recover=1&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v=2.9.64';
  resume.append(resumeTitle,resumeDescription,resumeLink);
  section.append(title,resume,note,links);
  intro.after(section);
@@ -1212,8 +1281,8 @@ let exerciseRestSeconds=90;try{const value=appStorage.getItem('gg-between-exerci
 let ggCloud, ggLibraryRaw;
 function load(){
   ggLibraryRaw=appStorage.getItem(KEY);
-  try{const raw=JSON.parse(ggLibraryRaw);workouts=Array.isArray(raw)?raw:!isHF&&usesWorkoutCloud?[example]:[]}
-  catch(e){workouts=!isHF&&usesWorkoutCloud?[example]:[]}
+  try{const raw=JSON.parse(ggLibraryRaw);workouts=Array.isArray(raw)?raw:!SECURE_AUTH_V2&&!isHF&&usesWorkoutCloud?[example]:[]}
+  catch(e){workouts=!SECURE_AUTH_V2&&!isHF&&usesWorkoutCloud?[example]:[]}
 }
 function persist(){
   try{
@@ -2650,13 +2719,70 @@ $('tvExerciseGif').onload=event=>displayTvTechniqueMedia(event.currentTarget);
 $('tvExerciseGif').onerror=unavailableTvTechnique;
 $('tvExerciseVideo').onloadeddata=event=>displayTvTechniqueMedia(event.currentTarget);
 $('tvExerciseVideo').onerror=unavailableTvTechnique;
+
+function restoreActiveSessionFromStorage(){
+  session=false;sessionWorkout=null;paused=true;step=0;elapsed=0;stepElapsed=0;seriesLog={};actualResults={};
+  try{const saved=JSON.parse(appStorage.getItem('gg-active-session-v1'));if(saved&&saved.session&&findWorkout(saved.active)){active=saved.active;sessionWorkout=saved.active;prestartRemaining=Number.isFinite(Number(saved.prestartRemaining))?Math.max(0,Math.min(10,Number(saved.prestartRemaining))):0;prestartRunning=false;step=Math.max(0,Math.min(saved.step,findWorkout(active).blocks.reduce((n,b)=>n+b.items.length,0)-1));paused=true;elapsed=saved.elapsed||0;stepElapsed=saved.stepElapsed||0;seriesLog=saved.seriesLog||{};restRemaining=saved.restRemaining||0;restRunning=!!saved.restRunning;transitionTo=Number.isInteger(saved.transitionTo)&&saved.transitionTo===step+1? saved.transitionTo:null;draftSets=saved.draftSets||{};vectorTargets=saved.vectorTargets||{};amrapElapsed=saved.amrapElapsed||0;amrapRounds=saved.amrapRounds||0;amrapResults=saved.amrapResults||[];ftElapsed=saved.ftElapsed||0;ftResults=saved.ftResults||[];actualResults=saved.actualResults||{};session=true}}catch(e){}
+}
+window.__secureAppV2={
+ setProfiles(ownerId,rows){
+  if(!SECURE_AUTH_V2)return;
+  if(!/^[a-f0-9-]{36}$/i.test(ownerId)||!Array.isArray(rows)||rows.some(p=>p.owner_id!==ownerId))
+   throw Error('Perfiles de una cuenta no autorizada.');
+  const cached=rows.filter(p=>!p.is_primary).map(p=>({id:p.id.replace(/-/g,''),name:p.name}));
+  localStorage.setItem(LOCAL_PROFILES_KEY,JSON.stringify(cached));
+  localProfiles.splice(1,localProfiles.length-1,...cached);
+  // A new device may not yet know the requested profile in its local cache.
+  // Once Supabase confirms its ownership, resolve it without a reload loop.
+  localProfile=localProfiles.find(profile=>profile.id===requestedProfile)??localProfiles[0];
+  $('localProfileSelect').replaceChildren();
+  for(const p of localProfiles){const option=node('option',p.name);option.value=p.id;$('localProfileSelect').append(option)}
+  $('localProfileSelect').value=localProfile.id;
+ },
+ useProfile(ownerId,profileId){
+  if(!SECURE_AUTH_V2||!/^[a-f0-9-]{36}$/i.test(ownerId))throw Error('Cuenta inválida.');
+  if(profileId!==localProfile.id){
+   throw Error('No se ha podido seleccionar el perfil autorizado. Vuelve al inicio.');
+  }
+  secureNamespace=(isHF?'hf-v2:':'gg-v2:')+ownerId+':'+profileId+':';
+  load();restoreActiveSessionFromStorage();
+  return true;
+ },
+ storagePrefix(){if(!secureNamespace)throw Error('Perfil sin autenticar.');return secureNamespace},
+ snapshot(){
+  return {
+   workouts:Array.isArray(JSON.parse(appStorage.getItem(KEY)||'[]'))?JSON.parse(appStorage.getItem(KEY)||'[]'):[],
+   history:Array.isArray(JSON.parse(appStorage.getItem('gg-strength-history-v1')||'[]'))?JSON.parse(appStorage.getItem('gg-strength-history-v1')||'[]'):[],
+   active:JSON.parse(appStorage.getItem('gg-active-session-v1')||'null')
+  };
+ },
+ async apply(payload){
+  if(session&&view==='guided')throw Error('No se sobrescribe una sesión activa.');
+  secureApply=true;
+  try{
+   appStorage.setItem(KEY,JSON.stringify(payload.workouts||[]));
+   appStorage.setItem('gg-strength-history-v1',JSON.stringify(payload.history||[]));
+   if(payload.active)appStorage.setItem('gg-active-session-v1',JSON.stringify(payload.active));
+   else appStorage.removeItem('gg-active-session-v1');
+  }finally{secureApply=false}
+  load();restoreActiveSessionFromStorage();
+  if(view==='library')renderLibrary();
+  if(view==='board'&&active)renderBoard();
+ },
+ busy(){return session||view==='editor'||view==='guided'},
+ setController(c){secureSyncController=c},
+};
 setupHF();
 setupLocalProfiles();
 $('appVersion').textContent='Versión '+GG_APP_VERSION;
 for(const id of ['v2Name','ftLines','circuitLines','amrapLines','emomExercises','visualName','timerName'])setupExercisePicker(id);
-setupExerciseLibrary();setupVectorHome();setupCompactGuided();load();try{const saved=JSON.parse(appStorage.getItem('gg-active-session-v1'));if(saved&&saved.session&&findWorkout(saved.active)){active=saved.active;sessionWorkout=saved.active;prestartRemaining=Number.isFinite(Number(saved.prestartRemaining))?Math.max(0,Math.min(10,Number(saved.prestartRemaining))):0;prestartRunning=false;step=Math.max(0,Math.min(saved.step,findWorkout(active).blocks.reduce((n,b)=>n+b.items.length,0)-1));paused=true;elapsed=saved.elapsed||0;stepElapsed=saved.stepElapsed||0;seriesLog=saved.seriesLog||{};restRemaining=saved.restRemaining||0;restRunning=!!saved.restRunning;transitionTo=Number.isInteger(saved.transitionTo)&&saved.transitionTo===step+1? saved.transitionTo:null;draftSets=saved.draftSets||{};vectorTargets=saved.vectorTargets||{};amrapElapsed=saved.amrapElapsed||0;amrapRounds=saved.amrapRounds||0;amrapResults=saved.amrapResults||[];ftElapsed=saved.ftElapsed||0;ftResults=saved.ftResults||[];actualResults=saved.actualResults||{};session=true}}catch(e){}show('library');void checkForUpdates();
+setupExerciseLibrary();setupVectorHome();setupCompactGuided();
+load();
+if(!SECURE_AUTH_V2)restoreActiveSessionFromStorage();
+show('library');
+void checkForUpdates();
 </script><script type="module">
-if(usesWorkoutCloud){
+if(usesWorkoutCloud&&!SECURE_AUTH_V2){
   if(isHF){
     $('cloudSummaryLabel').textContent='☁ Sincronización HF';
     document.querySelector('#ggCloudPanel .notice').textContent='Inicia sesión con tu cuenta HF en cada dispositivo para sincronizar las rutinas del perfil Principal. Los perfiles adicionales se guardan en este navegador.';
@@ -2685,4 +2811,4 @@ if(usesWorkoutCloud){
 }else{
   document.getElementById('ggCloudPanel')?.remove();
 }
-</script></body></html>
+</script><script type="module" src="src/account-entry-v2.mjs"></script></body></html>
