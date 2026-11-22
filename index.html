@@ -1174,7 +1174,7 @@ async function presentHFPreparedWorkout(workout,mode='guided'){
  if(!workout){alert('No se ha encontrado la rutina.');return;}
  hfPresenting=true;
  try{
-  const {createHFHandoff}=await import('./src/hf-workout-presenter.mjs?v=2.9.67');
+  const {createHFHandoff}=await import('./src/hf-workout-presenter.mjs');
   const transferId=createHFHandoff(workout,mode,{store:sessionStorage});
   const url=new URL('hf-class-display.html',location.href);
   url.searchParams.set('mode',mode);
