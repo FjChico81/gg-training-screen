@@ -202,7 +202,8 @@ test('queued edit is not discarded after response to a previous edit',async()=>{
  assert.equal(typeof releaseFirst,'function');
  control.changed('workout',JSON.stringify([{id:'r1',name:'Edición posterior',blocks:[]}]));
  releaseFirst();await first;
- for(let attempt=0;attempt<50 && transport.rows[0]?.payload.name!=='Edición posterior';attempt++)await Promise.resolve();
+ for(let attempt=0;attempt<30 && (transport.rows[0]?.payload.name!=='Edición posterior'||control.pendingCount()!==0);attempt++)
+  await new Promise(resolve=>setImmediate(resolve));
  assert.equal(transport.rows[0]?.payload.name,'Edición posterior');
  assert.equal(control.pendingCount(),0);
 });
