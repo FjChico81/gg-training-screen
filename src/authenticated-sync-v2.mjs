@@ -157,15 +157,22 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
  if(!pending||Array.isArray(pending)||typeof pending!=='object')pending={};
  let running=false,queued=false,lastLocal={workout:{},history:{},active:{}};
  const loadArray=(raw)=>{const rows=safeJSON(raw,[]);return Array.isArray(rows)?rows:[]};
- const toMap=(rows)=>Object.fromEntries(rows.filter(x=>x&&typeof x.id==='string'&&x.id.length<=128).map(x=>[x.id,clone(x)]));
+ const toMap=(rows,kind)=>Object.fromEntries(rows.filter(x=>{
+   const id=kind==='collective'?x?.runId:x?.id;
+   return x&&typeof id==='string'&&id.length<=128;
+  }).map(x=>[kind==='collective'?x.runId:x.id,clone(x)]));
  function persist(){storage.setItem(stateKey,JSON.stringify(shadow));storage.setItem(pendingKey,JSON.stringify(pending));}
- function seedLocal({workouts=[],history=[],active=null}={}){
-  lastLocal={workout:toMap(workouts),history:toMap(history),active:active?{current:clone(active)}:{}};
+ function seedLocal({workouts=[],history=[],active=null,collective=[],class_state=null}={}){
+  lastLocal={workout:toMap(workouts,'workout'),history:toMap(history,'history'),
+    active:active?{current:clone(active)}:{},
+    collective:toMap(collective,'collective'),
+    class_state:class_state?{current:clone(class_state)}:{}};
  }
  function changed(kind,content){
   assertKind(kind);
-  if(!['workout','history','active'].includes(kind))return;
-  const after=kind==='active'?(content&&typeof content==='object'?{current:content}:{}):toMap(loadArray(content));
+  if(!['workout','history','active','collective','class_state'].includes(kind))return;
+  const single=kind==='active'||kind==='class_state';
+  const after=single?(content&&typeof content==='object'?{current:content}:{}):toMap(loadArray(content),kind);
   const before=lastLocal[kind]||{};
   for(const [id,item] of Object.entries(after)){
    if(JSON.stringify(before[id])!==JSON.stringify(item)){
@@ -173,7 +180,7 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
     pending[key]={kind,client_id:id,payload:clone(item),deleted_at:null,at:now()};
    }
   }
-  if(kind!=='active')for(const id of Object.keys(before)){
+  if(!single)for(const id of Object.keys(before)){
    if(!(id in after)){const key=recordKey(kind,id);
     pending[key]={kind,client_id:id,payload:{id},deleted_at:new Date(now()).toISOString(),at:now()}}
   }
@@ -209,7 +216,7 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
    }
    persist();
    // Pending local changes never get overwritten by remote data.
-   const mapped={workout:{},history:{},active:{}};
+   const mapped={workout:{},history:{},active:{},collective:{},class_state:{}};
    for(const [key,server] of byKey){
     if(!mapped[server.kind])continue;
     if(server.deleted_at||pending[key])continue;
@@ -224,8 +231,8 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
     else mapped[item.kind][item.client_id]=clone(item.payload);
    }
    // If pending conflicted with remote, keep the local draft and alert.
-   const view={workouts:Object.values(mapped.workout),history:Object.values(mapped.history),
-    active:mapped.active.current||null};
+   const view={workouts:Object.values(mapped.workout),history:Object.values(mapped.history),active:mapped.active.current||null,
+    collective:Object.values(mapped.collective),class_state:mapped.class_state.current||null};
    if(!blocked())await onApply(view,{initial:false,conflicts:Object.keys(unresolved).length});
    seedLocal(view);persist();
    onState(Object.keys(unresolved).length
@@ -237,13 +244,14 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
  async function initial(){
   if(!cloud.verified)throw Error('Debes iniciar sesión antes de cargar los entrenamientos.');
   const rows=await cloud.getRecords(profileId);
-  const map={workout:{},history:{},active:{}};
+  const map={workout:{},history:{},active:{},collective:{},class_state:{}};
   for(const r of rows){const k=recordKey(r.kind,r.client_id);if(!pending[k])shadow[k]={revision:Number(r.revision)};
    if(!r.deleted_at&&map[r.kind]&&r.payload&&typeof r.payload==='object')map[r.kind][r.client_id]=clone(r.payload)
   }
   for(const [k,item] of Object.entries(pending)){if(!map[item.kind])continue;
    if(item.deleted_at)delete map[item.kind][item.client_id];else map[item.kind][item.client_id]=clone(item.payload)}
-  const result={workouts:Object.values(map.workout),history:Object.values(map.history),active:map.active.current||null};
+  const result={workouts:Object.values(map.workout),history:Object.values(map.history),active:map.active.current||null,
+    collective:Object.values(map.collective),class_state:map.class_state.current||null};
   await onApply(result,{initial:true});seedLocal(result);persist();
   if(Object.keys(pending).length)void synchronize();
   return result;
