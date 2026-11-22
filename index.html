@@ -1720,7 +1720,7 @@ $('prestartContinue').onclick=()=>{
  prestartRunning=true;clockAnchor=Date.now();
  void initAudio();syncPrestartOverlay();saveSession();
 };
-$('prestartCancel').onclick=()=>{$('cancelTraining').click()};
+$('prestartCancel').onclick=()=>{$('cancelTraining').onclick?.()};
 function saveSession(){try{appStorage.setItem('gg-active-session-v1',JSON.stringify({active:sessionWorkout,step,paused,elapsed,stepElapsed,session,seriesLog,restRemaining,restRunning,transitionTo,draftSets,prestartRemaining,vectorTargets,amrapElapsed,amrapRounds,amrapResults,amrapLastBlock,amrapCurrent,ftElapsed,ftResults,actualResults}))}catch(e){}}
 function numeric(id,min,max){const raw=$(id).value;if(raw==='')throw Error('Falta '+id);const v=Number(raw);if(!Number.isFinite(v)||v<min||v>max)throw Error('Valor inválido en '+id);return v}
 function currentStrength(){return steps()[step]?.strength||null}
