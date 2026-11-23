@@ -1373,7 +1373,7 @@ function setupHF(){
  const links=node('div','','hf-class-links');
  for(const [text,mode] of [['Clase guiada','guided'],['Circuito por estaciones','stations']]){
   const link=node('a',text,'hf-class-link');
-  link.href='hf-class-display.html?mode='+mode+'&view=mirror&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v=3.0.2';
+  link.href='hf-class-display.html?mode='+mode+'&view=mirror&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v='+HF_APP_VERSION;
   link.setAttribute('aria-label','Abrir '+text.toLowerCase()+' y elegir presentación');
   links.append(link);
  }
@@ -1382,7 +1382,7 @@ function setupHF(){
  const resumeTitle=node('strong','Clase interrumpida');
  const resumeDescription=node('p','La clase guardada en este dispositivo se recuperará en pausa.','muted small');
  const resumeLink=node('a','▶ Continuar clase','hf-resume-link');
- resumeLink.href='hf-class-display.html?recover=1&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v=3.0.2';
+ resumeLink.href='hf-class-display.html?recover=1&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v='+HF_APP_VERSION;
  resume.append(resumeTitle,resumeDescription,resumeLink);
  section.append(title,resume,note,links);
  intro.after(section);
@@ -1445,12 +1445,12 @@ function setupHF(){
      if(!saved||(saved.profileId??'personal')!==localProfile.id)return;
      resumeTitle.textContent=saved.title;
      resumeDescription.textContent='Guardada en este dispositivo. Al abrir se recuperará en pausa.';
-     resumeLink.href='hf-class-display.html?recover=1&view='+saved.deviceMode+'&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v=3.0.2';
+     resumeLink.href='hf-class-display.html?recover=1&view='+saved.deviceMode+'&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v='+HF_APP_VERSION;
      resume.classList.remove('hidden');
    }catch(error){
      resumeTitle.textContent='Hay una copia de clase que necesita revisión';
      resumeDescription.textContent='La nueva pantalla te permitirá revisar o descartar la copia sin alterar las rutinas.';
-     resumeLink.href='hf-class-display.html?recover=1&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v=3.0.2';
+     resumeLink.href='hf-class-display.html?recover=1&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v='+HF_APP_VERSION;
      resume.classList.remove('hidden');
    }finally{
      refreshHFHome();
@@ -1675,7 +1675,7 @@ async function presentHFPreparedWorkout(workout,mode='guided'){
   url.searchParams.set('mode',mode);
   url.searchParams.set('view','mirror');
   url.searchParams.set('hfProfile',localProfile.id);
-  url.searchParams.set('_hf_v','2.9.69');
+  url.searchParams.set('_hf_v',HF_APP_VERSION);
   url.searchParams.set('hfTransfer',transferId);
   // Short-lived transfer in the same tab. Neither saved routines nor cloud revisions change.
   location.assign(url.href);
@@ -2509,7 +2509,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.7', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.10';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.8', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.10';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
