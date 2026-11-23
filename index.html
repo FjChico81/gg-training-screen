@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.6</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.7</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -856,7 +856,38 @@ html[data-edition="hf"] #prestartValue{
   flex:0 0 auto;font-size:clamp(36px,10.5vh,140px);line-height:1;
  }
  html:not([data-edition="hf"]) .tv-mode.guided-active #guided .guided-controls{
-  position:sticky;bottom:0;background:var(--bg);
+  position:static;
+ }
+}
+
+
+@media (orientation:landscape) and (max-height:500px){
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided{
+  gap:5px;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided .tv-card{
+  padding:6px;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided .heart-rate-display{
+  gap:2px;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided .heart-rate-value{
+  font-size:clamp(29px,8.5vh,42px);
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided .hr-zone-bar{
+  margin:4px auto 0;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided .tv-timing:not(.is-timed) #clock{
+  font-size:clamp(34px,9vh,56px);
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided :is(#current.focus,#tvNextName){
+  font-size:clamp(17px,4.3vh,25px);margin:4px 0 2px;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided :is(#targetSummary,#tvNextTarget,#tvNextTiming){
+  font-size:clamp(12px,3.2vh,17px);margin-block:4px;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided .guided-instructions{
+  margin:4px 0;padding:4px 7px;
  }
 }
 
@@ -2360,7 +2391,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.6', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.6';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.6', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.7';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
