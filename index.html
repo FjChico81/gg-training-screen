@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.14</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.15</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -1301,8 +1301,20 @@ const vectorDays=new Map(vectorRoutines.flatMap(routine=>routine.days.map(day=>{
    : exercise.name+' | '+exercise.sets+'x'+(exercise.reps??0)+' | descanso '+exercise.setRest+'s');
  return [day.id,{...day,name,routine,blocks:[{name:day.focus||name,items}]}];
 })));
-const buhardillaRoutines=new Map(isHF?[]:makeBuhardillaRoutines().map(workout=>[workout.id,workout]));
-function makeBuhardillaRoutines(){
+const buhardillaFolders=isHF?[]:[
+ {name:'TONOFICACIÓN',routines:makeTonificationRoutines()},
+ {name:'ACONDICIONADO FÍSICO',routines:makeConditioningRoutines()}
+];
+const buhardillaRoutines=new Map(buhardillaFolders.flatMap(folder=>folder.routines.map(workout=>[workout.id,workout])));
+function timedBuhardillaBlock(name,exercises,restAfter=''){
+ const items=exercises.flatMap(([label,gif,instructions,seconds=30],position)=>{
+   const work=addExerciseInstructions(addTechniqueLink(label+' @'+seconds,gif),instructions);
+   return position<exercises.length-1?[work,'Descanso @20']:[work];
+ });
+ if(restAfter)items.push(restAfter+' @120');
+ return {name,items};
+}
+function makeTonificationRoutines(){
  const sides='15 s por lado. Cambia de lado a mitad del ejercicio.';
  const alternate='Alterna los lados en cada repetición.';
  const circuits=[
@@ -1337,17 +1349,69 @@ function makeBuhardillaRoutines(){
    ['Tijeras laterales tumbado','']
   ]
  ];
- return circuits.map((exercises,index)=>{
-   const blocks=Array.from({length:3},(_,round)=>{
-     const items=exercises.flatMap(([name,gif,instructions],position)=>{
-       const work=addExerciseInstructions(addTechniqueLink(name+' @30',gif),instructions);
-       return position<exercises.length-1?[work,'Descanso @20']:[work];
-     });
-     if(round<2)items.push('Descanso entre vueltas @120');
-     return {name:'Vuelta '+(round+1)+' de 3',items};
-   });
-   return {id:'buhardilla-tonificacion-'+(index+1),name:'Tonificación '+(index+1),blocks};
- });
+ return circuits.map((exercises,index)=>({
+   id:'buhardilla-tonificacion-'+(index+1),name:'Tonificación '+(index+1),
+   blocks:Array.from({length:3},(_,round)=>timedBuhardillaBlock(
+     'Vuelta '+(round+1)+' de 3',exercises,round<2?'Descanso entre vueltas':''))
+ }));
+}
+function makeConditioningRoutines(){
+ const walk=(minutes,pace)=>['Cinta '+pace,'cardio-caminar','Camina en la cinta al ritmo indicado.',minutes*60];
+ const bike=(minutes,pace='')=>['Bici'+pace,'cardio-bici','',minutes*60];
+ const squat=['Sentadillas libres','sentadilla-clasica'];
+ const trx=['Remo en TRX','remo-invertido-trx'];
+ const blockA=[walk(4,'a paso vivo'),squat,trx];
+ const blockB=[
+   bike(4),['Curl de bíceps con mancuernas','curl-de-biceps-con-mancuernas-de-pie'],
+   ['Elevaciones de talones','elevacion-talones-escalon']
+ ];
+ const stations=[
+   walk(3,'a paso vivo'),
+   ['Flexiones inclinadas en pared','flexion-inclinada-contra-la-pared-con-manos-a-la-anchura-de-hombros'],
+   bike(3),squat,trx
+ ];
+ const sessions=[
+   [
+     timedBuhardillaBlock('Calentamiento',[walk(5,'suave')]),
+     timedBuhardillaBlock('Bloque A · Vuelta 1 de 2',blockA,'Descanso entre vueltas'),
+     timedBuhardillaBlock('Bloque A · Vuelta 2 de 2',blockA,'Descanso entre bloques'),
+     timedBuhardillaBlock('Bloque B · Vuelta 1 de 2',blockB,'Descanso entre vueltas'),
+     timedBuhardillaBlock('Bloque B · Vuelta 2 de 2',blockB),
+     timedBuhardillaBlock('Vuelta a la calma',[bike(3,' suave')])
+   ],
+   [
+     timedBuhardillaBlock('Calentamiento',[bike(5,' suave')]),
+     ...[1,2,3].map(round=>timedBuhardillaBlock('Circuito · Vuelta '+round+' de 3',stations,
+       round<3?'Descanso entre vueltas':'')),
+     timedBuhardillaBlock('Vuelta a la calma',[walk(3,'suave')])
+   ],
+   [
+     timedBuhardillaBlock('Calentamiento',[walk(5,'suave')]),
+     ...[3,4,5].map((minutes,index)=>timedBuhardillaBlock('Escalera · Nivel '+(index+1),[
+       bike(minutes),squat,
+       ['Remo unilateral con mancuerna','remo-unilateral-mancuerna','15 s por lado. Cambia a mitad del ejercicio.'],
+       walk(minutes,'a paso vivo'),['Curl martillo con mancuernas','curl-martillo-mancuernas-pie']
+     ],index<2?'Descanso entre niveles':'')),
+     timedBuhardillaBlock('Vuelta a la calma',[bike(3,' suave')])
+   ],
+   [
+     timedBuhardillaBlock('Calentamiento',[walk(5,'suave')]),
+     timedBuhardillaBlock('Ronda 1 · Fuerza y cardio',[
+       bike(5),['Peso muerto rumano con mancuernas','peso-muerto-rumano-mancuernas'],
+       ['Press de hombros sentado con mancuernas','press-hombros-mancuernas-sentado'],walk(5,'a paso vivo')
+     ],'Descanso entre rondas'),
+     timedBuhardillaBlock('Ronda 2 · Fuerza y cardio',[
+       bike(5),trx,['Paseo del granjero con mancuernas','paseo-granjero-mancuernas'],squat
+     ]),
+     timedBuhardillaBlock('Vuelta a la calma',[walk(3,'suave')])
+   ]
+ ];
+ return sessions.map((blocks,index)=>({
+   id:'buhardilla-acontecimiento-fisico-'+(index+1),name:'Acontecimiento físico '+(index+1),blocks
+ }));
+}
+function buhardillaWorkoutDuration(workout){
+ return workout.blocks.flatMap(block=>block.items).reduce((total,line)=>total+decode(line).duration,0);
 }
 let vectorTargets={};
 function findWorkout(id){return vectorDays.get(id)??buhardillaRoutines.get(id)??workouts.find(workout=>workout.id===id)}
@@ -1504,19 +1568,26 @@ function setupVectorHome(){
  $('vectorRoutines').before(routines);
  routines.append($('vectorRoutines'));
 
- const tonification=node('details','','tools-details vector-home-section');
- tonification.id='buhardillaRoutineSection';
- tonification.append(vectorHomeSummary('Rutinas Buhardilla','▦',node('small','3 circuitos · 23 min cada uno')));
- for(const workout of buhardillaRoutines.values()){
-   const row=node('div','','workout-row');
-   const open=node('button','Abrir');
-   open.type='button';
-   open.setAttribute('aria-label','Abrir '+workout.name);
-   open.onclick=()=>openWorkout(workout.id);
-   row.append(node('strong',workout.name),open);
-   tonification.append(row);
+ const buhardilla=node('details','','tools-details vector-home-section');
+ buhardilla.id='buhardillaRoutineSection';
+ buhardilla.append(vectorHomeSummary('Rutinas Buhardilla','▦',node('small','7 rutinas · 2 subcarpetas')));
+ for(const folder of buhardillaFolders){
+   const section=node('details','','tools-details');
+   section.append(node('summary',folder.name));
+   for(const workout of folder.routines){
+     const row=node('div','','workout-row');
+     const title=node('div');
+     title.append(node('strong',workout.name),node('div',formatSeconds(buhardillaWorkoutDuration(workout)),'muted small'));
+     const open=node('button','Abrir');
+     open.type='button';
+     open.setAttribute('aria-label','Abrir '+workout.name);
+     open.onclick=()=>openWorkout(workout.id);
+     row.append(title,open);
+     section.append(row);
+   }
+   buhardilla.append(section);
  }
- routines.before(tonification);
+ routines.before(buhardilla);
 
  mountEditorExerciseLibrary('vectorEditorLibrary');
 }
@@ -2030,7 +2101,7 @@ function renderHFBoardBlock(block){
  return blockCard;
 }
 function renderBoard(){ $('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':(isHF?'▶ Entrenar en este dispositivo':'▶ Iniciar entrenamiento');const w=findWorkout(active);if(!w){show('library');return}$('edit').classList.toggle('hidden',vectorDays.has(active)||buhardillaRoutines.has(active));$('boardName').textContent=w.name;const exerciseCount=w.blocks.reduce((total,block)=>total+block.items.length,0);
-$('count').textContent=buhardillaRoutines.has(active)?'3 vueltas · 8 ejercicios por vuelta · 23 min':w.blocks.length+' '+(w.blocks.length===1?'bloque':'bloques')+' · '+exerciseCount+' '+(isHF?(exerciseCount===1?'paso':'pasos'):(exerciseCount===1?'ejercicio':'ejercicios'));$('blocks').replaceChildren();if(w.exercises){
+$('count').textContent=buhardillaRoutines.has(active)?'Duración programada · '+formatSeconds(buhardillaWorkoutDuration(w)):w.blocks.length+' '+(w.blocks.length===1?'bloque':'bloques')+' · '+exerciseCount+' '+(isHF?(exerciseCount===1?'paso':'pasos'):(exerciseCount===1?'ejercicio':'ejercicios'));$('blocks').replaceChildren();if(w.exercises){
  w.exercises.forEach((exercise,index)=>{
    const tile=node('div','','tile');
    const drawing=node('div','','vector-illustration hidden');
@@ -2837,7 +2908,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.14';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.15';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
