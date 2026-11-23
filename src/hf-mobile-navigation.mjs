@@ -95,51 +95,37 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal',onTabChang
   const quickCreate=create('button','＋ Crear entrenamiento','hf-home-create');
   quickCreate.type='button';
   quickCreate.onclick=()=>createWorkout?.click();
-  function updateHome({activeWorkout,routine,recentSession,resumeWorkout,openWorkout}={}){
+  function updateHome({activeWorkout,hasWorkouts,recentSession,resumeWorkout}={}){
     const classPending=!resume.classList.contains('hidden');
     resume.hidden=Boolean(activeWorkout);
-    quickCreate.hidden=Boolean(activeWorkout)||classPending||!routine;
-    card.hidden=!activeWorkout&&classPending;
+    quickCreate.hidden=Boolean(activeWorkout)||classPending;
+    quickCreate.textContent=hasWorkouts?'＋ Crear entrenamiento':'＋ Crear mi primer entrenamiento';
+    card.hidden=!activeWorkout;
     if(activeWorkout){
       status.textContent='Sesión en curso';
       heading.textContent=activeWorkout.name;
       action.textContent='Continuar sesión';
       action.onclick=resumeWorkout;
-    }else if(routine){
-      status.textContent='Rutina guardada';
-      heading.textContent=routine.name;
-      action.textContent='Abrir rutina';
-      action.onclick=()=>openWorkout(routine.id);
-    }else{
-      status.textContent='';
-      heading.textContent='Aún no tienes rutinas';
-      action.textContent=recentSession?'Crear entrenamiento':'Crear mi primer entrenamiento';
-      action.onclick=()=>createWorkout?.click();
     }
-    status.hidden=!status.textContent;
     recent.hidden=!recentSession;
     if(recentSession)recent.textContent='Última sesión: '+recentSession.name+' · '+recentSession.date;
   }
-  const shortcuts=create('div',undefined,'hf-home-shortcuts');
-  for(const [label,tab] of [['Mis entrenamientos','workouts'],['Circuito por estaciones','classes']]){
-    const shortcut=create('button',label,'hf-home-shortcut');
-    shortcut.type='button';
-    shortcut.onclick=()=>selectTab(tab,{focus:true});
-    shortcuts.append(shortcut);
-  }
-  panels.home.append(context,resume,quickCreate,card,shortcuts,recent);
+  const circuit=create('button','Circuito por estaciones','hf-home-shortcut');
+  circuit.type='button';
+  circuit.onclick=()=>selectTab('classes',{focus:true});
+  panels.home.append(context,resume,quickCreate,card,circuit,recent);
   updateHome();
 
   // Saved workouts and the individual history are together and nowhere else.
   title.textContent='Mis entrenamientos';
+  actions.append(exerciseLibrary);
   panels.workouts.append(title,actions,filters,saved);
   // Classes, templates, favorites and collective history are one destination.
   intro.hidden=true; // The existing class chooser already explains the options.
   panels.classes.append(classChooser,intro,organizer);
 
-  // Secondary tools leave the main mobile screen; IDs and listeners survive.
+  // Profile and sync tools live in Settings.
   const toolsHeading=create('h3','Perfil y sincronización','hf-settings-section-title');
-  const settingsLabel=create('p','Biblioteca y otras herramientas','hf-settings-section-caption');
   const settingsTop=doc.getElementById('restoreButton')||doc.getElementById('closeSettings');
   const addProfile=doc.getElementById('addLocalProfile');
   // Additional local HF profiles deliberately have no cloud panel.
@@ -148,15 +134,12 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal',onTabChang
     if(addProfile)profile.after(addProfile);
     const anchor=addProfile||profile;
     if(cloud)anchor.after(cloud);
-    (cloud||anchor).after(settingsLabel,exerciseLibrary);
   }else{
     settings.append(toolsHeading,profile);
     if(cloud)settings.append(cloud);
-    settings.append(settingsLabel,exerciseLibrary);
   }
   profile.classList.add('hf-settings-profile');
   if(cloud)cloud.classList.add('hf-settings-cloud');
-  exerciseLibrary.classList.add('hf-settings-exercise');
   if(vectorRoutines)vectorRoutines.classList.add('hf-hidden-vector-routines');
 
   // Keep only the navigation and its three pages in the HF library panel.

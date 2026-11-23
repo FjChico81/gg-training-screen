@@ -1504,7 +1504,7 @@ function setupHF(){
  $('updateBannerText').textContent='Hay una versión nueva de HF';
  $('restoreFile').setAttribute('aria-label','Seleccionar copia de seguridad HF');
  // HF-only progressive navigation enhancement; keep existing engine and IDs.
- void import('./src/hf-mobile-navigation.mjs?v=3.0.13').then(({mountHFMobileNavigation})=>{
+ void import('./src/hf-mobile-navigation.mjs?v=3.0.14').then(({mountHFMobileNavigation})=>{
    hfMobileNavigation=mountHFMobileNavigation(document,{profileLabel:localProfile.name});
    updateHFTheme();
    refreshHFHome();
@@ -1685,10 +1685,9 @@ function refreshHFHome(){
    .reduce((newest,entry)=>!newest||Date.parse(entry.date)>=Date.parse(newest.date)?entry:newest,null);
  hfMobileNavigation.updateHome({
    activeWorkout:session?findWorkout(sessionWorkout):null,
-   routine:workouts.at(-1),
+   hasWorkouts:workouts.length>0,
    recentSession:latest?{name:latest.name,date:new Date(latest.date).toLocaleDateString('es-ES')}:null,
-   resumeWorkout:()=>{active=sessionWorkout;$('resume').click();},
-   openWorkout
+   resumeWorkout:()=>{active=sessionWorkout;$('resume').click();}
  });
 }
 let hfClubTools=null,hfFavoritesOnly=false;
@@ -2630,7 +2629,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.13', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.11';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.14', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.11';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
@@ -2893,7 +2892,11 @@ function setupExerciseLibrary(){
  $('exerciseLibraryMovement').addEventListener('change',renderExerciseLibrary);
  $('exerciseLibrarySearch').addEventListener('input',renderExerciseLibrary);
  $('exerciseLibraryOpen').onclick=()=>show('exerciseLibrary');
- $('exerciseLibraryBack').onclick=()=>show('library');
+ if(isHF)$('exerciseLibraryBack').textContent='Volver a Mis entrenamientos';
+ $('exerciseLibraryBack').onclick=()=>{
+  show('library');
+  if(isHF)hfMobileNavigation?.selectTab('workouts',{focus:true});
+ };
 }
 function exerciseSearchText(value){
  return normalizedTechniqueLabel(value).replace(/\bpull ?ups?\b/g,'dominada').replace(/\bdominadas\b/g,'dominada');

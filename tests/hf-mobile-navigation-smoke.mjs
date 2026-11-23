@@ -141,26 +141,21 @@ test('Clases contains class chooser, templates, favorites and collective history
   assert.equal(app.organizer.parentElement,page);
   assert.equal(page.querySelector('.hf-class-intro').hidden,true);
 });
-test('Home offers creation or opens one saved routine and shows the latest session',()=>{
-  const app=makeApp();
-  const nav=mountHFMobileNavigation(app.doc);
-  const action=app.panel.querySelector('.hf-home-action');
-  const recent=app.panel.querySelector('.hf-home-recent');
-  assert.equal(action.textContent,'Crear mi primer entrenamiento');
-  assert.equal(recent.hidden,true);
-  action.click();
+test('Home offers creation and recent activity while saved workouts stay in their tab',()=>{
+  const app=makeApp(),nav=mountHFMobileNavigation(app.doc);
+  const home=byId(app,'hfPrimaryPagehome');
+  const create=home.querySelector('.hf-home-create');
+  const card=home.querySelector('.hf-home-card');
+  const recent=home.querySelector('.hf-home-recent');
+  assert.match(create.textContent,/Crear mi primer entrenamiento/);
+  create.click();
   assert.equal(app.counts().newClicks,1);
-  let opened;
-  nav.updateHome({
-    routine:{id:'fuerza',name:'Fuerza'},
-    recentSession:{name:'Carrera',date:'21/11/2026'},
-    openWorkout:id=>{opened=id;}
-  });
-  assert.equal(action.textContent,'Abrir rutina');
-  action.click();
-  assert.equal(opened,'fuerza');
+  nav.updateHome({hasWorkouts:true,recentSession:{name:'Carrera',date:'21/11/2026'}});
+  assert.equal(card.hidden,true);
+  assert.match(create.textContent,/Crear entrenamiento/);
   assert.equal(recent.textContent,'Última sesión: Carrera · 21/11/2026');
   assert.equal(recent.hidden,false);
+  assert.equal(app.saved.parentElement,byId(app,'hfPrimaryPageworkouts'));
 });
 test('An active personal session takes priority over an interrupted class and a saved routine',()=>{
   const app=makeApp();
@@ -168,12 +163,11 @@ test('An active personal session takes priority over an interrupted class and a 
   const card=app.panel.querySelector('.hf-home-card');
   const action=app.panel.querySelector('.hf-home-action');
   app.resume.className='hf-resume-card';
-  const routine={id:'r1',name:'Fuerza'};
-  nav.updateHome({routine});
+  nav.updateHome({hasWorkouts:true});
   assert.equal(card.hidden,true);
   assert.equal(app.resume.hidden,false);
   let resumed=false;
-  nav.updateHome({routine,activeWorkout:{name:'Carrera'},resumeWorkout:()=>{resumed=true;}});
+  nav.updateHome({hasWorkouts:true,activeWorkout:{name:'Carrera'},resumeWorkout:()=>{resumed=true;}});
   assert.equal(card.hidden,false);
   assert.equal(app.resume.hidden,true);
   assert.equal(action.textContent,'Continuar sesión');
@@ -194,11 +188,11 @@ test('Opening templates from a personal workout reveals Clases before navigating
   showClub(navigation,panel,organizer)('templates');
   assert.deepEqual(visits,[['templates','classes'],['scroll','classes']]);
 });
-test('Profile, synchronization and exercise library are in settings, not the first screen',()=>{
+test('The workout tab exposes the exercise library while profile and sync stay in settings',()=>{
   const app=makeApp();mountHFMobileNavigation(app.doc);
   assert.equal(app.profile.parentElement,app.settings);
   assert.equal(app.cloud.parentElement,app.settings);
-  assert.equal(app.exerciseLibrary.parentElement,app.settings);
+  assert.equal(app.exerciseLibrary.parentElement.parentElement,byId(app,'hfPrimaryPageworkouts'));
   assert.equal(app.settings.querySelector('.hf-settings-section-title').textContent,'Perfil y sincronización');
   app.exerciseLibrary.onclick();
   assert.equal(app.counts().exerciseClicks,1);
@@ -247,7 +241,7 @@ test('extra HF profiles with no cloud still receive all three navigation tabs',(
   const nav=mountHFMobileNavigation(app.doc,{profileLabel:'Invitado'});
   assert.equal(nav.activeTab(),'home');
   assert.equal(app.profile.parentElement,app.settings);
-  assert.equal(app.exerciseLibrary.parentElement,app.settings);
+  assert.equal(app.exerciseLibrary.parentElement.parentElement,byId(app,'hfPrimaryPageworkouts'));
   assert.equal(byId(app,'ggCloudPanel'),null);
 });
 test('settings are placed near the top, and cloud and profile controls retain their IDs',()=>{
@@ -259,7 +253,6 @@ test('settings are placed near the top, and cloud and profile controls retain th
   assert.ok(ids.indexOf('hf-settings-section-title')>ids.indexOf('restoreButton'));
   assert.ok(ids.indexOf('localProfilePanel')<ids.indexOf('addLocalProfile'));
   assert.ok(ids.indexOf('addLocalProfile')<ids.indexOf('ggCloudPanel'));
-  assert.ok(ids.indexOf('ggCloudPanel')<ids.indexOf('exerciseLibraryOpen'));
 });
 
 test('the default home hides redundant Principal label but clearly shows additional profiles',()=>{
