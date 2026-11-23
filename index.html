@@ -303,9 +303,14 @@ if(new URLSearchParams(location.search).get('app')==='hf'){
 .exercise-picker-group>button{display:block;width:100%;min-height:38px;margin-bottom:4px;padding:6px 8px;text-align:left;font-size:14px}
 html[data-edition="hf"]{--menu:#fff;--panel:#f6f6f6;--history:#f4f4f4;--editor:#f5f5f5;--tile:#fff;--line:#d4d4d4;--button-alt:#171717;--outline:#737373;--bg:#fff;--input:#fff;--accent:#ff4d20;--accent-soft:#9b3d00;--muted:#525252;--ink:#101010;--ink-tv:#101010;--text:#111;--history-body:#fff;--surface:#f5f5f5}
 html[data-edition="hf"] #brandTitle{font-size:clamp(42px,8vw,68px);line-height:1}
+html[data-edition="hf"] body:not(.tv-mode.guided-active)>header{
+ display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;
+}
+html[data-edition="hf"] body:not(.tv-mode.guided-active)>header>.brand-heading{display:contents}
+html[data-edition="hf"] body:not(.tv-mode.guided-active)>header>.header-settings{grid-area:1/2}
 html[data-edition="hf"] #brandSubtitle{
- display:inline-block;max-width:min(61vw,520px);margin-top:8px;color:#484345;
- font-size:clamp(14px,3.6vw,18px);line-height:1.25;font-weight:850;text-wrap:balance;
+ grid-column:1/-1;display:block;color:#484345;
+ font-size:clamp(11px,3.5vw,18px);line-height:1.25;font-weight:850;white-space:nowrap;
 }
 .hf-brand-symbol{
  --hf-logo-orange:#f34a15;
@@ -1108,7 +1113,7 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
   <p class="account-foot">GG FAMILY y HF TRAINING utilizan cuentas y bases de datos independientes. No se importan tus rutinas antiguas.</p>
  </div>
 </div>
-<header class="row" style="margin-bottom:18px"><div><h1 id="brandTitle" class="gold"><span class="gg-brand-mark" aria-label="BUHARDILLA Fitness"><span class="buhardilla-wordmark"><strong>BUHARDILLA</strong><em>Fitness</em></span></span></h1><span id="brandSubtitle" class="muted small hidden">GO ALL OUT</span></div><div class="header-settings">
+<header class="row" style="margin-bottom:18px"><div class="brand-heading"><h1 id="brandTitle" class="gold"><span class="gg-brand-mark" aria-label="BUHARDILLA Fitness"><span class="buhardilla-wordmark"><strong>BUHARDILLA</strong><em>Fitness</em></span></span></h1><span id="brandSubtitle" class="muted small hidden">GO ALL OUT</span></div><div class="header-settings">
 <button id="fullscreenToggle" class="settings-gear fullscreen-toggle" type="button" aria-label="Activar pantalla completa" title="Activar pantalla completa" aria-pressed="false">
  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
   <path class="fullscreen-enter" d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/>
@@ -1481,7 +1486,7 @@ function setupHF(){
  brandSymbol.setAttribute('role','img');
  brandSymbol.setAttribute('aria-label','HF');
  $('brandTitle').replaceChildren(brandSymbol);
- $('brandSubtitle').textContent='Hybrid Funcional Club “Go All Out”';
+ $('brandSubtitle').textContent='Hybrid Funcional Club “GO ALL OUT”';
  $('brandSubtitle').classList.remove('hidden');
  $('library').querySelector('.library-title').textContent='Clases y entrenamientos';
  const intro=node('p','Prepara la sesión y preséntala desde un móvil conectado a TV o directamente en un iPad o tablet. No hace falta emparejar dispositivos.','hf-class-intro');
@@ -2770,7 +2775,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.19', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.12';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.12';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
