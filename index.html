@@ -309,18 +309,18 @@ html[data-edition="hf"] #brandSubtitle{
 }
 .hf-brand-symbol{
  --hf-logo-orange:#f34a15;
- position:relative;display:block;width:1.9em;aspect-ratio:396 / 169;
+ position:relative;display:block;width:1.9em;aspect-ratio:342.144 / 169;
 }
 .hf-brand-symbol::before,.hf-brand-symbol::after{
  content:"";position:absolute;inset:0;
 }
 .hf-brand-symbol::before{
  background:#111;
- clip-path:polygon(21.2% 0.0%,36.6% 0.0%,32.1% 39.1%,54.5% 39.1%,51.3% 65.1%,29.0% 65.1%,24.7% 100.0%,8.8% 100.0%,12.9% 65.7%,0.0% 63.9%,14.4% 56.2%,0.0% 52.1%,17.2% 44.4%,0.3% 39.1%,17.7% 30.2%);
+ clip-path:polygon(24.537% 0.0%,42.361% 0.0%,37.153% 39.1%,63.079% 39.1%,59.375% 65.1%,33.565% 65.1%,28.588% 100.0%,10.185% 100.0%,14.931% 65.7%,0% 63.9%,16.667% 56.2%,0% 52.1%,19.907% 44.4%,0.34722% 39.1%,20.486% 30.2%);
 }
 .hf-brand-symbol::after{
  background:var(--hf-logo-orange);
- clip-path:polygon(59.1% 0.0%,100.0% 0.0%,97.0% 25.4%,76.5% 25.4%,74.7% 40.2%,89.1% 40.2%,86.1% 65.1%,71.5% 65.1%,67.2% 100.0%,46.7% 100.0%);
+ clip-path:polygon(57.986% 0.0%,100% 0.0%,96.528% 25.4%,72.743% 25.4%,70.625% 40.2%,87.384% 40.2%,83.912% 65.1%,67.049% 65.1%,62.037% 100.0%,43.634% 100.0%);
 }
 .gg-cloud-password{position:relative}
 .gg-cloud-password input{width:100%;min-height:44px;margin:0;padding-inline-end:48px}
@@ -2770,7 +2770,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.18', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.12';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.19', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.12';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
