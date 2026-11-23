@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.12</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.13</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -1301,8 +1301,56 @@ const vectorDays=new Map(vectorRoutines.flatMap(routine=>routine.days.map(day=>{
    : exercise.name+' | '+exercise.sets+'x'+(exercise.reps??0)+' | descanso '+exercise.setRest+'s');
  return [day.id,{...day,name,routine,blocks:[{name:day.focus||name,items}]}];
 })));
+const buhardillaRoutines=new Map(isHF?[]:makeBuhardillaRoutines().map(workout=>[workout.id,workout]));
+function makeBuhardillaRoutines(){
+ const sides='15 s por lado. Cambia de lado a mitad del ejercicio.';
+ const alternate='Alterna los lados en cada repetición.';
+ const circuits=[
+  [
+   ['Sentadillas','sentadilla-clasica'],
+   ['Aperturas de pecho con mancuernas','aperturas-banco-plano'],
+   ['Buenos días con banda elástica','buenos-dias-banda'],
+   ['Curl de bíceps con mancuerna','curl-unilateral-de-biceps-con-mancuerna-de-pie',sides],
+   ['Gemelos de pie','gemelos-pie-mancuernas'],
+   ['Patada de tríceps con mancuerna','patada-triceps-unilateral-banco',sides],
+   ['Elevaciones frontales con mancuernas','elevacion-frontal-alterna-de-pie-con-mancuernas',alternate],
+   ['Mountain climbers','escalador']
+  ],
+  [
+   ['Zancadas atrás alternas','zancada-atras-peso-corporal',alternate],
+   ['Press de banca unilateral con mancuerna','press-banca-unilateral-mancuerna',sides],
+   ['Curl femoral tumbado','curl-femoral-tumbado-boca-abajo-con-mancuerna-entre-los-pies-en-banco'],
+   ['Curl martillo con mancuerna','curl-martillo-unilateral-con-mancuerna-de-pie',sides],
+   ['Abducción de cadera de pie','abduccion-de-cadera-de-pie-con-apoyo-en-banco',sides],
+   ['Extensión de tríceps por encima de la cabeza','extension-de-triceps-por-encima-de-la-cabeza-con-mancuernas-de-pie'],
+   ['Press de hombro de pie con mancuernas','press-militar-mancuernas-pie'],
+   ['Tijeras frontales tumbado','patadas-alternas-tumbado']
+  ],
+  [
+   ['Subidas al cajón alternas','step-up',alternate],
+   ['Remo en TRX','remo-invertido-trx'],
+   ['Hip thrust en banco','hip-thrust-peso-corporal'],
+   ['Extensión de tríceps con goma','triceps-unilateral-banda',sides],
+   ['Gemelos sentado','gemelos-sentado-mancuerna'],
+   ['Press de hombro sentado con mancuernas','press-hombros-mancuernas-sentado'],
+   ['Aductores en máquina','aduccion-cadera-maquina'],
+   ['Tijeras laterales tumbado','']
+  ]
+ ];
+ return circuits.map((exercises,index)=>{
+   const blocks=Array.from({length:3},(_,round)=>{
+     const items=exercises.flatMap(([name,gif,instructions],position)=>{
+       const work=addExerciseInstructions(addTechniqueLink(name+' @30',gif),instructions);
+       return position<exercises.length-1?[work,'Descanso @20']:[work];
+     });
+     if(round<2)items.push('Descanso entre vueltas @120');
+     return {name:'Vuelta '+(round+1)+' de 3',items};
+   });
+   return {id:'buhardilla-tonificacion-'+(index+1),name:'Tonificación '+(index+1),blocks};
+ });
+}
 let vectorTargets={};
-function findWorkout(id){return vectorDays.get(id)??workouts.find(workout=>workout.id===id)}
+function findWorkout(id){return vectorDays.get(id)??buhardillaRoutines.get(id)??workouts.find(workout=>workout.id===id)}
 function openWorkout(id){
  if(session&&sessionWorkout!==id){
    alert('Finaliza el entrenamiento en curso antes de abrir otro.');
@@ -1452,9 +1500,23 @@ function setupVectorHome(){
 
  const routines=node('details','','tools-details vector-home-section');
  routines.id='vectorRoutineSection';
- routines.append(vectorHomeSummary('Rutinas BUHARDILLA','▦',node('small',vectorRoutines.length+' rutinas · 3 niveles')));
+ routines.append(vectorHomeSummary('Rutinas GYM','▦',node('small',vectorRoutines.length+' rutinas · 3 niveles')));
  $('vectorRoutines').before(routines);
  routines.append($('vectorRoutines'));
+
+ const tonification=node('details','','tools-details vector-home-section');
+ tonification.id='buhardillaRoutineSection';
+ tonification.append(vectorHomeSummary('Rutinas Buhardilla','▦',node('small','3 circuitos · 23 min cada uno')));
+ for(const workout of buhardillaRoutines.values()){
+   const row=node('div','','workout-row');
+   const open=node('button','Abrir');
+   open.type='button';
+   open.setAttribute('aria-label','Abrir '+workout.name);
+   open.onclick=()=>openWorkout(workout.id);
+   row.append(node('strong',workout.name),open);
+   tonification.append(row);
+ }
+ routines.before(tonification);
 
  mountEditorExerciseLibrary('vectorEditorLibrary');
 }
@@ -1967,8 +2029,8 @@ function renderHFBoardBlock(block){
  blockCard.append(summary,list);
  return blockCard;
 }
-function renderBoard(){ $('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':(isHF?'▶ Entrenar en este dispositivo':'▶ Iniciar entrenamiento');const w=findWorkout(active);if(!w){show('library');return}$('edit').classList.toggle('hidden',vectorDays.has(active));$('boardName').textContent=w.name;const exerciseCount=w.blocks.reduce((total,block)=>total+block.items.length,0);
-$('count').textContent=w.blocks.length+' '+(w.blocks.length===1?'bloque':'bloques')+' · '+exerciseCount+' '+(isHF?(exerciseCount===1?'paso':'pasos'):(exerciseCount===1?'ejercicio':'ejercicios'));$('blocks').replaceChildren();if(w.exercises){
+function renderBoard(){ $('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':(isHF?'▶ Entrenar en este dispositivo':'▶ Iniciar entrenamiento');const w=findWorkout(active);if(!w){show('library');return}$('edit').classList.toggle('hidden',vectorDays.has(active)||buhardillaRoutines.has(active));$('boardName').textContent=w.name;const exerciseCount=w.blocks.reduce((total,block)=>total+block.items.length,0);
+$('count').textContent=buhardillaRoutines.has(active)?'3 vueltas · 8 ejercicios por vuelta · 23 min':w.blocks.length+' '+(w.blocks.length===1?'bloque':'bloques')+' · '+exerciseCount+' '+(isHF?(exerciseCount===1?'paso':'pasos'):(exerciseCount===1?'ejercicio':'ejercicios'));$('blocks').replaceChildren();if(w.exercises){
  w.exercises.forEach((exercise,index)=>{
    const tile=node('div','','tile');
    const drawing=node('div','','vector-illustration hidden');
@@ -2775,7 +2837,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.12';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.13';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
