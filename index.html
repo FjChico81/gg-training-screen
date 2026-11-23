@@ -2324,7 +2324,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.5', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.5';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.6', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.5';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
