@@ -44,10 +44,6 @@ html[data-edition="hf"] .tv-mode.guided-active>header .header-settings{
 html[data-edition="hf"] .tv-mode.guided-active #guided .heart-rate-display{
   display:none!important; /* Un pulsómetro personal no representa a toda la clase. */
 }
-html[data-edition="hf"] .tv-mode.guided-active #guided .tv-current{
-  border-color:#8f4b30;
-  background:linear-gradient(140deg,#fff8f2,#fff);
-}
 html[data-edition="hf"] .tv-mode.guided-active #guided #current.focus{
   color:#111;
   font-weight:950;

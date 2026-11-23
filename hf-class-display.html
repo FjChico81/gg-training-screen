@@ -206,6 +206,8 @@ html[data-access="unlocked"] #hfAccountWall{display:none!important}
 .change-phase .time-card{background:#fff7dd;border-color:#4c9d9b}
 .class-board .main-card{border-color:#8c533c;background:linear-gradient(145deg,#fff0e4,#fff)}
 .rest-phase .main-card{border-color:#4c9d9b}
+.presentation .work-phase .class-board .main-card{border-color:#f34a15;background:#fff}
+#mainClock.countdown-ending{color:#c71924}
 .class-board .clock{font-size:clamp(56px,10vmin,136px)}
 .class-progress-card{
   grid-area:progress;display:flex;flex-direction:column;justify-content:center;gap:7px;
@@ -781,6 +783,9 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
       else if(state.phase==='finished')shown=0;
       else shown=timed?(state.paused?state.remainingMs:state.deadline-Date.now()):currentElapsed();
       main.textContent=time(shown,timed);
+      const seconds=Math.ceil(shown/1000);
+      const working=state.phase==='work'&&(state.mode==='stations'||!isRest(config.guided[state.step]));
+      main.classList.toggle('countdown-ending',working&&timed&&seconds>=1&&seconds<=3);
     }
     el('totalClock').textContent=time(totalElapsed());
     persistCheckpoint(false);
