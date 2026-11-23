@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.5</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.6</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -822,6 +822,42 @@ html[data-edition="hf"] #prestartValue{
 }
 @media (orientation:landscape) and (max-height:540px){
  .tv-mode.guided-active>header .fullscreen-toggle{width:40px;height:40px;min-height:40px}
+}
+
+/* BUHARDILLA TV: deja que el ejercicio determine la altura de su fila. */
+@media (orientation:landscape){
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided{
+  grid-template-rows:max-content minmax(min-content,1fr) auto;
+  overflow-y:auto;overscroll-behavior:contain;
+ }
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided :is(.tv-current,.tv-upcoming,.tv-current-copy){
+  max-height:none;overflow:visible;
+ }
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided .tv-current:is(.has-gif,.has-vector-illustration){
+  grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);
+  grid-template-rows:auto;
+ }
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided :is(#tvExerciseGif,#tvExerciseVideo){
+  height:clamp(82px,29vh,310px);
+ }
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided :is(#current.focus,#tvNextName){
+  font-size:clamp(18px,4.5vh,52px);line-height:1.08;
+ }
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided .guided-instructions{
+  font-size:clamp(13px,2.55vh,24px);line-height:1.25;
+ }
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided .tv-timing:not(.is-timed) #clock{
+  font-size:clamp(42px,10vh,132px);
+ }
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided .heart-rate-display{
+  padding:clamp(6px,1.5vh,16px);
+ }
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided .heart-rate-value{
+  flex:0 0 auto;font-size:clamp(36px,10.5vh,140px);line-height:1;
+ }
+ html:not([data-edition="hf"]) .tv-mode.guided-active #guided .guided-controls{
+  position:sticky;bottom:0;background:var(--bg);
+ }
 }
 
 /* Secure v2 gate. Until authenticated by GG FAMILY / HF TRAINING, no app UI is visible. */
@@ -2324,7 +2360,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.6', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.5';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.6', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.6';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
