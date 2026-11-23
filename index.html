@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.10</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.11</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -891,6 +891,7 @@ html[data-edition="hf"] #prestartValue{
  }
 }
 
+#guided #tvTechniqueToggle{display:none}
 /* BUHARDILLA TV: reserva espacio a la botonera y fija los dos paneles superiores. */
 @media (orientation:landscape){
  html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest){
@@ -900,9 +901,25 @@ html[data-edition="hf"] #prestartValue{
  html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) :is(.tv-current,.tv-upcoming,.tv-current-copy){
   min-height:0;max-height:100%;overflow:auto;
  }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) .tv-current{
+  display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;
+  gap:4px 8px;overflow:hidden;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) .tv-current-copy{
+  grid-area:1/1;align-self:start;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) :is(#tvExerciseGif,#tvExerciseVideo,#vectorCurrentIllustration){
+  grid-area:1/2;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) #techniqueToggle{
+  display:none;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) #tvTechniqueToggle{
+  display:block;grid-column:1/-1;grid-row:2;justify-self:start;
+  margin:0;min-height:32px;white-space:nowrap;
+ }
  html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) .tv-current:is(.has-gif,.has-vector-illustration){
   grid-template-columns:minmax(0,2fr) minmax(0,1fr);
-  grid-template-rows:minmax(0,1fr);
  }
  html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) :is(#tvExerciseGif,#tvExerciseVideo){
   height:100%;max-height:100%;min-height:0;object-fit:contain;
@@ -1110,7 +1127,7 @@ html[data-edition="hf"] .account-launch-gg{display:none}
 <div id="position" class="gold"></div><div id="current" class="focus"></div>
 <button id="techniqueToggle" type="button" class="alt technique-button">▶ Ver técnica</button>
 <span id="tvGifUnavailable" class="tv-only tv-gif-unavailable hidden" aria-live="polite">GIF no disponible</span>
-</div><div id="vectorCurrentIllustration" class="vector-illustration hidden" role="img"></div><img id="tvExerciseGif" class="tv-only hidden" alt="" decoding="async"><video id="tvExerciseVideo" class="tv-only hidden" muted loop autoplay playsinline preload="metadata" aria-label="Vídeo de técnica del ejercicio"></video></div>
+</div><div id="vectorCurrentIllustration" class="vector-illustration hidden" role="img"></div><img id="tvExerciseGif" class="tv-only hidden" alt="" decoding="async"><video id="tvExerciseVideo" class="tv-only hidden" muted loop autoplay playsinline preload="metadata" aria-label="Vídeo de técnica del ejercicio"></video><button id="tvTechniqueToggle" type="button" class="alt technique-button">▶ Ver técnica</button></div>
 <p id="next" class="muted"></p>
 <div class="tv-only tv-card tv-upcoming">
 <div class="tv-caption">SIGUIENTE</div><div id="tvNextPosition" class="muted small"></div>
@@ -2543,7 +2560,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.9', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.10';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.9', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.11';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
@@ -3016,7 +3033,7 @@ async function techniqueRender(){
    techniqueSharedPreview(key);
  }
 }
-$('techniqueToggle').onclick=()=>{const current=steps()[step];if(!current)return;techniqueFocus=$('techniqueToggle');techniqueActiveKey=techniqueKey(current.label);techniqueSharedId=current.techniqueId;$('techniqueTitle').textContent=current.label;$('techniqueOverlay').classList.remove('hidden');void techniqueRender();$('techniqueClose').focus()};
+$('techniqueToggle').onclick=$('tvTechniqueToggle').onclick=event=>{const current=steps()[step];if(!current)return;techniqueFocus=event.currentTarget;techniqueActiveKey=techniqueKey(current.label);techniqueSharedId=current.techniqueId;$('techniqueTitle').textContent=current.label;$('techniqueOverlay').classList.remove('hidden');void techniqueRender();$('techniqueClose').focus()};
 $('techniqueClose').onclick=techniqueClose;
 $('techniqueOverlay').addEventListener('click',event=>{if(event.target===$('techniqueOverlay'))techniqueClose()});
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('techniqueOverlay').classList.contains('hidden'))techniqueClose()});
