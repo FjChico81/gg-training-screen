@@ -477,18 +477,13 @@ html[data-edition="hf"] .header-settings #settingsPanel{
   max-height:min(78dvh,700px);
 }
 html[data-edition="hf"] #settingsPanel .hf-settings-section-title,
-html[data-edition="hf"] #settingsPanel .hf-settings-section-caption,
 html[data-edition="hf"] #settingsPanel .hf-settings-profile,
-html[data-edition="hf"] #settingsPanel .hf-settings-cloud,
-html[data-edition="hf"] #settingsPanel .hf-settings-exercise{
+html[data-edition="hf"] #settingsPanel .hf-settings-cloud{
   grid-column:1/-1;min-width:0;width:100%;
 }
 html[data-edition="hf"] #settingsPanel .hf-settings-section-title{
   margin:14px 0 0;padding-top:12px;
   border-top:1px solid #675650;color:#9b3d00;font-size:16px;
-}
-html[data-edition="hf"] #settingsPanel .hf-settings-section-caption{
-  font-size:12px;color:#525252;margin:0;
 }
 html[data-edition="hf"] #settingsPanel .hf-settings-profile{margin:5px 0}
 html[data-edition="hf"] #settingsPanel .hf-settings-profile label{
@@ -506,8 +501,10 @@ html[data-edition="hf"] .header-settings #ggCloudPanel>summary{
   border:0;padding:7px 0;font-size:14px;text-align:left;
   color:#71371e;
 }
-html[data-edition="hf"] #settingsPanel .hf-settings-exercise{
-  background:#f6f6f6;min-height:45px;color:#111;
+html[data-edition="hf"] #hfPrimaryPageworkouts #exerciseLibraryOpen{
+  grid-column:1/-1;
+  margin:0;
+  min-height:44px;
 }
 @media(max-width:360px){
   html[data-edition="hf"] .hf-primary-tabs{gap:3px;padding:4px}
@@ -578,12 +575,9 @@ html[data-edition="hf"] .hf-board-phase{color:var(--block-accent);font-weight:85
 html[data-edition="hf"] .hf-board-list{display:grid;gap:7px;padding:9px}
 html[data-edition="hf"] .hf-home-create[hidden]{display:none}
 html[data-edition="hf"] .hf-home-create{width:100%;margin:0 0 10px}
-html[data-edition="hf"] .hf-home-create:not([hidden]) + .hf-home-card .hf-home-action{background:#fff;border:1px solid var(--hf-control-border)}
 html[data-edition="hf"] .hf-class-manual{margin-top:10px}
 html[data-edition="hf"] .hf-class-manual summary{cursor:pointer;min-height:44px;padding:11px 0;font-weight:750}
-html[data-edition="hf"] .hf-home-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
-html[data-edition="hf"] .hf-home-shortcut{background:#fff;color:#111;border:1px solid var(--hf-control-border);padding:8px;font-size:clamp(12px,3.5vw,15px)}
-html[data-edition="hf"] .hf-home-shortcut:last-child{background:#fff0d0}
+html[data-edition="hf"] .hf-home-shortcut{width:100%;min-height:44px;background:#fff0d0;color:#111;border:1px solid var(--hf-control-border);padding:8px;font-size:clamp(12px,3.5vw,15px)}
 html[data-edition="hf"] #brandTitle{color:#111}
 html[data-edition="hf"] body>header{border-bottom:3px solid #ff4d20}
 html[data-edition="hf"] :is(input,select,textarea){color:var(--text)}
