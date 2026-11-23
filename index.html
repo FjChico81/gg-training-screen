@@ -1395,14 +1395,16 @@ function setupHF(){
  heading.after(intro);
  const section=node('section','','hf-class-chooser');
  section.setAttribute('aria-label','Clases colectivas HF');
- const title=node('h3','Impartir una clase');
- const note=node('p','Elige un formato. Después selecciona «Móvil conectado a TV» o «Usar iPad o tablet».','muted small');
+ const title=node('h3','Clases del box');
+ const note=node('p','Para proyectar una sesión guardada, ábrela en Mis entrenamientos y pulsa Proyectar en TV o tablet.','muted small');
  const links=node('div','','hf-class-links');
- for(const [text,mode] of [['Clase guiada','guided'],['Circuito por estaciones','stations']]){
+ const manual=node('details','','hf-class-manual');
+ manual.append(node('summary','Configurar clase manualmente'));
+ for(const [text,mode] of [['Circuito por estaciones','stations'],['Clase guiada','guided']]){
   const link=node('a',text,'hf-class-link');
   link.href='hf-class-display.html?mode='+mode+'&view=mirror&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v='+HF_APP_VERSION;
   link.setAttribute('aria-label','Abrir '+text.toLowerCase()+' y elegir presentación');
-  links.append(link);
+  (mode==='stations'?links:manual).append(link);
  }
  const resume=node('div','','hf-resume-card hidden');
  resume.id='hfResumeClass';
@@ -1411,7 +1413,7 @@ function setupHF(){
  const resumeLink=node('a','▶ Continuar clase','hf-resume-link');
  resumeLink.href='hf-class-display.html?recover=1&hfProfile='+encodeURIComponent(localProfile.id)+'&_hf_v='+HF_APP_VERSION;
  resume.append(resumeTitle,resumeDescription,resumeLink);
- section.append(title,resume,note,links);
+ section.append(title,resume,note,links,manual);
  intro.after(section);
  const organizer=node('div','','hf-org-host');
  organizer.id='hfClubOrganizer';
@@ -1486,22 +1488,23 @@ function setupHF(){
   refreshClassRecovery();
   window.addEventListener('pageshow',event=>{if(event.persisted)refreshClassRecovery()});
  }).catch(()=>{});
- $('new').textContent='＋ Preparar entrenamiento';
+ $('new').textContent='＋ Crear entrenamiento';
  $('historyButton').textContent='Historial de sesiones';
  $('editor').querySelector('.gold').textContent='EDITOR HF';
  $('editor').querySelector('h2').textContent='Crear o modificar entrenamiento';
  const boardActions=$('board').querySelector('.buttons');
  if(boardActions&&!document.getElementById('hfPresentFromBoard')){
-  const button=node('button','▶ Presentar en TV / tablet','alt');
+  const button=node('button','▣ Proyectar en TV o tablet');
   button.id='hfPresentFromBoard';button.type='button';
   button.onclick=()=>void presentSavedHFWorkout(active,'guided');
-  boardActions.insertBefore(button,$('back'));
+  $('start').classList.add('alt');
+  boardActions.insertBefore(button,$('start'));
  }
  document.querySelectorAll('[data-tv-toggle]').forEach(button=>button.textContent='Pantalla de clase');
  $('updateBannerText').textContent='Hay una versión nueva de HF';
  $('restoreFile').setAttribute('aria-label','Seleccionar copia de seguridad HF');
  // HF-only progressive navigation enhancement; keep existing engine and IDs.
- void import('./src/hf-mobile-navigation.mjs?v=3.0.12').then(({mountHFMobileNavigation})=>{
+ void import('./src/hf-mobile-navigation.mjs?v=3.0.13').then(({mountHFMobileNavigation})=>{
    hfMobileNavigation=mountHFMobileNavigation(document,{profileLabel:localProfile.name});
    updateHFTheme();
    refreshHFHome();
@@ -1867,7 +1870,7 @@ function renderHFBoardBlock(block){
  blockCard.append(summary,list);
  return blockCard;
 }
-function renderBoard(){ $('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':'▶ Iniciar entrenamiento';const w=findWorkout(active);if(!w){show('library');return}$('edit').classList.toggle('hidden',vectorDays.has(active));$('boardName').textContent=w.name;const exerciseCount=w.blocks.reduce((total,block)=>total+block.items.length,0);
+function renderBoard(){ $('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':(isHF?'▶ Entrenar en este dispositivo':'▶ Iniciar entrenamiento');const w=findWorkout(active);if(!w){show('library');return}$('edit').classList.toggle('hidden',vectorDays.has(active));$('boardName').textContent=w.name;const exerciseCount=w.blocks.reduce((total,block)=>total+block.items.length,0);
 $('count').textContent=w.blocks.length+' '+(w.blocks.length===1?'bloque':'bloques')+' · '+exerciseCount+' '+(isHF?(exerciseCount===1?'paso':'pasos'):(exerciseCount===1?'ejercicio':'ejercicios'));$('blocks').replaceChildren();if(w.exercises){
  w.exercises.forEach((exercise,index)=>{
    const tile=node('div','','tile');
@@ -2627,7 +2630,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.12', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.11';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.13', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.11';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;

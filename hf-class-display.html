@@ -29,6 +29,21 @@
 .device-options button{flex:1;min-width:185px;border:2px solid #6b5751;background:#fff;color:#111}
 .device-options button[aria-pressed="true"]{background:#ff4d20;color:#211611;border-color:#ff4d20}
 .coach-toggle{display:none}
+.coach-more{position:relative;flex:0 0 auto}
+.coach-more summary{
+  display:flex;align-items:center;justify-content:center;height:100%;min-height:44px;
+  padding:8px 13px;border:1px solid #646369;border-radius:12px;
+  background:#171717;color:#fff;font-weight:800;cursor:pointer;list-style:none;
+}
+.coach-more summary::-webkit-details-marker{display:none}
+.coach-more summary:focus-visible{outline:3px solid #ffb188;outline-offset:2px}
+.coach-more-menu{
+  position:absolute;right:0;bottom:calc(100% + 8px);z-index:1;
+  display:grid;gap:6px;width:max-content;max-width:calc(100vw - 24px);
+  padding:8px;border:1px solid var(--line);border-radius:12px;
+  background:var(--panel);box-shadow:0 8px 24px #0003;
+}
+.coach-more-menu button{width:100%}
 .presentation-info{font-size:12px;color:#71371e;background:#fff7ec;border:1px solid #84563c;border-radius:10px;padding:8px 10px;max-width:58ch}
 .presentation.session-mode-mirror .coach,
 .presentation.session-mode-tablet .coach{
@@ -39,7 +54,7 @@
   border-radius:13px;background:rgba(20,20,23,.94);
   border:1px solid #76635a;box-shadow:0 9px 36px #0008;
 }
-.presentation.session-mode-mirror .coach{max-width:530px;right:auto}
+.presentation.session-mode-mirror .coach{max-width:530px}
 .presentation.session-mode-mirror .coach button{
   min-width:0;min-height:40px;padding:8px 10px;font-size:12px;border-radius:8px
 }
@@ -290,7 +305,6 @@ html[data-access="unlocked"] #hfAccountWall{display:none!important}
 <header class="top">
   <div class="topline">
     <div class="identity"><div class="brand" aria-label="HF">HF</div><div><div class="brandname">ENTRENAMIENTO HÍBRIDO</div><div class="sub">Fuerza · Ergómetros · Carrera · Funcional</div></div></div>
-    <span class="prototype">DESARROLLO · NO PUBLICADO</span>
   </div>
   <nav class="switcher" aria-label="Formato de clase">
     <button id="guidedMode" type="button" aria-pressed="true">01 · Clase guiada</button>
@@ -299,7 +313,7 @@ html[data-access="unlocked"] #hfAccountWall{display:none!important}
   <div class="toolbar">
     <a href="index.html?app=hf" class="nav-back" aria-label="Volver al inicio de HF">← Volver a HF</a>
     <button id="toggleConfig" type="button" class="secondary" aria-expanded="false">⚙ Configurar sesión</button>
-    <button id="togglePresentation" type="button" class="outline">▣ Presentar clase</button>
+    <button id="togglePresentation" type="button" class="outline">▣ Pantalla completa</button>
     <button id="toggleSound" type="button" class="outline" aria-pressed="true">🔊 Sonido activado</button>
   </div>
 </header>
@@ -360,14 +374,20 @@ html[data-access="unlocked"] #hfAccountWall{display:none!important}
   <div id="saveIndicator" class="save-indicator" role="status" hidden></div>
   <div id="display" class="display"></div>
   <button id="coachToggle" class="coach-toggle" type="button" aria-controls="coach" aria-expanded="true" aria-label="Ocultar los controles de la clase">Ocultar mandos</button>
-  <div class="coach-label">MANDOS DEL ENTRENADOR · VISIBLES TAMBIÉN AL DUPLICAR POR HDMI</div>
+  <div class="coach-label">MANDOS DEL ENTRENADOR</div>
   <div class="coach" id="coach">
     <button id="start" type="button">▶ Iniciar</button>
     <button id="pause" type="button" class="secondary" disabled>Ⅱ Pausar</button>
     <button id="next" type="button" class="secondary" disabled>Avanzar ▶</button>
     <button id="finishClass" type="button" class="secondary">✓ Finalizar</button>
-    <button id="reset" type="button" class="danger">↺ Reiniciar</button>
-    <button id="restartClass" type="button" class="danger">↻ Reiniciar desde cero</button><button id="cancelClass" type="button" class="secondary">✕ Cancelar</button>
+    <details id="coachMore" class="coach-more">
+      <summary>Más</summary>
+      <div class="coach-more-menu">
+        <button id="restartClass" type="button" class="danger">↻ Reiniciar clase</button>
+        <button id="reset" type="button" class="secondary">↺ Volver a preparación</button>
+        <button id="cancelClass" type="button" class="secondary">✕ Cancelar clase</button>
+      </div>
+    </details>
   </div>
   <section id="classOutcome" class="class-outcome" hidden aria-label="Resultado de la clase"></section>
   <section id="classFeedback" class="hf-class-feedback" hidden aria-label="Feedback al finalizar la clase">
@@ -963,9 +983,13 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
     const display=el('display');display.replaceChildren(isGuided?guidedView():stationView());
     const ready=state.phase==='ready';
     el('start').disabled=done||(!ready&&!state.paused)||importReviewPending||importBlocked||recoveryPending;
-    el('start').textContent=ready?'▶ Iniciar clase':'▶ Reanudar';
+    el('start').textContent='▶ Iniciar clase';
+    el('start').hidden=!ready;
+    el('pause').hidden=ready||done;
     el('pause').disabled=ready||done;
     el('pause').textContent=state.paused?'▶ Reanudar':'Ⅱ Pausar';
+    el('next').hidden=ready||done;
+    el('finishClass').hidden=ready||done;
     el('next').disabled=ready||done||state.paused||recoveryPending||importBlocked;
     el('finishClass').disabled=ready||done||recoveryPending||importBlocked;
     el('next').textContent=isGuided?(activeSpecial()?.type==='amrap'&&state.step===activeSpecial().end
@@ -1038,8 +1062,9 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
   el('start').onclick=startSession;
   el('pause').onclick=pauseSession;
   el('next').onclick=()=>{if(!state.paused&&!recoveryPending&&!importBlocked)nextPhase();};
-  el('reset').onclick=()=>resetSession();
+  el('reset').onclick=()=>{el('coachMore').open=false;resetSession();};
   el('restartClass').onclick=()=>{
+    el('coachMore').open=false;
     if(state.phase==='finished'){
       alert('La clase ya ha terminado. Puedes preparar una nueva tras guardar el resultado.');return;
     }
@@ -1047,6 +1072,7 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
     if(resetSession(true))startSession();
   };
   el('cancelClass').onclick=()=>{
+    el('coachMore').open=false;
     if(state.phase==='finished')return;
     const inProgress=state.phase!=='ready';
     if(inProgress&&!confirm('¿Cancelar la clase sin guardarla? Se perderá el progreso de esta sesión, pero no el historial de clases anteriores.'))return;
@@ -1156,6 +1182,7 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
     return true;
   }
   function setDockCollapsed(collapse){
+    if(collapse)el('coachMore').open=false;
     document.body.classList.toggle('controls-collapsed',Boolean(collapse));
     el('coachToggle').textContent=collapse?'Mostrar mandos':'Ocultar mandos';
     el('coachToggle').setAttribute('aria-expanded',String(!collapse));
@@ -1167,7 +1194,7 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
       updateDeviceUI();
       setDockCollapsed(false);
     }
-    el('togglePresentation').textContent=on?'Salir de presentación':'▣ Presentar clase';
+    el('togglePresentation').textContent=on?'Salir de presentación':'▣ Pantalla completa';
     if(on&&el('screen').requestFullscreen){
       // iPhone Safari may not expose Element.requestFullscreen; CSS is the fallback.
       try{Promise.resolve(el('screen').requestFullscreen()).catch(()=>{});}catch(e){}
@@ -1189,7 +1216,7 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
   });
   document.addEventListener('keydown',event=>{
     const tag=event.target?.tagName;
-    if(['INPUT','TEXTAREA','SELECT','BUTTON'].includes(tag)||event.altKey||event.metaKey||event.ctrlKey)return;
+    if(['INPUT','TEXTAREA','SELECT','BUTTON','SUMMARY','A'].includes(tag)||event.altKey||event.metaKey||event.ctrlKey)return;
     if(event.key==='Escape'&&document.body.classList.contains('presentation'))presentation(false);
     if(event.code==='Space'&&state.phase!=='ready'&&state.phase!=='finished'&&!importBlocked&&!recoveryPending){
       event.preventDefault();pauseSession();

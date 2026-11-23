@@ -419,6 +419,7 @@ html[data-edition="hf"] .hf-home-status{
   margin:0 0 8px;color:var(--hf-muted);font-size:13px;font-weight:750;
 }
 html[data-edition="hf"] .hf-home-action,
+html[data-edition="hf"] .hf-home-create,
 html[data-edition="hf"] #hfPrimaryPagehome .hf-resume-link{
   display:flex;align-items:center;justify-content:center;width:fit-content;max-width:100%;
   min-height:48px;padding:10px 16px;
@@ -453,7 +454,7 @@ html[data-edition="hf"] #hfPrimaryPageclasses .hf-class-chooser p{
   font-size:13px;margin-bottom:12px;
 }
 html[data-edition="hf"] #hfPrimaryPageclasses .hf-class-links{
-  grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+  grid-template-columns:1fr;gap:8px;
 }
 html[data-edition="hf"] #hfPrimaryPageclasses .hf-class-link{
   min-height:58px;font-size:clamp(12px,2.5vw,16px);
@@ -529,7 +530,8 @@ html[data-edition="hf"] #boardName{margin:4px 0 0;font-size:clamp(21px,5.1vw,34p
 html[data-edition="hf"] #board #count{font-size:.84rem}
 html[data-edition="hf"] #board .buttons{display:flex;gap:6px;margin:0;flex-wrap:wrap}
 html[data-edition="hf"] #board .buttons button{min-height:44px;margin:0;font-size:.83rem;padding:7px 10px}
-html[data-edition="hf"] #board :is(#start,#resume){flex:1 0 100%}
+html[data-edition="hf"] #board :is(#hfPresentFromBoard,#resume){flex:1 0 100%}
+html[data-edition="hf"] #board [data-tv-toggle]{display:none}
 html[data-edition="hf"] #board #blocks{
   display:grid;
   grid-template-columns:minmax(0,1fr);
@@ -574,6 +576,11 @@ html[data-edition="hf"] .hf-board-list{
 }
 html[data-edition="hf"] .hf-board-phase{color:var(--block-accent);font-weight:850;font-size:.75rem;text-transform:uppercase;margin-bottom:5px}
 html[data-edition="hf"] .hf-board-list{display:grid;gap:7px;padding:9px}
+html[data-edition="hf"] .hf-home-create[hidden]{display:none}
+html[data-edition="hf"] .hf-home-create{width:100%;margin:0 0 10px}
+html[data-edition="hf"] .hf-home-create:not([hidden]) + .hf-home-card .hf-home-action{background:#fff;border:1px solid var(--hf-control-border)}
+html[data-edition="hf"] .hf-class-manual{margin-top:10px}
+html[data-edition="hf"] .hf-class-manual summary{cursor:pointer;min-height:44px;padding:11px 0;font-weight:750}
 html[data-edition="hf"] .hf-home-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
 html[data-edition="hf"] .hf-home-shortcut{background:#fff;color:#111;border:1px solid var(--hf-control-border);padding:8px;font-size:clamp(12px,3.5vw,15px)}
 html[data-edition="hf"] .hf-home-shortcut:last-child{background:#fff0d0}

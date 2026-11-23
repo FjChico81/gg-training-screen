@@ -92,9 +92,13 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal',onTabChang
   card.append(status,heading,action);
   const recent=create('p',undefined,'hf-home-recent');
   const createWorkout=doc.getElementById('new');
+  const quickCreate=create('button','＋ Crear entrenamiento','hf-home-create');
+  quickCreate.type='button';
+  quickCreate.onclick=()=>createWorkout?.click();
   function updateHome({activeWorkout,routine,recentSession,resumeWorkout,openWorkout}={}){
     const classPending=!resume.classList.contains('hidden');
     resume.hidden=Boolean(activeWorkout);
+    quickCreate.hidden=Boolean(activeWorkout)||classPending||!routine;
     card.hidden=!activeWorkout&&classPending;
     if(activeWorkout){
       status.textContent='Sesión en curso';
@@ -117,13 +121,13 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal',onTabChang
     if(recentSession)recent.textContent='Última sesión: '+recentSession.name+' · '+recentSession.date;
   }
   const shortcuts=create('div',undefined,'hf-home-shortcuts');
-  for(const [label,tab] of [['Mis entrenamientos','workouts'],['Impartir clase','classes']]){
+  for(const [label,tab] of [['Mis entrenamientos','workouts'],['Circuito por estaciones','classes']]){
     const shortcut=create('button',label,'hf-home-shortcut');
     shortcut.type='button';
     shortcut.onclick=()=>selectTab(tab,{focus:true});
     shortcuts.append(shortcut);
   }
-  panels.home.append(context,resume,card,shortcuts,recent);
+  panels.home.append(context,resume,quickCreate,card,shortcuts,recent);
   updateHome();
 
   // Saved workouts and the individual history are together and nowhere else.
@@ -131,8 +135,6 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal',onTabChang
   panels.workouts.append(title,actions,filters,saved);
   // Classes, templates, favorites and collective history are one destination.
   intro.hidden=true; // The existing class chooser already explains the options.
-  const classHint=classChooser.querySelector('p');
-  if(classHint)classHint.textContent='Elige el formato y después el dispositivo.';
   panels.classes.append(classChooser,intro,organizer);
 
   // Secondary tools leave the main mobile screen; IDs and listeners survive.
