@@ -116,7 +116,14 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal',onTabChang
     recent.hidden=!recentSession;
     if(recentSession)recent.textContent='Última sesión: '+recentSession.name+' · '+recentSession.date;
   }
-  panels.home.append(context,resume,card,recent);
+  const shortcuts=create('div',undefined,'hf-home-shortcuts');
+  for(const [label,tab] of [['Mis entrenamientos','workouts'],['Impartir clase','classes']]){
+    const shortcut=create('button',label,'hf-home-shortcut');
+    shortcut.type='button';
+    shortcut.onclick=()=>selectTab(tab,{focus:true});
+    shortcuts.append(shortcut);
+  }
+  panels.home.append(context,resume,card,shortcuts,recent);
   updateHome();
 
   // Saved workouts and the individual history are together and nowhere else.

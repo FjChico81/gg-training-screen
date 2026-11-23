@@ -1,26 +1,26 @@
 /* HF Asociación · clases colectivas HDMI / tablet. Sólo html[data-edition=hf]. */
 html[data-edition="hf"] body{
-  --hf-strong:#ff671d;
-  --hf-focus:#ffb38e;
-  --hf-canvas:#f6f3ee;
+  --hf-strong:#ff4d20;
+  --hf-focus:#8a3c19;
+  --hf-canvas:#fff;
   --hf-surface:#fff;
-  --hf-inset:#faf8f4;
-  --hf-ink:#242426;
-  --hf-muted:#555052;
-  --hf-border:#ded8ce;
-  --hf-control-border:#91877a;
-  --hf-accent-soft:#ffecdf;
-  --hf-focus-ring:#176b70;
+  --hf-inset:#f6f6f6;
+  --hf-ink:#111;
+  --hf-muted:#525252;
+  --hf-border:#d4d4d4;
+  --hf-control-border:#737373;
+  --hf-accent-soft:#fff0e4;
+  --hf-focus-ring:#9b3d00;
   --hf-card-radius:18px;
   --hf-card-padding:clamp(16px,3.5vw,26px);
 }
 html[data-edition="hf"] #brandSubtitle{
-  color:#f6f1e9;
+  color:#525252;
   letter-spacing:.075em;
   font-size:clamp(10px,1.2vw,14px);
 }
 html[data-edition="hf"] #library>.panel{
-  border:1px solid #424247;
+  border:1px solid #d4d4d4;
 }
 html[data-edition="hf"] #library .library-title{
   letter-spacing:-.025em;
@@ -51,25 +51,25 @@ html[data-edition="hf"] .tv-mode.guided-active #guided .heart-rate-display{
 }
 html[data-edition="hf"] .tv-mode.guided-active #guided .tv-current{
   border-color:#8f4b30;
-  background:linear-gradient(140deg,#2b2525,#1f1f22);
+  background:linear-gradient(140deg,#fff8f2,#fff);
 }
 html[data-edition="hf"] .tv-mode.guided-active #guided #current.focus{
-  color:#fff9f4;
+  color:#111;
   font-weight:950;
 }
 html[data-edition="hf"] .tv-mode.guided-active #guided .tv-upcoming{
-  border-color:#55555a;
-  background:#29292c;
+  border-color:#d4d4d4;
+  background:#fff8ec;
 }
 html[data-edition="hf"] .tv-mode.guided-active #guided .tv-timing{
   border-color:#a54a20;
-  background:#342720;
+  background:#fff0e4;
 }
 html[data-edition="hf"] .tv-mode.guided-active #guided .tv-caption{
   color:var(--hf-focus);
 }
 html[data-edition="hf"] .tv-mode.guided-active #guided #tvExerciseGif{
-  background:#1b1b1e;
+  background:#f6f6f6;
 }
 html[data-edition="hf"] .tv-mode.guided-active #guided #hfTvProgress{
   display:flex;
@@ -77,7 +77,7 @@ html[data-edition="hf"] .tv-mode.guided-active #guided #hfTvProgress{
   justify-content:center;
   gap:clamp(3px,1vh,12px);
   border-color:#785b53;
-  background:#29272d;
+  background:#f6f6f6;
 }
 #hfTvProgressValue{
   font-size:clamp(18px,4.6vh,48px);
@@ -91,9 +91,9 @@ html[data-edition="hf"] .tv-mode.guided-active #guided #hfTvProgress{
   border:0;
   border-radius:8px;
   accent-color:var(--hf-focus);
-  background:#484347;
+  background:#e5d8cf;
 }
-#hfTvProgressBar::-webkit-progress-bar{background:#484347;border-radius:8px}
+#hfTvProgressBar::-webkit-progress-bar{background:#e5d8cf;border-radius:8px}
 #hfTvProgressBar::-webkit-progress-value{background:var(--hf-focus);border-radius:8px}
 #hfTvProgressBar::-moz-progress-bar{background:var(--hf-focus);border-radius:8px}
 html[data-edition="hf"] .tv-mode.guided-active #guided #hfTvProgress :is(.amrap-status,#hfTvProgressDetail){
@@ -195,13 +195,13 @@ html[data-edition="hf"] .hf-resume-card{
   display:flex;flex-direction:column;gap:6px;
   margin:11px 0 18px;padding:15px;
   border:1px solid #d48752;border-radius:14px;
-  background:linear-gradient(125deg,#3e2a21,#29272b)
+  background:linear-gradient(125deg,#fff0e4,#fff)
 }
 html[data-edition="hf"] .hf-resume-card.hidden{display:none!important}
 html[data-edition="hf"] .hf-resume-card strong{font-size:clamp(18px,2.5vw,24px)}
 html[data-edition="hf"] .hf-resume-card p{margin:0 0 6px}
 html[data-edition="hf"] .hf-resume-link{
-  background:#ff671d;color:#241812;padding:12px 15px;
+  background:#ff4d20;color:#241812;padding:12px 15px;
   border-radius:11px;min-height:48px;text-align:center;
   font-weight:850;text-decoration:none
 }
@@ -427,7 +427,7 @@ html[data-edition="hf"] #hfPrimaryPagehome .hf-resume-link{
 }
 html[data-edition="hf"] .hf-home-recent{
   margin:14px 0 0;padding:9px 12px;border-inline-start:3px solid var(--hf-focus-ring);
-  border-radius:0 8px 8px 0;background:#e7f0ed;color:#1c5658;
+  border-radius:0 8px 8px 0;background:#fff7dd;color:#6b4b39;
   font-size:13px;line-height:1.45;overflow-wrap:anywhere;
 }
 html[data-edition="hf"] #hfPrimaryPageworkouts .library-title{
@@ -484,10 +484,10 @@ html[data-edition="hf"] #settingsPanel .hf-settings-exercise{
 }
 html[data-edition="hf"] #settingsPanel .hf-settings-section-title{
   margin:14px 0 0;padding-top:12px;
-  border-top:1px solid #675650;color:#ffaf7f;font-size:16px;
+  border-top:1px solid #675650;color:#9b3d00;font-size:16px;
 }
 html[data-edition="hf"] #settingsPanel .hf-settings-section-caption{
-  font-size:12px;color:#c7bbb5;margin:0;
+  font-size:12px;color:#525252;margin:0;
 }
 html[data-edition="hf"] #settingsPanel .hf-settings-profile{margin:5px 0}
 html[data-edition="hf"] #settingsPanel .hf-settings-profile label{
@@ -503,10 +503,10 @@ html[data-edition="hf"] #settingsPanel .hf-settings-cloud{
 html[data-edition="hf"] .header-settings #ggCloudPanel>summary{
   display:block;width:100%;height:auto;list-style:revert;
   border:0;padding:7px 0;font-size:14px;text-align:left;
-  color:#e9c2ac;
+  color:#71371e;
 }
 html[data-edition="hf"] #settingsPanel .hf-settings-exercise{
-  background:#413b3e;min-height:45px;color:#f6ece8;
+  background:#f6f6f6;min-height:45px;color:#111;
 }
 @media(max-width:360px){
   html[data-edition="hf"] .hf-primary-tabs{gap:3px;padding:4px}
@@ -519,12 +519,12 @@ html[data-edition="hf"] #vectorRoutines{display:none!important}
 
 /* Pizarra HF */
 html[data-edition="hf"] #board > .panel{
-  background:#242427;
+  background:#f6f6f6;
   display:grid;
   gap:14px;
 }
 html[data-edition="hf"] #board .row{display:grid;gap:5px}
-html[data-edition="hf"] #board .gold{color:#ffb38e;font-size:.8rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
+html[data-edition="hf"] #board .gold{color:#8a3c19;font-size:.8rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
 html[data-edition="hf"] #boardName{margin:4px 0 0;font-size:clamp(21px,5.1vw,34px);line-height:1.14;overflow-wrap:anywhere}
 html[data-edition="hf"] #board #count{font-size:.84rem}
 html[data-edition="hf"] #board .buttons{display:flex;gap:6px;margin:0;flex-wrap:wrap}
@@ -536,18 +536,18 @@ html[data-edition="hf"] #board #blocks{
   gap:8px;
 }
 html[data-edition="hf"] .hf-board-block{
-  --block-accent:#e5ded5;
-  --block-surface:#2d2d31;
+  --block-accent:#6b4b39;
+  --block-surface:#fff;
   min-width:0;
-  border:1px solid #ffffff26;
+  border:1px solid #d4d4d4;
   border-inline-start:3px solid var(--block-accent);
   border-radius:13px;
   background:var(--block-surface);
   overflow-wrap:anywhere;
 }
-html[data-edition="hf"] .hf-board-block[data-format="emom"]{--block-accent:#ffba91;--block-surface:#382c29}
-html[data-edition="hf"] .hf-board-block[data-format="rest"]{--block-accent:#a9e4da;--block-surface:#263734}
-html[data-edition="hf"] .hf-board-block[data-format="timed"]{--block-accent:#cfc6ff;--block-surface:#322e40}
+html[data-edition="hf"] .hf-board-block[data-format="emom"]{--block-accent:#87370d;--block-surface:#fff0e4}
+html[data-edition="hf"] .hf-board-block[data-format="rest"]{--block-accent:#735711;--block-surface:#fff7dd}
+html[data-edition="hf"] .hf-board-block[data-format="timed"]{--block-accent:#883a23;--block-surface:#fff7f2}
 html[data-edition="hf"] .hf-board-summary{
   cursor:pointer;
   display:grid;
@@ -561,20 +561,25 @@ html[data-edition="hf"] .hf-board-summary::-webkit-details-marker{display:none}
 html[data-edition="hf"] .hf-board-summary:focus-visible{outline:2px solid var(--block-accent);outline-offset:-4px;border-radius:12px}
 html[data-edition="hf"] .hf-board-labels{display:grid;gap:3px}
 html[data-edition="hf"] .hf-board-kind{color:var(--block-accent);font-size:.73rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
-html[data-edition="hf"] .hf-board-block-title{color:#faf5ee;font-size:1rem;font-weight:850;line-height:1.16}
+html[data-edition="hf"] .hf-board-block-title{color:#111;font-size:1rem;font-weight:850;line-height:1.16}
 html[data-edition="hf"] .hf-board-meta{color:var(--block-accent);font-size:.82rem;font-weight:700}
-html[data-edition="hf"] .hf-board-preview{color:#ede2d8;font-size:.8rem;line-height:1.28}
+html[data-edition="hf"] .hf-board-preview{color:#525252;font-size:.8rem;line-height:1.28}
 html[data-edition="hf"] .hf-board-chevron{color:var(--block-accent);font-size:1.35rem;line-height:1}
 html[data-edition="hf"] .hf-board-block[open] .hf-board-chevron{transform:rotate(180deg)}
 html[data-edition="hf"] .hf-board-list{
   list-style:none;
   padding:0 13px;
   margin:0;
-  border-top:1px solid #ffffff26;
+  border-top:1px solid #d4d4d4;
 }
-html[data-edition="hf"] .hf-board-exercise{padding:9px 0;border-bottom:1px solid #ffffff22}
-html[data-edition="hf"] .hf-board-exercise:last-child{border-bottom:0}
-html[data-edition="hf"] .hf-board-exercise-head{display:flex;align-items:baseline;justify-content:space-between;gap:9px;font-size:.91rem;font-weight:750}
-html[data-edition="hf"] .hf-board-duration{color:var(--block-accent);white-space:nowrap;font-variant-numeric:tabular-nums}
-html[data-edition="hf"] #board #blocks .hf-board-note{margin:3px 0 0;font-size:.81rem;line-height:1.35;color:#e8deda;white-space:pre-line}
 html[data-edition="hf"] .hf-board-phase{color:var(--block-accent);font-weight:850;font-size:.75rem;text-transform:uppercase;margin-bottom:5px}
+html[data-edition="hf"] .hf-board-list{display:grid;gap:7px;padding:9px}
+html[data-edition="hf"] .hf-home-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+html[data-edition="hf"] .hf-home-shortcut{background:#fff;color:#111;border:1px solid var(--hf-control-border);padding:8px;font-size:clamp(12px,3.5vw,15px)}
+html[data-edition="hf"] .hf-home-shortcut:last-child{background:#fff0d0}
+html[data-edition="hf"] #brandTitle{color:#111}
+html[data-edition="hf"] body>header{border-bottom:3px solid #ff4d20}
+html[data-edition="hf"] :is(input,select,textarea){color:var(--text)}
+html[data-edition="hf"] #accountWall[data-phase="login"]{background:#f6f6f6}
+html[data-edition="hf"] #accountWall .account-panel{box-shadow:0 12px 40px #17171718;border:1px solid #d4d4d4}
+html[data-edition="hf"] #accountWall .account-actions #accountLogin{color:#111}
