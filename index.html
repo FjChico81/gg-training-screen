@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.7</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.8</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -891,6 +891,25 @@ html[data-edition="hf"] #prestartValue{
  }
 }
 
+/* Pizarra de Buhardilla: cada ejercicio tiene sus datos e indicaciones. */
+#board .gg-board-block{background:#fff;border:1px solid #e3d8cd;padding:clamp(12px,2.5vw,22px)}
+#board .gg-board-block:only-child{grid-column:1/-1}
+#board #blocks .gg-board-block-title{margin:0 0 10px;color:#85411d}
+#board .gg-board-exercises{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+#board .gg-board-exercise{min-width:0;padding:10px 12px;border:1px solid #eee3da;border-radius:10px;background:#fffdfb}
+#board #blocks .gg-board-exercise-name{
+ margin:0 0 5px;font-size:clamp(16px,2.6vw,20px);line-height:1.25;font-weight:800;overflow-wrap:anywhere
+}
+#board .gg-board-metrics{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+#board .gg-board-metric{padding:4px 8px;border-radius:6px;background:#f0eeeb;color:#292622;font-size:13px;font-weight:700}
+#board .gg-board-metric:first-child{background:#fbe6d9;color:#763515}
+#board #blocks .gg-board-note{
+ margin:7px 0 0;padding:5px 0 5px 8px;border-left:2px solid #e78a54;
+ color:#5a4538;font-size:14px;line-height:1.35;white-space:pre-line
+}
+.tv-mode #board .gg-board-metric{font-size:clamp(13px,2vw,19px)}
+.tv-mode #board #blocks .gg-board-note{font-size:clamp(14px,2.1vw,20px)}
+
 /* Secure v2 gate. Until authenticated by GG FAMILY / HF TRAINING, no app UI is visible. */
 html[data-access="locked"] body > :not(#accountWall):not(script){
  visibility:hidden!important;pointer-events:none!important;
@@ -1676,7 +1695,34 @@ const more=node('button','⋯','alt');more.type='button';more.setAttribute('aria
  options.append(makeTemplate);
 }
 more.onclick=()=>{const opening=options.classList.contains('hidden');for(const menu of target.querySelectorAll('.routine-options:not(.hidden)'))setRoutineMenu(menu,false);setRoutineMenu(options,opening)};actions.append(open,more,options);line.append(info,actions);target.append(line)})}
-function renderBoard(){ $('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':'▶ Iniciar entrenamiento';const w=findWorkout(active);if(!w){show('library');return}$('edit').classList.toggle('hidden',vectorDays.has(active));$('boardName').textContent=w.name;$('count').textContent=w.blocks.length+' bloques · '+w.blocks.reduce((n,b)=>n+b.items.length,0)+' ejercicios';$('blocks').replaceChildren();if(w.exercises){
+function renderGGBoardExercise(item,blockName){
+ const raw=readTechniqueLink(item).text;
+ const exercise=decode(FOR_TIME_BLOCK.test(blockName)?forTimeLine(item):item);
+ const card=node('li','','gg-board-exercise');
+ card.append(node('h4',exercise.strength||exercise.duration?exercise.label:raw,'gg-board-exercise-name'));
+ const metrics=[];
+ if(exercise.strength){
+  const {sets,reps,weight,rest,rir}=exercise.strength;
+  metrics.push(sets+' × '+reps+' rep');
+  if(weight!==null)metrics.push(weight.toLocaleString('es-ES')+' kg');
+  if(sets>1||raw.split('|').some(field=>/^descanso\s*\d+\s*s?$/i.test(field.trim())))metrics.push('Descanso '+rest+' s');
+  if(rir!==null)metrics.push('RIR '+rir);
+  const extras=raw.split('|').slice(1).map(field=>field.trim()).filter(field=>
+   field&&!/^(?:\d+\s*[x×]\s*\d+|\d+(?:[.,]\d+)?\s*kg|RIR\s*\d+|descanso\s*\d+\s*s?)$/i.test(field));
+  metrics.push(...extras);
+ }else if(exercise.duration){
+  metrics.push(exercise.duration+' s');
+ }
+ if(metrics.length){
+  const row=node('div','','gg-board-metrics');
+  for(const metric of metrics)row.append(node('span',metric,'gg-board-metric'));
+  card.append(row);
+ }
+ if(exercise.instructions)card.append(node('p',exercise.instructions,'gg-board-note'));
+ return card;
+}
+function renderBoard(){ $('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':'▶ Iniciar entrenamiento';const w=findWorkout(active);if(!w){show('library');return}$('edit').classList.toggle('hidden',vectorDays.has(active));$('boardName').textContent=w.name;const exerciseCount=w.blocks.reduce((total,block)=>total+block.items.length,0);
+$('count').textContent=w.blocks.length+' '+(w.blocks.length===1?'bloque':'bloques')+' · '+exerciseCount+' '+(exerciseCount===1?'ejercicio':'ejercicios');$('blocks').replaceChildren();if(w.exercises){
  w.exercises.forEach((exercise,index)=>{
    const tile=node('div','','tile');
    const drawing=node('div','','vector-illustration hidden');
@@ -1708,7 +1754,18 @@ function renderBoard(){ $('resume').classList.toggle('hidden',!(session&&session
    $('blocks').append(tile);
  });
  return;
-}w.blocks.forEach((b,i)=>{const tile=node('div','','tile');tile.append(node('h3',String(i+1).padStart(2,'0')+' · '+b.name));b.items.forEach(item=>{const d=decode(item);tile.append(node('p',readTechniqueLink(item).text));if(d.instructions)tile.append(node('p','Indicaciones: '+d.instructions,'muted small exercise-instruction-preview'))});$('blocks').append(tile)})}
+}
+if(!isHF){
+ for(const block of w.blocks){
+  const tile=node('div','','tile gg-board-block');
+  const exercises=node('ol','','gg-board-exercises');
+  for(const item of block.items)exercises.append(renderGGBoardExercise(item,block.name));
+  tile.append(node('h3',block.name,'gg-board-block-title'),exercises);
+  $('blocks').append(tile);
+ }
+ return;
+}
+w.blocks.forEach((b,i)=>{const tile=node('div','','tile');tile.append(node('h3',String(i+1).padStart(2,'0')+' · '+b.name));b.items.forEach(item=>{const d=decode(item);tile.append(node('p',readTechniqueLink(item).text));if(d.instructions)tile.append(node('p','Indicaciones: '+d.instructions,'muted small exercise-instruction-preview'))});$('blocks').append(tile)})}
 function readExerciseInstructions(line){
  const raw=String(line||'');
  const match=raw.match(/ \| INSTRUCCIONES ([^ |]+)(?=(?: \| GIF [a-z0-9-]+)?(?: @\d+)?$)/);
@@ -2391,7 +2448,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.6', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.7';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.6', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.8';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
