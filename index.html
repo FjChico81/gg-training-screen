@@ -309,18 +309,18 @@ html[data-edition="hf"] #brandSubtitle{
 }
 .hf-brand-symbol{
  --hf-logo-orange:#f34a15;
- position:relative;display:block;width:1.9em;aspect-ratio:2.16;
+ position:relative;display:block;width:1.9em;aspect-ratio:396 / 169;
 }
 .hf-brand-symbol::before,.hf-brand-symbol::after{
  content:"";position:absolute;inset:0;
 }
 .hf-brand-symbol::before{
  background:#111;
- clip-path:polygon(22% 0,40% 0,33% 41%,56% 41%,51% 63%,29% 63%,22% 100%,6% 100%,13% 63%,0 56%,15% 54%,3% 46%,17% 43%,2% 34%,18% 34%);
+ clip-path:polygon(21.2% 0.0%,36.6% 0.0%,32.1% 39.1%,54.5% 39.1%,51.3% 65.1%,29.0% 65.1%,24.7% 100.0%,8.8% 100.0%,12.9% 65.7%,0.0% 63.9%,14.4% 56.2%,0.0% 52.1%,17.2% 44.4%,0.3% 39.1%,17.7% 30.2%);
 }
 .hf-brand-symbol::after{
  background:var(--hf-logo-orange);
- clip-path:polygon(54% 0,100% 0,94% 25%,68% 25%,64% 42%,85% 42%,79% 65%,59% 65%,50% 100%,33% 100%);
+ clip-path:polygon(59.1% 0.0%,100.0% 0.0%,97.0% 25.4%,76.5% 25.4%,74.7% 40.2%,89.1% 40.2%,86.1% 65.1%,71.5% 65.1%,67.2% 100.0%,46.7% 100.0%);
 }
 .gg-cloud-password{position:relative}
 .gg-cloud-password input{width:100%;min-height:44px;margin:0;padding-inline-end:48px}
@@ -1050,6 +1050,10 @@ html[data-edition="hf"] #accountWall .account-launch-hf{
  font-weight:950;letter-spacing:.015em;margin:0 0 18px;
 }
 .account-launch-hf .hf-brand-symbol{width:clamp(174px,62vw,296px);margin:0 auto 13px}
+#accountWall .hf-login-symbol{display:none}
+html[data-edition="hf"] #accountWall .hf-login-symbol{
+ display:block;width:min(62%,220px);margin:0 auto 15px;
+}
 .account-launch-hf .hf-brand-name{display:block}
 .account-launch-hf .hf-brand-name-accent{color:#e4420e}
 #accountWall .account-launch p{color:var(--muted)}
@@ -1088,6 +1092,7 @@ html[data-edition="hf"] #accountWall .account-launch-hf{
   <button id="accountLaunchRetry" type="button" onclick="location.reload()">Volver a intentar</button>
  </div>
  <div class="account-panel">
+  <span class="hf-brand-symbol hf-login-symbol" aria-hidden="true"></span>
   <h1 id="accountBrand">Acceso personal</h1>
   <p>Inicia sesión para acceder a tus perfiles, entrenamientos e historial sincronizados.</p>
   <label for="accountEmail">Correo electrónico</label>
@@ -2765,7 +2770,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.17', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.12';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.18', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.12';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
