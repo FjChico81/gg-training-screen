@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.9</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.10</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -888,6 +888,66 @@ html[data-edition="hf"] #prestartValue{
  }
  html:not([data-edition="hf"]) body.tv-mode.guided-active #guided .guided-instructions{
   margin:4px 0;padding:4px 7px;
+ }
+}
+
+/* BUHARDILLA TV: reserva espacio a la botonera y fija los dos paneles superiores. */
+@media (orientation:landscape){
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest){
+  grid-template-rows:minmax(0,37fr) minmax(0,63fr) auto;
+  overflow:hidden;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) :is(.tv-current,.tv-upcoming,.tv-current-copy){
+  min-height:0;max-height:100%;overflow:auto;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) .tv-current:is(.has-gif,.has-vector-illustration){
+  grid-template-columns:minmax(0,2fr) minmax(0,1fr);
+  grid-template-rows:minmax(0,1fr);
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) :is(#tvExerciseGif,#tvExerciseVideo){
+  height:100%;max-height:100%;min-height:0;object-fit:contain;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) #vectorCurrentIllustration{
+  width:min(100%,27vh);margin:0 auto;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) .tv-timing #stepTimer{
+  font-size:clamp(30px,10.5vh,112px);margin-top:0;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) .tv-timing.is-timed #clock{
+  font-size:clamp(18px,4.5vh,48px);
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) .heart-rate-display{
+  gap:clamp(2px,.55vh,6px);padding:clamp(5px,1.25vh,14px);
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) .hr-zone-bar{
+  margin:3px auto 0;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) #position{
+  font-size:clamp(9px,2.15vh,21px);line-height:1.15;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) :is(#current.focus,#tvNextName){
+  font-size:clamp(14px,3.9vh,44px);
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) .guided-instructions{
+  font-size:clamp(11px,2.65vh,27px);line-height:1.22;margin:4px 0;padding:4px 7px;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) .technique-button{
+  min-height:30px;margin:3px 0 0;padding:4px 8px;font-size:clamp(11px,2.7vh,24px);
+ }
+}
+
+@media (orientation:landscape) and (max-height:370px){
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) .guided-controls button{
+  min-height:37px;padding-inline:6px;font-size:12px;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) .tv-current .tv-caption{
+  font-size:11px;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) .tv-current .guided-instructions{
+  margin:3px 0;padding:3px 6px;
+ }
+ html:not([data-edition="hf"]) body.tv-mode.guided-active #guided:not(.tv-rest) .tv-current:is(.has-gif,.has-vector-illustration){
+  grid-template-columns:minmax(0,2.5fr) minmax(0,1fr);
  }
 }
 
@@ -2449,7 +2509,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.7', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.9';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.7', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.10';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
