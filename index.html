@@ -1137,6 +1137,12 @@ html[data-edition="hf"] .account-launch-gg{display:none}
 </div>
 <p id="hrLimitStatus" class="hidden" role="status"></p>
 </div>
+<section id="hfTvProgress" class="tv-only tv-card hidden" aria-labelledby="hfTvProgressLabel">
+<div id="hfTvProgressLabel" class="tv-caption">PROGRESO DE LA CLASE</div>
+<div id="hfTvProgressValue"></div>
+<progress id="hfTvProgressBar" aria-label="Avance del bloque" value="0" max="1"></progress>
+<div id="hfTvProgressDetail" class="muted"></div>
+</section>
 <div id="guidedElapsed" class="elapsed-display"><div class="guided-metric-label muted">TIEMPO TOTAL</div><div id="clock" class="metric">00:00</div></div>
 </div></div>
 <div id="prestartOverlay" class="prestart-overlay hidden" role="status" aria-label="Cuenta atrás de preparación" aria-live="off">
@@ -1357,7 +1363,7 @@ function setupHF(){
  document.querySelector('meta[name="theme-color"]').content='#1c1c1e';
  const style=document.createElement('link');
  style.rel='stylesheet';
- style.href='assets/hf-association.css?v=identity1';
+ style.href='assets/hf-association.css?v='+HF_APP_VERSION;
  document.head.append(style);
  $('brandTitle').textContent='HF';
  $('brandSubtitle').textContent='Hybrid Funcional Club “Go All Out”';
@@ -2111,9 +2117,37 @@ async function loadTvTechnique(current,resting){
   image.src=shared;
  }else fallback.classList.remove('hidden');
 }
+function renderHFTvProgress(exercises,current,amrap,ft){
+ const value=$('hfTvProgressValue'),bar=$('hfTvProgressBar'),detail=$('hfTvProgressDetail');
+ const emom=/^EMOM(?: · |$)/i.test(current.block)&&current.label.match(/ · Ronda (\d+)\/(\d+)$/);
+ let title='Paso '+(step+1)+' de '+exercises.length;
+ let completed=step,total=exercises.length,description=current.block;
+ if(emom){
+  title='Minuto '+emom[1]+' de '+emom[2];
+  completed=Number(emom[1])-1;
+  total=Number(emom[2]);
+ }else if(ft){
+  title='Ejercicio '+(step-ft.start+1)+' de '+ft.total;
+  completed=step-ft.start;
+  total=ft.total;
+  description='';
+ }else if(amrap){
+  title=amrapRounds+(amrapRounds===1?' ronda completa':' rondas completas');
+  completed=amrapElapsed;
+  total=amrap.limit;
+  description='';
+ }
+ if(value.textContent!==title)value.textContent=title;
+ if(detail.textContent!==description)detail.textContent=description;
+ detail.classList.toggle('hidden',!description);
+ bar.setAttribute('aria-label',amrap?'Tiempo transcurrido del AMRAP':title);
+ bar.max=total;
+ bar.value=completed;
+}
 function renderTvExercises(exercises=steps(),amrap=getAmrapAt(step),ft=getForTimeAt(step)){
  if(!document.body.classList.contains('tv-mode')||!exercises[step])return;
  const current=exercises[step],resting=$('guided').classList.contains('tv-rest');
+ if(isHF)renderHFTvProgress(exercises,current,amrap,ft);
  $('tvPaused').classList.toggle('hidden',!paused);
  $('tvTiming').classList.toggle('is-timed',!!current.duration);
  const timedRest=isProgrammedRest(current);
@@ -2276,7 +2310,7 @@ $('tvReturnToTraining').onclick=()=>setSessionExtrasOpen(false);
 function getForTimeAt(index){const w=workouts.find(x=>x.id===(session?sessionWorkout:active));if(!w)return null;let offset=0;for(let i=0;i<w.blocks.length;i++){const b=w.blocks[i],m=b.name.match(/^FOR TIME (\d+)s · (.+) · Ronda (\d+)\/(\d+)$/);if(m){let end=offset+b.items.length-1;for(let j=i+1;j<w.blocks.length;j++){const n=w.blocks[j].name.match(/^FOR TIME (\d+)s · (.+) · Ronda (\d+)\/(\d+)$/);if(!n||n[1]!==m[1]||n[2]!==m[2]||n[4]!==m[4])break;end+=w.blocks[j].items.length}if(index>=offset&&index<=end)return{start:offset,end,limit:Number(m[1]),name:m[2],total:end-offset+1}}offset+=b.items.length}return null}
 function finishForTime(info,complete){ftResults.push({name:info.name,seconds:ftElapsed,complete,steps:complete?info.total:step-info.start,total:info.total});ftElapsed=0;if(info.end===steps().length-1){if(!archiveSession())return;session=false;paused=true;saveSession();void releaseWakeLock();openSessionSummary()}else{step=info.end+1;stepElapsed=0;saveSession();show('guided')}}
 function getAmrapAt(index){const w=workouts.find(x=>x.id===(session?sessionWorkout:active));if(!w)return null;let offset=0;for(const block of w.blocks){const length=block.items.length,match=block.name.match(/^AMRAP (\d+)s · (.+)$/);if(index>=offset&&index<offset+length&&match)return{start:offset,end:offset+length-1,count:length,limit:Number(match[1]),name:match[2],key:offset};offset+=length}return null}
-function updateAmrapDisplay(){const info=getAmrapAt(step),out=$('amrapStatus');out.classList.toggle('hidden',!info);if(!info)return;const round=amrapRounds+1;out.textContent='AMRAP · '+info.name+' · Ronda '+round+' · Restante '+formatSeconds(Math.max(0,Math.ceil(info.limit-amrapElapsed)))}
+function updateAmrapDisplay(){const info=getAmrapAt(step),out=$('amrapStatus');out.classList.toggle('hidden',!info);if(!info)return;const round=amrapRounds+1;if(isHF&&document.body.classList.contains('tv-mode'))$('hfTvProgressBar').value=amrapElapsed;out.textContent='AMRAP · '+info.name+' · Ronda '+round+' · Restante '+formatSeconds(Math.max(0,Math.ceil(info.limit-amrapElapsed)))}
 function finishAmrapBlock(info){amrapResults.push({name:info.name,limit:info.limit,rounds:amrapRounds,partial:step-info.start,exerciseCount:info.count,elapsed:Math.min(info.limit,amrapElapsed)});amrapElapsed=0;amrapRounds=0;amrapLastBlock=null;amrapCurrent=null;stepElapsed=0;restRemaining=0;restRunning=false;if(info.end>=steps().length-1){if(!archiveSession())return;session=false;paused=true;saveSession();void releaseWakeLock();openSessionSummary()}else{step=info.end+1;saveSession();show('guided')}}
 function finishExerciseTransition(){if(!session||transitionTo===null)return;const target=transitionTo;transitionTo=null;restRemaining=0;restRunning=false;step=target;stepElapsed=0;editingSet=-1;saveSession();if(view==='guided'){setSessionExtrasOpen(false);renderGuided()}else if(view==='board')renderBoard()}
 function nextStep(){if(prestartRemaining>0)return;if(transitionTo!==null)return;editingSet=-1;const ft=getForTimeAt(step);if(ft){if(step===ft.end)finishForTime(ft,true);else{step++;stepElapsed=0;saveSession();renderGuided()}return}const info=getAmrapAt(step);if(info){if(step===info.end){amrapRounds++;step=info.start}else step++;stepElapsed=0;restRemaining=0;restRunning=false;saveSession();renderGuided();return}const a=currentStrength();if(a&&(seriesLog[step]||[]).length<a.sets){alert('Completa las series programadas antes de avanzar');return}restRemaining=0;restRunning=false;if(step===steps().length-1){if(!archiveSession())return;session=false;paused=true;saveSession();openSessionSummary()}else{step++;stepElapsed=0;saveSession();if(view==='guided')renderGuided();else if(view==='board')renderBoard()}}function beginTrainingSession(){
@@ -2509,7 +2543,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.8', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.10';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.9', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.10';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
@@ -3021,6 +3055,11 @@ for(const button of tvToggles)button.addEventListener('click',()=>{
  const enabled=document.body.classList.toggle('tv-mode');
  for(const toggle of tvToggles)toggle.setAttribute('aria-pressed',String(enabled));
  $(enabled?'tvTiming':'guidedHeartPanel').append($('guidedElapsed'));
+ if(isHF){
+  $('hfTvProgress').classList.toggle('hidden',!enabled);
+  if(enabled)$('hfTvProgress').append($('amrapStatus'),$('ftStatus'));
+  else $('stepTimer').before($('amrapStatus'),$('ftStatus'));
+ }
  const strength=$('strengthPanel');
  if(enabled)$('sessionExtras').prepend(strength);
  else $('guided').querySelector('.guided-controls').before(strength);

@@ -71,41 +71,83 @@ html[data-edition="hf"] .tv-mode.guided-active #guided .tv-caption{
 html[data-edition="hf"] .tv-mode.guided-active #guided #tvExerciseGif{
   background:#1b1b1e;
 }
-@media (orientation:landscape) and (min-width:760px){
-  html[data-edition="hf"] .tv-mode.guided-active #guided{
-    grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);
-    grid-template-rows:minmax(0,1fr) minmax(0,1fr) auto;
+html[data-edition="hf"] .tv-mode.guided-active #guided #hfTvProgress{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:clamp(3px,1vh,12px);
+  border-color:#785b53;
+  background:#29272d;
+}
+#hfTvProgressValue{
+  font-size:clamp(18px,4.6vh,48px);
+  font-weight:900;
+  line-height:1.05;
+}
+#hfTvProgressBar{
+  appearance:none;
+  width:100%;
+  height:clamp(6px,1.3vh,14px);
+  border:0;
+  border-radius:8px;
+  accent-color:var(--hf-focus);
+  background:#484347;
+}
+#hfTvProgressBar::-webkit-progress-bar{background:#484347;border-radius:8px}
+#hfTvProgressBar::-webkit-progress-value{background:var(--hf-focus);border-radius:8px}
+#hfTvProgressBar::-moz-progress-bar{background:var(--hf-focus);border-radius:8px}
+html[data-edition="hf"] .tv-mode.guided-active #guided #hfTvProgress :is(.amrap-status,#hfTvProgressDetail){
+  font-size:clamp(11px,2.7vh,23px);
+  line-height:1.15;
+  margin:0;
+  padding:0;
+  border:0;
+  background:transparent;
+}
+html[data-edition="hf"] .tv-mode.guided-active #guided .tv-current #position{
+  display:none; /* El progreso tiene su propio panel. */
+}
+@media (orientation:portrait){
+  html[data-edition="hf"] .tv-mode.guided-active #guided #hfTvProgress{grid-row:2}
+}
+@media (orientation:landscape){
+  html[data-edition="hf"] body.tv-mode.guided-active #guided{
+    grid-template-columns:minmax(0,3fr) minmax(0,2fr);
+    grid-template-rows:minmax(0,34fr) minmax(0,66fr) auto;
   }
-  html[data-edition="hf"] .tv-mode.guided-active #guided .tv-current{
-    grid-area:1/1/3/2;
-  }
-  html[data-edition="hf"] .tv-mode.guided-active #guided .tv-timing,
-  html[data-edition="hf"] .tv-mode.guided-active #guided.tv-rest>#restCard{
-    grid-area:1/2/2/3;
-  }
-  html[data-edition="hf"] .tv-mode.guided-active #guided .tv-upcoming{
-    grid-area:2/2/3/3;
-  }
-  html[data-edition="hf"] .tv-mode.guided-active #guided .guided-controls{
-    grid-area:3/1/4/-1;
-  }
+  html[data-edition="hf"] .tv-mode.guided-active #guided #hfTvProgress{grid-area:1/2}
   html[data-edition="hf"] .tv-mode.guided-active #guided .tv-current.has-gif{
     display:grid;
-    grid-template-columns:minmax(0,1fr);
-    grid-template-rows:auto minmax(0,1fr);
+    grid-template-columns:minmax(0,2.35fr) minmax(0,1fr);
+    grid-template-rows:minmax(0,1fr);
     align-items:stretch;
-    gap:clamp(6px,1.4vh,18px);
+    gap:clamp(5px,1.5vh,14px);
   }
   html[data-edition="hf"] .tv-mode.guided-active #guided .tv-current-copy{
-    max-height:none;
+    min-height:0;
     overflow:auto;
   }
-  html[data-edition="hf"] .tv-mode.guided-active #guided #tvExerciseGif{
+  html[data-edition="hf"] .tv-mode.guided-active #guided :is(#tvExerciseGif,#tvExerciseVideo){
     height:100%;
     max-height:100%;
+    min-height:0;
+    object-fit:contain;
   }
+  html[data-edition="hf"] .tv-mode.guided-active #guided :is(#current.focus,#tvNextName){
+    font-size:clamp(15px,4.35vh,48px);
+  }
+  html[data-edition="hf"] .tv-mode.guided-active #guided .guided-instructions{
+    font-size:clamp(11px,3.05vh,24px);
+    line-height:1.24;
+    margin:4px 0;
+    padding:4px 7px;
+  }
+  html[data-edition="hf"] .tv-mode.guided-active #guided .tv-timing #stepTimer{
+    font-size:clamp(24px,9.5vh,106px);
+    margin-top:0;
+  }
+  html[data-edition="hf"] .tv-mode.guided-active #guided .tv-timing .elapsed-display{margin-top:3px}
 }
-/* Mantener la composición original en tablet vertical y pantallas estrechas. */
 
 /* Accesos a prototipos de clase: exclusivamente HF. */
 html[data-edition="hf"] .hf-class-chooser{
