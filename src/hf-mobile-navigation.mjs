@@ -131,11 +131,11 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal',onTabChang
   // Secondary tools leave the main mobile screen; IDs and listeners survive.
   const toolsHeading=create('h3','Perfil y sincronización','hf-settings-section-title');
   const settingsLabel=create('p','Biblioteca y otras herramientas','hf-settings-section-caption');
-  const closeButton=doc.getElementById('closeSettings');
+  const settingsTop=doc.getElementById('restoreButton')||doc.getElementById('closeSettings');
   const addProfile=doc.getElementById('addLocalProfile');
   // Additional local HF profiles deliberately have no cloud panel.
-  if(closeButton){
-    closeButton.after(toolsHeading,profile);
+  if(settingsTop){
+    settingsTop.after(toolsHeading,profile);
     if(addProfile)profile.after(addProfile);
     const anchor=addProfile||profile;
     if(cloud)anchor.after(cloud);
