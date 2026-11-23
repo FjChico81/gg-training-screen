@@ -1377,6 +1377,10 @@ function setupVectorHome(){
 function setupHF(){
  if(!isHF)return;
  document.title='HF v'+GG_APP_VERSION;
+ const board=$('board');
+ $('start').before($('resume'));
+ board.querySelector('.gold').textContent='Pizarra';
+ $('blocks').before(board.querySelector('.buttons'));
  document.querySelector('meta[name="theme-color"]').content='#1c1c1e';
  const style=document.createElement('link');
  style.rel='stylesheet';
@@ -1805,8 +1809,74 @@ function renderGGBoardExercise(item,blockName){
  if(exercise.instructions)card.append(node('p',exercise.instructions,'gg-board-note'));
  return card;
 }
+function hfBoardDuration(seconds){
+ if(seconds<60)return seconds+' s';
+ if(seconds%60===0)return seconds/60+' min';
+ return formatSeconds(seconds);
+}
+function renderHFBoardBlock(block){
+ const items=block.items.map(item=>({
+  raw:readTechniqueLink(item).text,
+  exercise:decode(FOR_TIME_BLOCK.test(block.name)?forTimeLine(item):item),
+ }));
+ const rest=items.length>0&&items.every(({exercise})=>isProgrammedRest(exercise));
+ const emom=block.name.match(/^EMOM(?: · (.+))?$/i);
+ const forTime=block.name.match(FOR_TIME_BLOCK);
+ const amrap=block.name.match(/^AMRAP (\d+)s · (.+)$/);
+ const format=rest?'rest':emom?'emom':forTime||amrap?'timed':'regular';
+ const duration=items.reduce((sum,{exercise})=>sum+exercise.duration,0);
+ let title=block.name,meta=items.length+(items.length===1?' paso':' pasos'),preview='';
+ if(rest){
+  meta=hfBoardDuration(duration);
+ }else if(emom){
+  title=emom[1]||'EMOM';
+  const work=items.filter(({exercise})=>!isProgrammedRest(exercise));
+  const recovery=items.filter(({exercise})=>isProgrammedRest(exercise));
+  const uniform=group=>group.length&&group[0].exercise.duration&&group.every(({exercise})=>exercise.duration===group[0].exercise.duration);
+  if(items.every(({exercise})=>exercise.duration))meta=hfBoardDuration(duration);
+  if(uniform(work)&&uniform(recovery)&&work.length===recovery.length){
+   meta+=' · '+hfBoardDuration(work[0].exercise.duration)+' trabajo / '+hfBoardDuration(recovery[0].exercise.duration)+' pausa';
+  }
+  const names=[...new Set(work.map(({exercise})=>exercise.label.replace(/ · Ronda \d+\/\d+$/,'')))];
+  preview=names.slice(0,3).join(' · ')+(names.length>3?' · +'+(names.length-3):'');
+ }else if(forTime||amrap){
+  const [,limit,name,round,total]=forTime||amrap;
+  title=name+(total&&Number(total)>1?' · Ronda '+round+'/'+total:'');
+  if(Number(limit)>0)meta+=' · '+(forTime?'Límite ':'')+hfBoardDuration(Number(limit));
+ }
+ const blockCard=node('details','','hf-board-block');
+ blockCard.dataset.format=format;
+ const summary=node('summary','','hf-board-summary');
+ const content=node('span','','hf-board-labels');
+ const kind=rest?'Pausa':emom?'EMOM':forTime?'For Time':amrap?'AMRAP':'';
+ if(kind)content.append(node('span',kind,'hf-board-kind'));
+ content.append(node('span',title,'hf-board-block-title'),node('span',meta,'hf-board-meta'));
+ if(preview)content.append(node('span',preview,'hf-board-preview'));
+ summary.append(content,node('span','⌄','hf-board-chevron'));
+ summary.lastChild.setAttribute('aria-hidden','true');
+ const list=node('ol','','hf-board-list');
+ let section='';
+ for(const {raw,exercise} of items){
+  const match=forTime&&exercise.instructions.match(/^(Bajada|Subida) · /i);
+  const phase=match?.[1]||'';
+  const name=exercise.duration?exercise.label:raw.replace(/\s*\|\s*/g,' · ');
+  const row=node('li','','hf-board-exercise');
+  if(phase&&phase.toLowerCase()!==section){
+   row.append(node('div',phase,'hf-board-phase'));
+  }
+  section=phase.toLowerCase();
+  const headline=node('div','','hf-board-exercise-head');
+  headline.append(node('span',name));
+  if(exercise.duration)headline.append(node('span',hfBoardDuration(exercise.duration),'hf-board-duration'));
+  row.append(headline);
+  if(exercise.instructions)row.append(node('p',match?exercise.instructions.slice(match[0].length):exercise.instructions,'hf-board-note'));
+  list.append(row);
+ }
+ blockCard.append(summary,list);
+ return blockCard;
+}
 function renderBoard(){ $('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':'▶ Iniciar entrenamiento';const w=findWorkout(active);if(!w){show('library');return}$('edit').classList.toggle('hidden',vectorDays.has(active));$('boardName').textContent=w.name;const exerciseCount=w.blocks.reduce((total,block)=>total+block.items.length,0);
-$('count').textContent=w.blocks.length+' '+(w.blocks.length===1?'bloque':'bloques')+' · '+exerciseCount+' '+(exerciseCount===1?'ejercicio':'ejercicios');$('blocks').replaceChildren();if(w.exercises){
+$('count').textContent=w.blocks.length+' '+(w.blocks.length===1?'bloque':'bloques')+' · '+exerciseCount+' '+(isHF?(exerciseCount===1?'paso':'pasos'):(exerciseCount===1?'ejercicio':'ejercicios'));$('blocks').replaceChildren();if(w.exercises){
  w.exercises.forEach((exercise,index)=>{
    const tile=node('div','','tile');
    const drawing=node('div','','vector-illustration hidden');
@@ -1849,7 +1919,8 @@ if(!isHF){
  }
  return;
 }
-w.blocks.forEach((b,i)=>{const tile=node('div','','tile');tile.append(node('h3',String(i+1).padStart(2,'0')+' · '+b.name));b.items.forEach(item=>{const d=decode(item);tile.append(node('p',readTechniqueLink(item).text));if(d.instructions)tile.append(node('p','Indicaciones: '+d.instructions,'muted small exercise-instruction-preview'))});$('blocks').append(tile)})}
+for(const block of w.blocks)$('blocks').append(renderHFBoardBlock(block));
+}
 function readExerciseInstructions(line){
  const raw=String(line||'');
  const match=raw.match(/ \| INSTRUCCIONES ([^ |]+)(?=(?: \| GIF [a-z0-9-]+)?(?: @\d+)?$)/);
@@ -1876,7 +1947,7 @@ function readTechniqueLink(line){
 function addTechniqueLink(line,id){
  return id?line.replace(/( @\d+)?$/,(_,duration='')=>' | GIF '+id+duration):line;
 }
-const FOR_TIME_BLOCK=/^FOR TIME \d+s · .+ · Ronda \d+\/\d+$/;
+const FOR_TIME_BLOCK=/^FOR TIME (\d+)s · (.+) · Ronda (\d+)\/(\d+)$/;
 function forTimeLine(line,strict=false){
  const {text,techniqueId,instructions}=readTechniqueLink(line);
  const explicit=text.match(/ @(\d+)$/);
@@ -2560,7 +2631,7 @@ function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStat
 $('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
 $('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.9', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.11';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.11', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.11';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
