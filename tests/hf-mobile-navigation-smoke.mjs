@@ -70,6 +70,8 @@ function makeApp(){
   settings.id='settingsPanel';header.append(settings);doc.body.append(header);
   const closeSettings=doc.createElement('button');
   closeSettings.id='closeSettings';settings.append(closeSettings);
+  const restore=doc.createElement('button');
+  restore.id='restoreButton';settings.append(restore);
   const addProfile=doc.createElement('button');
   addProfile.id='addLocalProfile';settings.append(addProfile);
   const library=doc.createElement('section');library.id='library';
@@ -253,7 +255,8 @@ test('settings are placed near the top, and cloud and profile controls retain th
   mountHFMobileNavigation(app.doc);
   const items=app.settings.children;
   const ids=items.map(el=>el.id||el.className);
-  assert.ok(ids.indexOf('hf-settings-section-title')>ids.indexOf('closeSettings'));
+  assert.ok(ids.indexOf('restoreButton')>ids.indexOf('closeSettings'));
+  assert.ok(ids.indexOf('hf-settings-section-title')>ids.indexOf('restoreButton'));
   assert.ok(ids.indexOf('localProfilePanel')<ids.indexOf('addLocalProfile'));
   assert.ok(ids.indexOf('addLocalProfile')<ids.indexOf('ggCloudPanel'));
   assert.ok(ids.indexOf('ggCloudPanel')<ids.indexOf('exerciseLibraryOpen'));
@@ -266,4 +269,11 @@ test('the default home hides redundant Principal label but clearly shows additio
   const label=guest.panel.querySelector('.hf-home-profile');
   assert.equal(label.hidden,false);
   assert.equal(label.textContent,'Perfil: Cliente 2');
+});
+
+test('both editions expose the import button directly in Ajustes',()=>{
+  const page=readFileSync(resolve('index.html'),'utf8');
+  assert.match(page,/id="settingsPanel"[^>]*><button id="closeSettings"[^>]*>[^<]*<\/button>\s*<button id="restoreButton"/);
+  assert.equal((page.match(/id="restoreButton"/g)||[]).length,1);
+  assert.match(page,/\$\('restoreButton'\)\.onclick=.*\$\('restoreFile'\)\.click\(\)/);
 });
