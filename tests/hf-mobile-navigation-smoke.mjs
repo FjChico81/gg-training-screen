@@ -111,7 +111,7 @@ test('HF home opens with only concise actions while all other panels are hidden'
   assert.equal(byId(app,'hfPrimaryNavigation').getAttribute('role'),'tablist');
   assert.equal(byId(app,'hfPrimaryTabhome').textContent,'Inicio');
   assert.equal(byId(app,'hfPrimaryTabworkouts').textContent,'Mis entrenamientos');
-  assert.equal(byId(app,'hfPrimaryTabclasses').textContent,'Clases');
+  assert.equal(byId(app,'hfPrimaryTabclasses'),null);
   assert.equal(byId(app,'hfPrimaryPagehome').hidden,false);
   assert.equal(byId(app,'hfPrimaryPageworkouts').hidden,true);
   assert.equal(byId(app,'hfPrimaryPageclasses').hidden,true);
@@ -132,14 +132,20 @@ test('Mis entrenamientos contains saved sessions, creation and personal history 
   app.newButton.onclick();app.individualHistory.onclick();
   assert.deepEqual(app.counts(),{newClicks:1,historyClicks:1,exerciseClicks:0});
 });
-test('Clases contains class chooser, templates, favorites and collective history',()=>{
+test('The home circuit shortcut opens collective tools and can return to Inicio',()=>{
   const app=makeApp(),nav=mountHFMobileNavigation(app.doc);
-  byId(app,'hfPrimaryTabclasses').onclick();
+  byId(app,'hfPrimaryPagehome').querySelector('.hf-home-shortcut').click();
   const page=byId(app,'hfPrimaryPageclasses');
   assert.equal(nav.activeTab(),'classes');
   assert.equal(app.chooser.parentElement,page);
   assert.equal(app.organizer.parentElement,page);
   assert.equal(page.querySelector('.hf-class-intro').hidden,true);
+  assert.equal(byId(app,'hfPrimaryNavigation').hidden,true);
+  const back=page.querySelector('.hf-circuit-back');
+  assert.equal(back.focused,true);
+  back.click();
+  assert.equal(nav.activeTab(),'home');
+  assert.equal(byId(app,'hfPrimaryNavigation').hidden,false);
 });
 test('Home offers creation and recent activity while saved workouts stay in their tab',()=>{
   const app=makeApp(),nav=mountHFMobileNavigation(app.doc);
@@ -174,7 +180,7 @@ test('An active personal session takes priority over an interrupted class and a 
   action.click();
   assert.equal(resumed,true);
 });
-test('Opening templates from a personal workout reveals Clases before navigating within it',()=>{
+test('Opening templates from a personal workout reveals collective tools before navigating within it',()=>{
   const app=makeApp();
   const navigation=mountHFMobileNavigation(app.doc);
   navigation.selectTab('workouts');
@@ -188,14 +194,15 @@ test('Opening templates from a personal workout reveals Clases before navigating
   showClub(navigation,panel,organizer)('templates');
   assert.deepEqual(visits,[['templates','classes'],['scroll','classes']]);
 });
-test('The workout tab exposes the exercise library while profile and sync stay in settings',()=>{
+test('The editor owns the exercise library while profile and sync stay in settings',()=>{
   const app=makeApp();mountHFMobileNavigation(app.doc);
   assert.equal(app.profile.parentElement,app.settings);
   assert.equal(app.cloud.parentElement,app.settings);
-  assert.equal(app.exerciseLibrary.parentElement.parentElement,byId(app,'hfPrimaryPageworkouts'));
+  assert.equal(byId(app,'hfPrimaryPageworkouts').querySelector('#exerciseLibraryOpen'),null);
   assert.equal(app.settings.querySelector('.hf-settings-section-title').textContent,'Perfil y sincronización');
-  app.exerciseLibrary.onclick();
-  assert.equal(app.counts().exerciseClicks,1);
+  const html=readFileSync(resolve('index.html'),'utf8');
+  assert.match(html,/function setupHF\(\)[\s\S]+?mountEditorExerciseLibrary\('hfEditorLibrary'\)/);
+  assert.match(html,/drawer.append\(node\('summary',entry.textContent\),library\)/);
 });
 test('Arrow keys and Home/End navigate tabs with accessible selection and focus',()=>{
   const app=makeApp(),nav=mountHFMobileNavigation(app.doc);
@@ -205,11 +212,11 @@ test('Arrow keys and Home/End navigate tabs with accessible selection and focus'
     tablist.onkeydown({key,preventDefault(){prevented++}});
   }
   assert.equal(prevented,4);
-  assert.equal(nav.activeTab(),'classes');
-  assert.equal(byId(app,'hfPrimaryTabclasses').getAttribute('aria-selected'),'true');
-  assert.equal(byId(app,'hfPrimaryTabclasses').getAttribute('aria-controls'),'hfPrimaryPageclasses');
-  assert.equal(byId(app,'hfPrimaryTabclasses').focused,true);
-  assert.equal(byId(app,'hfPrimaryTabworkouts').tabIndex,-1);
+  assert.equal(nav.activeTab(),'workouts');
+  assert.equal(byId(app,'hfPrimaryTabworkouts').getAttribute('aria-selected'),'true');
+  assert.equal(byId(app,'hfPrimaryTabworkouts').getAttribute('aria-controls'),'hfPrimaryPageworkouts');
+  assert.equal(byId(app,'hfPrimaryTabworkouts').focused,true);
+  assert.equal(byId(app,'hfPrimaryTabhome').tabIndex,-1);
 });
 test('navigation does not move or destroy nodes if a required HF component is missing',()=>{
   const app=makeApp();
@@ -235,13 +242,13 @@ test('GG/VECTOR path never calls the HF navigation module',()=>{
   assert.match(group,/#vectorRoutines\{display:none!important\}/);
 });
 
-test('extra HF profiles with no cloud still receive all three navigation tabs',()=>{
+test('extra HF profiles with no cloud still receive both navigation tabs',()=>{
   const app=makeApp();
   app.cloud.remove(); // startup intentionally removes cloud UI for extra local profile
   const nav=mountHFMobileNavigation(app.doc,{profileLabel:'Invitado'});
   assert.equal(nav.activeTab(),'home');
   assert.equal(app.profile.parentElement,app.settings);
-  assert.equal(app.exerciseLibrary.parentElement.parentElement,byId(app,'hfPrimaryPageworkouts'));
+  assert.equal(byId(app,'hfPrimaryPageworkouts').querySelector('#exerciseLibraryOpen'),null);
   assert.equal(byId(app,'ggCloudPanel'),null);
 });
 test('settings are placed near the top, and cloud and profile controls retain their IDs',()=>{

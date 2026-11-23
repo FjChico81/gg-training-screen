@@ -22,10 +22,9 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal',onTabChang
   const settings=doc.getElementById('settingsPanel');
   const profile=doc.getElementById('localProfilePanel');
   const cloud=doc.getElementById('ggCloudPanel');
-  const exerciseLibrary=doc.getElementById('exerciseLibraryOpen');
   const vectorRoutines=doc.getElementById('vectorRoutines');
   if(!title||!intro||!classChooser||!organizer||!resume||!actions||
-     !filters||!saved||!settings||!profile||!exerciseLibrary)
+     !filters||!saved||!settings||!profile)
     throw Error('Falta algún componente de la pantalla HF. No se ha modificado la biblioteca.');
 
   const create=(tag,text,className)=>{
@@ -44,9 +43,13 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal',onTabChang
     classes:create('section',undefined,'hf-primary-page')
   };
   const tabs=new Map();
-  const names={home:'Inicio',workouts:'Mis entrenamientos',classes:'Clases'};
+  const names={home:'Inicio',workouts:'Mis entrenamientos'};
+  const circuitBack=create('button','← Volver a Inicio','alt hf-circuit-back');
+  circuitBack.type='button';
+  circuitBack.onclick=()=>selectTab('home',{focus:true});
   for(const [key,section] of Object.entries(panels)){
     section.id='hfPrimaryPage'+key;
+    if(key==='classes')continue;
     section.setAttribute('role','tabpanel');
     const tab=create('button',names[key],'hf-primary-tab');
     tab.id='hfPrimaryTab'+key;
@@ -60,17 +63,19 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal',onTabChang
   }
   function selectTab(key,{focus=false}={}){
     if(!Object.hasOwn(panels,key))return;
+    nav.hidden=key==='classes';
     for(const [name,section] of Object.entries(panels)){
       const active=key===name,tab=tabs.get(name);
       section.hidden=!active;
+      if(!tab)continue;
       tab.setAttribute('aria-selected',String(active));
       tab.tabIndex=active?0:-1;
     }
     onTabChange(key);
-    if(focus)tabs.get(key).focus();
+    if(focus)(tabs.get(key)||circuitBack).focus();
   }
   nav.onkeydown=event=>{
-    const keys=Object.keys(panels);
+    const keys=[...tabs.keys()];
     const current=keys.findIndex(key=>tabs.get(key).getAttribute('aria-selected')==='true');
     const next=event.key==='ArrowRight'?(current+1)%keys.length:
       event.key==='ArrowLeft'?(current+keys.length-1)%keys.length:
@@ -118,11 +123,10 @@ export function mountHFMobileNavigation(doc,{profileLabel='Principal',onTabChang
 
   // Saved workouts and the individual history are together and nowhere else.
   title.textContent='Mis entrenamientos';
-  actions.append(exerciseLibrary);
   panels.workouts.append(title,actions,filters,saved);
   // Classes, templates, favorites and collective history are one destination.
   intro.hidden=true; // The existing class chooser already explains the options.
-  panels.classes.append(classChooser,intro,organizer);
+  panels.classes.append(circuitBack,classChooser,intro,organizer);
 
   // Profile and sync tools live in Settings.
   const toolsHeading=create('h3','Perfil y sincronización','hf-settings-section-title');
