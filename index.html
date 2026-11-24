@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.19</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.20</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -1046,6 +1046,31 @@ html:not([data-edition="hf"]) #guided .hr-zone-segment:not([data-hr-zone="1"]){b
 #summaryEffortValue{display:block;margin-top:7px;font-weight:750}
 @media (min-width:560px){#summaryEffortChoices{grid-template-columns:repeat(10,minmax(0,1fr))}}
 
+/* Historial y estadísticas del perfil activo. */
+html[data-edition="hf"] #historyViewChoices{display:none}
+.history-view-choices{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+#historyViewChoices button,#historyStatsPeriod button{
+ background:#fff;color:#28211e;border:1px solid #d1c7c1;min-height:44px
+}
+#historyViewChoices button[aria-pressed="true"],#historyStatsPeriod button[aria-pressed="true"]{
+ background:#ffe8dd;color:#692912;border-color:#b74b22;font-weight:800
+}
+#historyStats:not(.hidden){display:grid;gap:12px;margin-top:12px;color:#201a17}
+#historyStats .stats-panel{border:1px solid #ded2ca;background:#fff;border-radius:12px;padding:clamp(12px,2.5vw,20px)}
+#historyStats h3{margin:0 0 8px}
+#historyStats .stats-periods,#historyStats .stats-filters:not(.hidden){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#historyStats .stats-period{border:1px solid #ded2ca;border-radius:9px;padding:10px}
+#historyStats .stats-period:first-child{background:#fff4ed;border-color:#edc8b6}
+#historyStats .stats-period h4{margin:0;font-size:1rem}
+#historyStats .stats-period p{margin:3px 0;font-size:.9rem}
+#historyStats .stats-period strong{display:block;margin:6px 0;font-size:clamp(1rem,3vw,1.35rem)}
+#historyStats .stats-filters select{margin:4px 0 0}
+#historyStats .stats-chart{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
+#historyStats .stats-chart li{display:grid;grid-template-columns:5.2em minmax(20px,1fr) minmax(4.3em,auto);gap:7px;align-items:center}
+#historyStats .stats-chart-track{display:block;border-radius:10px;background:#f2e9e3;height:9px}
+#historyStats .stats-chart-fill{display:block;border-radius:inherit;background:#ba481e;height:100%}
+#historyStats .stats-chart-value{text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:410px){#historyStats .stats-filters{grid-template-columns:1fr}}
 /* Pizarra de Buhardilla: cada ejercicio tiene sus datos e indicaciones. */
 #board .gg-board-block{background:#fff;border:1px solid #e3d8cd;padding:clamp(12px,2.5vw,22px)}
 #board .gg-board-block:only-child{grid-column:1/-1}
@@ -1209,7 +1234,29 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
 <p id="exerciseLibraryCount" class="muted small" aria-live="polite"></p>
 <div id="exerciseLibraryResults"></div>
 </div></section>
-<section id="history" class="hidden"><div class="panel"><div class="row"><h2>Historial de sesiones</h2><div class="actions"><button id="historyUndoDelete" class="alt hidden" type="button">↶ Deshacer eliminación</button><button id="historyBack" class="alt">Inicio</button></div></div><p class="notice">Registros guardados en este navegador. No se sincronizan todavía con otros dispositivos.</p><div id="historyEntries"></div></div></section><section id="editor" class="hidden"><div class="panel"><h2 id="editorTitle">Crear entrenamiento</h2><label for="workoutName">Nombre del entrenamiento</label><input id="workoutName" maxlength="70" placeholder="Ej.: Torso A">
+<section id="history" class="hidden"><div class="panel"><div class="row"><h2>Historial de sesiones</h2><div class="actions"><button id="historyUndoDelete" class="alt hidden" type="button">↶ Deshacer eliminación</button><button id="historyBack" class="alt">Inicio</button></div></div><div id="historyViewChoices" class="history-view-choices" role="group" aria-label="Vista del historial">
+<button id="historySessionsTab" type="button" aria-pressed="true" aria-controls="historySessionList">Sesiones</button>
+<button id="historyStatsTab" type="button" aria-pressed="false" aria-controls="historyStats">Estadísticas</button>
+</div>
+<div id="historySessionList"><p class="notice">Registros guardados en este navegador. No se sincronizan todavía con otros dispositivos.</p><div id="historyEntries"></div></div>
+<div id="historyStats" class="hidden">
+ <section class="stats-panel" aria-labelledby="historyActivityTitle">
+  <h3 id="historyActivityTitle">Actividad</h3>
+  <div id="historyStatsPeriod" class="history-view-choices" role="group" aria-label="Periodo de actividad">
+   <button type="button" data-period="week" aria-pressed="true">Semana</button>
+   <button type="button" data-period="month" aria-pressed="false">Mes</button>
+  </div>
+  <div id="historyActivity" class="stats-periods"></div>
+ </section>
+ <section class="stats-panel" aria-labelledby="historyProgressTitle">
+  <h3 id="historyProgressTitle">Progreso por ejercicio</h3>
+  <div id="historyStatsFilters" class="stats-filters">
+   <label for="historyStatsExercise">Ejercicio<select id="historyStatsExercise"></select></label>
+   <label for="historyStatsMetric">Medida<select id="historyStatsMetric"></select></label>
+  </div>
+  <div id="historyProgress" aria-live="polite"></div>
+ </section>
+</div></div></section><section id="editor" class="hidden"><div class="panel"><h2 id="editorTitle">Crear entrenamiento</h2><label for="workoutName">Nombre del entrenamiento</label><input id="workoutName" maxlength="70" placeholder="Ej.: Torso A">
 <div class="v2-list"><div class="row"><h3>Tu entrenamiento</h3><span id="v2Count" class="muted small">0 ejercicios</span></div><div id="visualList"></div><p class="editor-empty muted">Añade un ejercicio o elige un formato para empezar.</p><button id="v2Add" type="button" class="v2-primary">＋ Añadir al entrenamiento</button></div>
 <div id="v2Wizard" class="panel hidden" style="background:var(--editor,#304451)"><div class="row"><h3 id="v2WizardTitle">Añadir al entrenamiento</h3><button id="v2Close" type="button" class="alt" aria-label="Cerrar selector">✕</button></div>
 <div id="v2Choices" class="v2-choices">
@@ -1931,7 +1978,157 @@ function undoHistoryDeletion(){
  }catch(error){alert('No se ha podido deshacer: '+error.message)}
 }
 $('historyUndoDelete').onclick=undoHistoryDeletion;
-function renderHistory(){const box=$('historyEntries');box.replaceChildren();const records=getHistory(),sorted=records.slice().reverse();$('historyUndoDelete').classList.toggle('hidden',isHF||!appStorage.getItem(HISTORY_RECOVERY_KEY));if(!sorted.length)box.append(node('p','Todavía no hay sesiones finalizadas guardadas.','muted'));sorted.forEach((r,displayIndex)=>{const card=node('div','','tile');card.style.margin='12px 0';const heading=node('div','','row history-entry-heading');heading.append(node('h3',r.name||'Entrenamiento'));if(!isHF){const del=node('button','Eliminar sesión','danger');del.type='button';del.setAttribute('aria-label','Eliminar sesión '+(r.name||'Entrenamiento'));del.onclick=()=>deleteHistoryEntry(r,records.length-1-displayIndex);heading.append(del)}card.append(heading);const date=new Date(r.date);card.append(node('p',(isNaN(date.getTime())?'Fecha no disponible':date.toLocaleString('es-ES'))+' · '+formatSeconds(Math.floor(r.elapsed||0)),'muted'));if(!isHF){const heart=r.heartRate;card.append(node('p',heart?'FC media '+heartRateText(heart.average)+' · FC máxima '+heartRateText(heart.peak)+(heart.partial?' · Lectura parcial':''):'FC media y máxima · Sin datos','muted small'))}const details=node('div','','history-detail hidden');const toggle=node('button','▸ Ver ejercicios y series','history-toggle');toggle.type='button';toggle.onclick=()=>{const opening=details.classList.contains('hidden');details.classList.toggle('hidden',!opening);toggle.textContent=(opening?'▾':'▸')+' Ver ejercicios y series'};card.append(toggle);const w=workouts.find(x=>x.id===r.workoutId);let items=Array.isArray(r.exerciseSnapshot)?r.exerciseSnapshot:null;if(!items||!items.length){if(Array.isArray(r.exerciseNames)&&r.exerciseNames.length){items=r.exerciseNames.map((label,i)=>({label,raw:label,block:'',index:i}))}else if(w){items=w.blocks.flatMap(b=>b.items.map(line=>({label:decode(line).label,raw:line,block:b.name})))}}if(items&&items.length){items=groupHistoricalItems(items,w);details.append(node('p',items.length+' pasos programados · agrupados por bloque','gold small'));let currentBlock=null,blockBody=null,blockNumber=0;items.forEach((item,i)=>{const blockName=item.block||'Ejercicios';if(blockName!==currentBlock){currentBlock=blockName;blockNumber++;const section=node('section','','history-block');const head=node('button','','history-block-head');head.type='button';const label=node('span',blockName);const indicator=node('span','▸');head.append(label,indicator);blockBody=node('div','','history-block-body hidden');const ownBody=blockBody;head.onclick=()=>{const opening=ownBody.classList.contains('hidden');ownBody.classList.toggle('hidden',!opening);indicator.textContent=opening?'▾':'▸'};section.append(head,blockBody);details.append(section)}const raw=item.raw||item.label||'',d=decode(raw),group=node('div','','history-exercise');const title=node('div','','history-exercise-title');let kind='REP';if(d.duration)kind='TIEMPO';else if(/\b\d+(?:[.,]\d+)?\s*(?:m|km)\b/i.test(raw))kind='DIST';else if(d.strength)kind='FUERZA';const chip=node('span',kind,'history-kind');title.append(chip,node('strong',(i+1)+'. '+(item.label||d.label||raw)));group.append(title);if(r.vectorDose?.[i])group.append(node('div',r.vectorDose[i],'muted small'));else if(d.duration)group.append(node('div','Duración programada: '+formatSeconds(d.duration),'muted small'));else if(d.strength)group.append(node('div','Programado: '+d.strength.sets+' × '+d.strength.reps+' · '+(d.strength.weight??0)+' kg','muted small'));else if(readTechniqueLink(raw).text!==item.label)group.append(node('div',readTechniqueLink(raw).text,'muted small'));if(d.instructions)group.append(node('p','Indicaciones: '+d.instructions,'muted small exercise-instruction-preview'));const actual=r.actualResults?.[i];if(actual)group.append(node('div','Realizado: '+actual.value+' '+actual.unit,'gold small'));const sets=r.seriesLog?.[i]||[];if(Array.isArray(sets))sets.forEach((e,n)=>group.append(node('div','Serie '+(n+1)+': '+(e.reps??'—')+' rep · '+e.weight+' kg · RIR '+e.rir+' · descanso '+e.rest+'s','small')));blockBody.append(group)})}else{details.append(node('p','Esta sesión antigua no conserva el detalle de ejercicios.','muted small'))}card.append(details);if(Array.isArray(r.ftResults))for(const result of r.ftResults)card.append(node('p','FOR TIME '+result.name+' · '+(result.complete?'Completado':'Límite alcanzado')+' · '+formatSeconds(Math.floor(result.seconds))+' · '+result.steps+'/'+result.total+' pasos','gold'));if(Array.isArray(r.amrapResults)&&r.amrapResults.length){for(const result of r.amrapResults){const p=node('p','AMRAP '+result.name+': '+result.rounds+' rondas completas + '+result.partial+' ejercicios · '+formatSeconds(result.elapsed),'gold');card.append(p)}}if(r.rpe!==undefined||r.pain||r.notes){const report=node('div','','notice');report.style.marginTop='10px';report.textContent='RPE: '+(r.rpe??'—')+' · Molestias: '+(r.pain||'—')+(r.notes?' · '+r.notes:'');card.append(report)}const prior=records.filter(x=>x.workoutId===r.workoutId&&x.id!==r.id&&new Date(x.date)<new Date(r.date)).at(-1);if(prior){const diff=Math.round((r.elapsed||0)-(prior.elapsed||0));card.append(node('p','Respecto a la sesión anterior: '+(diff===0?'mismo tiempo':diff<0?Math.abs(diff)+' s menos':diff+' s más')+' · comparación orientativa','muted small'))}box.append(card)})}
+let historyStatsOpen=false,historyStatsPeriod='week';
+const statsDateFormat=new Intl.DateTimeFormat('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit'});
+const statsNumberFormat=new Intl.NumberFormat('es-ES',{maximumFractionDigits:2});
+const workoutStatsMetrics={
+ load:{label:'Carga máxima',format:value=>statsNumberFormat.format(value)+' kg'},
+ reps:{label:'Repeticiones totales',format:value=>statsNumberFormat.format(value)+' rep'},
+ time:{label:'Tiempo registrado',format:value=>formatStatsDuration(value)},
+ distance:{label:'Distancia registrada',format:value=>value<1000?statsNumberFormat.format(value)+' m':statsNumberFormat.format(value/1000)+' km'}
+};
+function formatStatsDuration(seconds){
+ const total=Math.floor(seconds),hours=Math.floor(total/3600),minutes=Math.floor(total/60)%60;
+ const parts=[];
+ if(hours)parts.push(hours+' h');
+ if(minutes)parts.push(minutes+' min');
+ if(total%60||!parts.length)parts.push(total%60+' s');
+ return parts.join(' ');
+}
+function activityPeriods(now,period){
+ const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+ if(period==='month'){
+  const start=new Date(today.getFullYear(),today.getMonth(),1);
+  return [new Date(today.getFullYear(),today.getMonth()-1,1),start,new Date(today.getFullYear(),today.getMonth()+1,1)];
+ }
+ const start=new Date(today);
+ start.setDate(today.getDate()-(today.getDay()+6)%7);
+ const previous=new Date(start),end=new Date(start);
+ previous.setDate(start.getDate()-7);end.setDate(start.getDate()+7);
+ return [previous,start,end];
+}
+function renderHistoryActivity(records){
+ const target=$('historyActivity');
+ const now=new Date(),[previous,start,end]=activityPeriods(now,historyStatsPeriod);
+ const monthly=historyStatsPeriod==='month';
+ const periods=[
+  {label:monthly?'Este mes':'Esta semana',from:start,to:end,current:true},
+  {label:monthly?'Mes anterior':'Semana anterior',from:previous,to:start}
+ ];
+ target.replaceChildren(...periods.map(period=>{
+  const entries=records.filter(entry=>entry.date>=period.from&&entry.date<period.to&&entry.date<=now);
+  const duration=entries.reduce((total,{record})=>{
+   const seconds=Number(record.elapsed);
+   return total+(Number.isFinite(seconds)&&seconds>0?seconds:0);
+  },0);
+  const card=node('div','','stats-period');
+  const inclusiveEnd=new Date(period.current?now:period.to);
+  if(!period.current)inclusiveEnd.setDate(inclusiveEnd.getDate()-1);
+  card.append(
+   node('h4',period.label),
+   node('p',statsDateFormat.format(period.from)+' – '+statsDateFormat.format(inclusiveEnd),'muted'),
+   node('strong',entries.length+(entries.length===1?' sesión':' sesiones')),
+   node('p',formatStatsDuration(duration)+' de entrenamiento')
+  );
+  return card;
+ }));
+}
+function registeredExerciseStats(record){
+ const result=new Map();
+ const labels=Array.isArray(record.exerciseNames)?record.exerciseNames:[];
+ const snapshots=Array.isArray(record.exerciseSnapshot)?record.exerciseSnapshot:[];
+ const itemCount=Math.max(labels.length,snapshots.length);
+ for(let index=0;index<itemCount;index++){
+  const label=String(labels[index]||snapshots[index]?.label||'').trim().replace(/ · Ronda \d+\/\d+$/i,'');
+  if(!label)continue;
+  const key=normalizedName(label);
+  const series=Array.isArray(record.seriesLog?.[index])?record.seriesLog[index]:[];
+  const actual=record.actualResults?.[index];
+  const entry=result.get(key)??{label};
+  for(const set of series){
+   if(Number.isFinite(set.weight)&&set.weight>=0)entry.load=Math.max(entry.load??0,set.weight);
+   if(Number.isFinite(set.reps)&&set.reps>=0)entry.reps=(entry.reps??0)+set.reps;
+  }
+  if(Number.isFinite(actual?.value)&&actual.value>=0){
+   if(actual.unit==='reps')entry.reps=(entry.reps??0)+actual.value;
+   if(actual.unit==='s')entry.time=(entry.time??0)+actual.value;
+   if(actual.unit==='m'||actual.unit==='km')entry.distance=(entry.distance??0)+actual.value*(actual.unit==='km'?1000:1);
+  }
+  if(Object.keys(entry).length>1)result.set(key,entry);
+ }
+ return result;
+}
+function fillStatsSelect(select,options){
+ const selected=select.value;
+ select.replaceChildren(...options.map(([value,label])=>{
+  const option=node('option',label);option.value=value;return option;
+ }));
+ if(options.some(([value])=>value===selected))select.value=selected;
+}
+function renderExerciseProgress(timeline){
+ const exercise=$('historyStatsExercise'),metric=$('historyStatsMetric'),body=$('historyProgress');
+ const series=timeline.get(exercise.value)??[];
+ const options=Object.entries(workoutStatsMetrics).filter(([key])=>series.some(entry=>entry[key]!==undefined));
+ fillStatsSelect(metric,options.map(([key,definition])=>[key,definition.label]));
+ const key=metric.value;
+ if(!key){
+  body.replaceChildren(node('p','El progreso aparecerá cuando guardes series o resultados de un ejercicio.','muted'));
+  return;
+ }
+ const points=series.filter(entry=>entry[key]!==undefined).slice(-12);
+ const maximum=Math.max(1,...points.map(entry=>entry[key]));
+ const chart=node('ol','','stats-chart');
+ for(const entry of points){
+  const point=node('li'),track=node('span','','stats-chart-track'),fill=node('span','','stats-chart-fill');
+  track.setAttribute('aria-hidden','true');
+  fill.style.width=(entry[key]/maximum*100)+'%';
+  track.append(fill);
+  point.append(node('span',statsDateFormat.format(entry.date)),track,node('strong',workoutStatsMetrics[key].format(entry[key]),'stats-chart-value'));
+  chart.append(point);
+ }
+ body.replaceChildren(node('p',points.length===1?'1 registro · '+workoutStatsMetrics[key].label:'Últimos '+points.length+' registros · '+workoutStatsMetrics[key].label,'muted small'),chart);
+}
+function renderProfileStats(records){
+ const dated=records.map(record=>({record,date:record?.date?new Date(record.date):null}))
+  .filter(entry=>entry.date&&Number.isFinite(entry.date.getTime())).sort((a,b)=>a.date-b.date);
+ renderHistoryActivity(dated);
+ const timeline=new Map();
+ for(const {record,date} of dated){
+  for(const [key,entry] of registeredExerciseStats(record)){
+   if(!timeline.has(key))timeline.set(key,[]);
+   timeline.get(key).push({...entry,date});
+  }
+ }
+ const options=Array.from(timeline,([key,entries])=>[key,entries.at(-1).label]).sort((a,b)=>a[1].localeCompare(b[1],'es'));
+ fillStatsSelect($('historyStatsExercise'),options);
+ $('historyStatsFilters').classList.toggle('hidden',!options.length);
+ renderExerciseProgress(timeline);
+ $('historyStatsExercise').onchange=$('historyStatsMetric').onchange=()=>renderExerciseProgress(timeline);
+}
+function selectHistoryView(stats){
+ historyStatsOpen=!isHF&&stats;
+ $('historySessionsTab').setAttribute('aria-pressed',String(!historyStatsOpen));
+ $('historyStatsTab').setAttribute('aria-pressed',String(historyStatsOpen));
+ $('historySessionList').classList.toggle('hidden',historyStatsOpen);
+ $('historyStats').classList.toggle('hidden',!historyStatsOpen);
+ renderHistory();
+}
+$('historySessionsTab').onclick=()=>selectHistoryView(false);
+$('historyStatsTab').onclick=()=>selectHistoryView(true);
+$('historyStatsPeriod').addEventListener('click',event=>{
+ const button=event.target.closest('button[data-period]');
+ if(!button)return;
+ historyStatsPeriod=button.dataset.period;
+ for(const option of $('historyStatsPeriod').querySelectorAll('button'))option.setAttribute('aria-pressed',String(option===button));
+ renderProfileStats(getHistory());
+});
+function renderHistory(){
+ if(!isHF&&historyStatsOpen){
+  $('historyUndoDelete').classList.add('hidden');
+  renderProfileStats(getHistory());
+  return;
+ }
+ const box=$('historyEntries');box.replaceChildren();const records=getHistory(),sorted=records.slice().reverse();$('historyUndoDelete').classList.toggle('hidden',isHF||!appStorage.getItem(HISTORY_RECOVERY_KEY));if(!sorted.length)box.append(node('p','Todavía no hay sesiones finalizadas guardadas.','muted'));sorted.forEach((r,displayIndex)=>{const card=node('div','','tile');card.style.margin='12px 0';const heading=node('div','','row history-entry-heading');heading.append(node('h3',r.name||'Entrenamiento'));if(!isHF){const del=node('button','Eliminar sesión','danger');del.type='button';del.setAttribute('aria-label','Eliminar sesión '+(r.name||'Entrenamiento'));del.onclick=()=>deleteHistoryEntry(r,records.length-1-displayIndex);heading.append(del)}card.append(heading);const date=new Date(r.date);card.append(node('p',(isNaN(date.getTime())?'Fecha no disponible':date.toLocaleString('es-ES'))+' · '+formatSeconds(Math.floor(r.elapsed||0)),'muted'));if(!isHF){const heart=r.heartRate;card.append(node('p',heart?'FC media '+heartRateText(heart.average)+' · FC máxima '+heartRateText(heart.peak)+(heart.partial?' · Lectura parcial':''):'FC media y máxima · Sin datos','muted small'))}const details=node('div','','history-detail hidden');const toggle=node('button','▸ Ver ejercicios y series','history-toggle');toggle.type='button';toggle.onclick=()=>{const opening=details.classList.contains('hidden');details.classList.toggle('hidden',!opening);toggle.textContent=(opening?'▾':'▸')+' Ver ejercicios y series'};card.append(toggle);const w=workouts.find(x=>x.id===r.workoutId);let items=Array.isArray(r.exerciseSnapshot)?r.exerciseSnapshot:null;if(!items||!items.length){if(Array.isArray(r.exerciseNames)&&r.exerciseNames.length){items=r.exerciseNames.map((label,i)=>({label,raw:label,block:'',index:i}))}else if(w){items=w.blocks.flatMap(b=>b.items.map(line=>({label:decode(line).label,raw:line,block:b.name})))}}if(items&&items.length){items=groupHistoricalItems(items,w);details.append(node('p',items.length+' pasos programados · agrupados por bloque','gold small'));let currentBlock=null,blockBody=null,blockNumber=0;items.forEach((item,i)=>{const blockName=item.block||'Ejercicios';if(blockName!==currentBlock){currentBlock=blockName;blockNumber++;const section=node('section','','history-block');const head=node('button','','history-block-head');head.type='button';const label=node('span',blockName);const indicator=node('span','▸');head.append(label,indicator);blockBody=node('div','','history-block-body hidden');const ownBody=blockBody;head.onclick=()=>{const opening=ownBody.classList.contains('hidden');ownBody.classList.toggle('hidden',!opening);indicator.textContent=opening?'▾':'▸'};section.append(head,blockBody);details.append(section)}const raw=item.raw||item.label||'',d=decode(raw),group=node('div','','history-exercise');const title=node('div','','history-exercise-title');let kind='REP';if(d.duration)kind='TIEMPO';else if(/\b\d+(?:[.,]\d+)?\s*(?:m|km)\b/i.test(raw))kind='DIST';else if(d.strength)kind='FUERZA';const chip=node('span',kind,'history-kind');title.append(chip,node('strong',(i+1)+'. '+(item.label||d.label||raw)));group.append(title);if(r.vectorDose?.[i])group.append(node('div',r.vectorDose[i],'muted small'));else if(d.duration)group.append(node('div','Duración programada: '+formatSeconds(d.duration),'muted small'));else if(d.strength)group.append(node('div','Programado: '+d.strength.sets+' × '+d.strength.reps+' · '+(d.strength.weight??0)+' kg','muted small'));else if(readTechniqueLink(raw).text!==item.label)group.append(node('div',readTechniqueLink(raw).text,'muted small'));if(d.instructions)group.append(node('p','Indicaciones: '+d.instructions,'muted small exercise-instruction-preview'));const actual=r.actualResults?.[i];if(actual)group.append(node('div','Realizado: '+actual.value+' '+actual.unit,'gold small'));const sets=r.seriesLog?.[i]||[];if(Array.isArray(sets))sets.forEach((e,n)=>group.append(node('div','Serie '+(n+1)+': '+(e.reps??'—')+' rep · '+e.weight+' kg · RIR '+e.rir+' · descanso '+e.rest+'s','small')));blockBody.append(group)})}else{details.append(node('p','Esta sesión antigua no conserva el detalle de ejercicios.','muted small'))}card.append(details);if(Array.isArray(r.ftResults))for(const result of r.ftResults)card.append(node('p','FOR TIME '+result.name+' · '+(result.complete?'Completado':'Límite alcanzado')+' · '+formatSeconds(Math.floor(result.seconds))+' · '+result.steps+'/'+result.total+' pasos','gold'));if(Array.isArray(r.amrapResults)&&r.amrapResults.length){for(const result of r.amrapResults){const p=node('p','AMRAP '+result.name+': '+result.rounds+' rondas completas + '+result.partial+' ejercicios · '+formatSeconds(result.elapsed),'gold');card.append(p)}}if(r.rpe!==undefined||r.pain||r.notes){const report=node('div','','notice');report.style.marginTop='10px';report.textContent='RPE: '+(r.rpe??'—')+' · Molestias: '+(r.pain||'—')+(r.notes?' · '+r.notes:'');card.append(report)}const prior=records.filter(x=>x.workoutId===r.workoutId&&x.id!==r.id&&new Date(x.date)<new Date(r.date)).at(-1);if(prior){const diff=Math.round((r.elapsed||0)-(prior.elapsed||0));card.append(node('p','Respecto a la sesión anterior: '+(diff===0?'mismo tiempo':diff<0?Math.abs(diff)+' s menos':diff+' s más')+' · comparación orientativa','muted small'))}box.append(card)})}
 function getHistory(){try{const data=JSON.parse(appStorage.getItem('gg-strength-history-v1')||'[]');return Array.isArray(data)?data:[]}catch(e){return[]}}
 function normalizedName(v){return String(v||'').trim().toLocaleLowerCase('es-ES').replace(/\s+/g,' ')}
 function renderPrevious(){const out=$('previousSession'),current=steps()[step];out.replaceChildren();if(!current)return;const name=normalizedName(current.label);const history=getHistory().slice().reverse();let found=null;for(const h of history){const labels=h.exerciseNames||[];for(const [index,entries] of Object.entries(h.seriesLog||{})){if(normalizedName(labels[Number(index)])===name&&Array.isArray(entries)&&entries.length){found={h,entries};break}}if(found)break}if(!found){out.textContent='Sin registro anterior de este ejercicio';return}const date=new Date(found.h.date);out.append(node('strong','Última sesión · '+(Number.isNaN(date.getTime())?'Fecha desconocida':date.toLocaleDateString('es-ES'))));found.entries.forEach((entry,i)=>out.append(node('div','Serie '+(i+1)+': '+entry.reps+' rep · '+entry.weight+' kg · RIR '+entry.rir,'small')))}
@@ -3197,7 +3394,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.19';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.20';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
