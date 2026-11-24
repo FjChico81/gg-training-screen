@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.20</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.21</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -1234,7 +1234,9 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
 <p id="exerciseLibraryCount" class="muted small" aria-live="polite"></p>
 <div id="exerciseLibraryResults"></div>
 </div></section>
-<section id="history" class="hidden"><div class="panel"><div class="row"><h2>Historial de sesiones</h2><div class="actions"><button id="historyUndoDelete" class="alt hidden" type="button">↶ Deshacer eliminación</button><button id="historyBack" class="alt">Inicio</button></div></div><div id="historyViewChoices" class="history-view-choices" role="group" aria-label="Vista del historial">
+<section id="history" class="hidden"><div class="panel"><div class="row"><h2>Historial de sesiones</h2><div class="actions"><button id="historyUndoDelete" class="alt hidden" type="button">↶ Deshacer eliminación</button><button id="historyBack" class="alt">Inicio</button></div></div><button id="garminImport" type="button" class="alt hidden">Importar desde Garmin</button>
+<p id="garminImportStatus" class="muted small" role="status"></p>
+<div id="historyViewChoices" class="history-view-choices" role="group" aria-label="Vista del historial">
 <button id="historySessionsTab" type="button" aria-pressed="true" aria-controls="historySessionList">Sesiones</button>
 <button id="historyStatsTab" type="button" aria-pressed="false" aria-controls="historyStats">Estadísticas</button>
 </div>
@@ -1610,13 +1612,13 @@ const appStorage={
   if(SECURE_AUTH_V2)return secureNamespace?localStorage.getItem(secureNamespace+key):null;
   return localStorage.getItem(storagePrefix+key)
  },
- setItem(key,value){
+ setItem(key,value,options){
   if(SECURE_AUTH_V2&&!secureNamespace)throw Error('Inicia sesión para guardar datos.');
   localStorage.setItem((SECURE_AUTH_V2?secureNamespace:storagePrefix)+key,value);
   if(SECURE_AUTH_V2&&!secureApply&&secureSyncController){
    const kind=key===KEY?'workout':key==='gg-strength-history-v1'?'history':key==='gg-active-session-v1'?'active':null;
    if(kind){
-    secureSyncController.changed(kind,kind==='active'?JSON.parse(value):value);
+    secureSyncController.changed(kind,kind==='active'?JSON.parse(value):value,options);
     window.__secureAccount?.schedule();
    }
   }
@@ -2037,6 +2039,15 @@ function registeredExerciseStats(record){
  const result=new Map();
  const labels=Array.isArray(record.exerciseNames)?record.exerciseNames:[];
  const snapshots=Array.isArray(record.exerciseSnapshot)?record.exerciseSnapshot:[];
+ if(record.source==='garmin'&&record.garmin?.type){
+  const sportLabels={running:'Carrera',treadmill_running:'Carrera en cinta',trail_running:'Carrera de montaña',cycling:'Ciclismo',indoor_cycling:'Bici indoor',walking:'Caminar',lap_swimming:'Natación en piscina'};
+  const type=record.garmin.type;
+  const label=Object.hasOwn(sportLabels,type)?sportLabels[type]:type.replace(/_/g,' ');
+  const entry={label,time:record.elapsed};
+  if(Number.isFinite(record.garmin.distanceMeters))entry.distance=record.garmin.distanceMeters;
+  result.set(normalizedName(label),entry);
+  return result;
+ }
  const itemCount=Math.max(labels.length,snapshots.length);
  for(let index=0;index<itemCount;index++){
   const label=String(labels[index]||snapshots[index]?.label||'').trim().replace(/ · Ronda \d+\/\d+$/i,'');
@@ -2128,7 +2139,7 @@ function renderHistory(){
   renderProfileStats(getHistory());
   return;
  }
- const box=$('historyEntries');box.replaceChildren();const records=getHistory(),sorted=records.slice().reverse();$('historyUndoDelete').classList.toggle('hidden',isHF||!appStorage.getItem(HISTORY_RECOVERY_KEY));if(!sorted.length)box.append(node('p','Todavía no hay sesiones finalizadas guardadas.','muted'));sorted.forEach((r,displayIndex)=>{const card=node('div','','tile');card.style.margin='12px 0';const heading=node('div','','row history-entry-heading');heading.append(node('h3',r.name||'Entrenamiento'));if(!isHF){const del=node('button','Eliminar sesión','danger');del.type='button';del.setAttribute('aria-label','Eliminar sesión '+(r.name||'Entrenamiento'));del.onclick=()=>deleteHistoryEntry(r,records.length-1-displayIndex);heading.append(del)}card.append(heading);const date=new Date(r.date);card.append(node('p',(isNaN(date.getTime())?'Fecha no disponible':date.toLocaleString('es-ES'))+' · '+formatSeconds(Math.floor(r.elapsed||0)),'muted'));if(!isHF){const heart=r.heartRate;card.append(node('p',heart?'FC media '+heartRateText(heart.average)+' · FC máxima '+heartRateText(heart.peak)+(heart.partial?' · Lectura parcial':''):'FC media y máxima · Sin datos','muted small'))}const details=node('div','','history-detail hidden');const toggle=node('button','▸ Ver ejercicios y series','history-toggle');toggle.type='button';toggle.onclick=()=>{const opening=details.classList.contains('hidden');details.classList.toggle('hidden',!opening);toggle.textContent=(opening?'▾':'▸')+' Ver ejercicios y series'};card.append(toggle);const w=workouts.find(x=>x.id===r.workoutId);let items=Array.isArray(r.exerciseSnapshot)?r.exerciseSnapshot:null;if(!items||!items.length){if(Array.isArray(r.exerciseNames)&&r.exerciseNames.length){items=r.exerciseNames.map((label,i)=>({label,raw:label,block:'',index:i}))}else if(w){items=w.blocks.flatMap(b=>b.items.map(line=>({label:decode(line).label,raw:line,block:b.name})))}}if(items&&items.length){items=groupHistoricalItems(items,w);details.append(node('p',items.length+' pasos programados · agrupados por bloque','gold small'));let currentBlock=null,blockBody=null,blockNumber=0;items.forEach((item,i)=>{const blockName=item.block||'Ejercicios';if(blockName!==currentBlock){currentBlock=blockName;blockNumber++;const section=node('section','','history-block');const head=node('button','','history-block-head');head.type='button';const label=node('span',blockName);const indicator=node('span','▸');head.append(label,indicator);blockBody=node('div','','history-block-body hidden');const ownBody=blockBody;head.onclick=()=>{const opening=ownBody.classList.contains('hidden');ownBody.classList.toggle('hidden',!opening);indicator.textContent=opening?'▾':'▸'};section.append(head,blockBody);details.append(section)}const raw=item.raw||item.label||'',d=decode(raw),group=node('div','','history-exercise');const title=node('div','','history-exercise-title');let kind='REP';if(d.duration)kind='TIEMPO';else if(/\b\d+(?:[.,]\d+)?\s*(?:m|km)\b/i.test(raw))kind='DIST';else if(d.strength)kind='FUERZA';const chip=node('span',kind,'history-kind');title.append(chip,node('strong',(i+1)+'. '+(item.label||d.label||raw)));group.append(title);if(r.vectorDose?.[i])group.append(node('div',r.vectorDose[i],'muted small'));else if(d.duration)group.append(node('div','Duración programada: '+formatSeconds(d.duration),'muted small'));else if(d.strength)group.append(node('div','Programado: '+d.strength.sets+' × '+d.strength.reps+' · '+(d.strength.weight??0)+' kg','muted small'));else if(readTechniqueLink(raw).text!==item.label)group.append(node('div',readTechniqueLink(raw).text,'muted small'));if(d.instructions)group.append(node('p','Indicaciones: '+d.instructions,'muted small exercise-instruction-preview'));const actual=r.actualResults?.[i];if(actual)group.append(node('div','Realizado: '+actual.value+' '+actual.unit,'gold small'));const sets=r.seriesLog?.[i]||[];if(Array.isArray(sets))sets.forEach((e,n)=>group.append(node('div','Serie '+(n+1)+': '+(e.reps??'—')+' rep · '+e.weight+' kg · RIR '+e.rir+' · descanso '+e.rest+'s','small')));blockBody.append(group)})}else{details.append(node('p','Esta sesión antigua no conserva el detalle de ejercicios.','muted small'))}card.append(details);if(Array.isArray(r.ftResults))for(const result of r.ftResults)card.append(node('p','FOR TIME '+result.name+' · '+(result.complete?'Completado':'Límite alcanzado')+' · '+formatSeconds(Math.floor(result.seconds))+' · '+result.steps+'/'+result.total+' pasos','gold'));if(Array.isArray(r.amrapResults)&&r.amrapResults.length){for(const result of r.amrapResults){const p=node('p','AMRAP '+result.name+': '+result.rounds+' rondas completas + '+result.partial+' ejercicios · '+formatSeconds(result.elapsed),'gold');card.append(p)}}if(r.rpe!==undefined||r.pain||r.notes){const report=node('div','','notice');report.style.marginTop='10px';report.textContent='RPE: '+(r.rpe??'—')+' · Molestias: '+(r.pain||'—')+(r.notes?' · '+r.notes:'');card.append(report)}const prior=records.filter(x=>x.workoutId===r.workoutId&&x.id!==r.id&&new Date(x.date)<new Date(r.date)).at(-1);if(prior){const diff=Math.round((r.elapsed||0)-(prior.elapsed||0));card.append(node('p','Respecto a la sesión anterior: '+(diff===0?'mismo tiempo':diff<0?Math.abs(diff)+' s menos':diff+' s más')+' · comparación orientativa','muted small'))}box.append(card)})}
+ const box=$('historyEntries');box.replaceChildren();const records=getHistory(),sorted=records.map((record,index)=>({record,index})).reverse();if(!isHF)sorted.sort((a,b)=>(Date.parse(b.record.date)||0)-(Date.parse(a.record.date)||0));$('historyUndoDelete').classList.toggle('hidden',isHF||!appStorage.getItem(HISTORY_RECOVERY_KEY));if(!sorted.length)box.append(node('p','Todavía no hay sesiones finalizadas guardadas.','muted'));sorted.forEach(({record:r,index})=>{const card=node('div','','tile');card.style.margin='12px 0';const heading=node('div','','row history-entry-heading');heading.append(node('h3',r.name||'Entrenamiento'));if(!isHF){const del=node('button','Eliminar sesión','danger');del.type='button';del.setAttribute('aria-label','Eliminar sesión '+(r.name||'Entrenamiento'));del.onclick=()=>deleteHistoryEntry(r,index);heading.append(del)}card.append(heading);if(!isHF&&r.source==='garmin')card.append(node('p','Garmin Connect'+(r.garmin?.distanceMeters?' · '+workoutStatsMetrics.distance.format(r.garmin.distanceMeters):''),'muted small'));const date=new Date(r.date);card.append(node('p',(isNaN(date.getTime())?'Fecha no disponible':date.toLocaleString('es-ES'))+' · '+formatSeconds(Math.floor(r.elapsed||0)),'muted'));if(!isHF){const heart=r.heartRate;card.append(node('p',heart?'FC media '+heartRateText(heart.average)+' · FC máxima '+heartRateText(heart.peak)+(heart.partial?' · Lectura parcial':''):'FC media y máxima · Sin datos','muted small'))}const details=node('div','','history-detail hidden');const toggle=node('button','▸ Ver ejercicios y series','history-toggle');toggle.type='button';toggle.onclick=()=>{const opening=details.classList.contains('hidden');details.classList.toggle('hidden',!opening);toggle.textContent=(opening?'▾':'▸')+' Ver ejercicios y series'};if(r.source!=='garmin')card.append(toggle);const w=workouts.find(x=>x.id===r.workoutId);let items=Array.isArray(r.exerciseSnapshot)?r.exerciseSnapshot:null;if(!items||!items.length){if(Array.isArray(r.exerciseNames)&&r.exerciseNames.length){items=r.exerciseNames.map((label,i)=>({label,raw:label,block:'',index:i}))}else if(w){items=w.blocks.flatMap(b=>b.items.map(line=>({label:decode(line).label,raw:line,block:b.name})))}}if(items&&items.length){items=groupHistoricalItems(items,w);details.append(node('p',items.length+' pasos programados · agrupados por bloque','gold small'));let currentBlock=null,blockBody=null,blockNumber=0;items.forEach((item,i)=>{const blockName=item.block||'Ejercicios';if(blockName!==currentBlock){currentBlock=blockName;blockNumber++;const section=node('section','','history-block');const head=node('button','','history-block-head');head.type='button';const label=node('span',blockName);const indicator=node('span','▸');head.append(label,indicator);blockBody=node('div','','history-block-body hidden');const ownBody=blockBody;head.onclick=()=>{const opening=ownBody.classList.contains('hidden');ownBody.classList.toggle('hidden',!opening);indicator.textContent=opening?'▾':'▸'};section.append(head,blockBody);details.append(section)}const raw=item.raw||item.label||'',d=decode(raw),group=node('div','','history-exercise');const title=node('div','','history-exercise-title');let kind='REP';if(d.duration)kind='TIEMPO';else if(/\b\d+(?:[.,]\d+)?\s*(?:m|km)\b/i.test(raw))kind='DIST';else if(d.strength)kind='FUERZA';const chip=node('span',kind,'history-kind');title.append(chip,node('strong',(i+1)+'. '+(item.label||d.label||raw)));group.append(title);if(r.vectorDose?.[i])group.append(node('div',r.vectorDose[i],'muted small'));else if(d.duration)group.append(node('div','Duración programada: '+formatSeconds(d.duration),'muted small'));else if(d.strength)group.append(node('div','Programado: '+d.strength.sets+' × '+d.strength.reps+' · '+(d.strength.weight??0)+' kg','muted small'));else if(readTechniqueLink(raw).text!==item.label)group.append(node('div',readTechniqueLink(raw).text,'muted small'));if(d.instructions)group.append(node('p','Indicaciones: '+d.instructions,'muted small exercise-instruction-preview'));const actual=r.actualResults?.[i];if(actual)group.append(node('div','Realizado: '+actual.value+' '+actual.unit,'gold small'));const sets=r.seriesLog?.[i]||[];if(Array.isArray(sets))sets.forEach((e,n)=>group.append(node('div','Serie '+(n+1)+': '+(e.reps??'—')+' rep · '+e.weight+' kg · RIR '+e.rir+' · descanso '+e.rest+'s','small')));blockBody.append(group)})}else{details.append(node('p','Esta sesión antigua no conserva el detalle de ejercicios.','muted small'))}card.append(details);if(Array.isArray(r.ftResults))for(const result of r.ftResults)card.append(node('p','FOR TIME '+result.name+' · '+(result.complete?'Completado':'Límite alcanzado')+' · '+formatSeconds(Math.floor(result.seconds))+' · '+result.steps+'/'+result.total+' pasos','gold'));if(Array.isArray(r.amrapResults)&&r.amrapResults.length){for(const result of r.amrapResults){const p=node('p','AMRAP '+result.name+': '+result.rounds+' rondas completas + '+result.partial+' ejercicios · '+formatSeconds(result.elapsed),'gold');card.append(p)}}if(r.rpe!==undefined||r.pain||r.notes){const report=node('div','','notice');report.style.marginTop='10px';report.textContent='RPE: '+(r.rpe??'—')+' · Molestias: '+(r.pain||'—')+(r.notes?' · '+r.notes:'');card.append(report)}const prior=r.workoutId?records.filter(x=>x.workoutId===r.workoutId&&x.id!==r.id&&new Date(x.date)<new Date(r.date)).at(-1):null;if(prior){const diff=Math.round((r.elapsed||0)-(prior.elapsed||0));card.append(node('p','Respecto a la sesión anterior: '+(diff===0?'mismo tiempo':diff<0?Math.abs(diff)+' s menos':diff+' s más')+' · comparación orientativa','muted small'))}box.append(card)})}
 function getHistory(){try{const data=JSON.parse(appStorage.getItem('gg-strength-history-v1')||'[]');return Array.isArray(data)?data:[]}catch(e){return[]}}
 function normalizedName(v){return String(v||'').trim().toLocaleLowerCase('es-ES').replace(/\s+/g,' ')}
 function renderPrevious(){const out=$('previousSession'),current=steps()[step];out.replaceChildren();if(!current)return;const name=normalizedName(current.label);const history=getHistory().slice().reverse();let found=null;for(const h of history){const labels=h.exerciseNames||[];for(const [index,entries] of Object.entries(h.seriesLog||{})){if(normalizedName(labels[Number(index)])===name&&Array.isArray(entries)&&entries.length){found={h,entries};break}}if(found)break}if(!found){out.textContent='Sin registro anterior de este ejercicio';return}const date=new Date(found.h.date);out.append(node('strong','Última sesión · '+(Number.isNaN(date.getTime())?'Fecha desconocida':date.toLocaleDateString('es-ES'))));found.entries.forEach((entry,i)=>out.append(node('div','Serie '+(i+1)+': '+entry.reps+' rep · '+entry.weight+' kg · RIR '+entry.rir,'small')))}
@@ -3394,7 +3405,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.20';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.21';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
@@ -3978,6 +3989,27 @@ window.__secureAppV2={
   return true;
  },
  storagePrefix(){if(!secureNamespace)throw Error('Perfil sin autenticar.');return secureNamespace},
+ importGarminActivities(activities){
+  if(isHF||!secureNamespace?.endsWith(':personal:')||!secureSyncController)
+   throw Error('La importación de Garmin está disponible en el perfil Principal.');
+  if(!Array.isArray(activities)||activities.length>30)throw Error('Historial de Garmin inválido.');
+  const key='gg-strength-history-v1',history=getHistory();
+  const ids=new Set(history.map(entry=>entry?.id)),imported=[];
+  for(const entry of activities){
+   const garminId=entry?.id,id='garmin-'+garminId;
+   if(!/^\d{1,20}$/.test(garminId)||ids.has(id)||!Number.isFinite(Date.parse(entry.date))||!Number.isFinite(entry.elapsed)||entry.elapsed<=0)continue;
+   const {averageHeartRate,peakHeartRate}=entry;
+   const heartRate=Number.isFinite(averageHeartRate)||Number.isFinite(peakHeartRate)
+    ?{average:averageHeartRate,peak:peakHeartRate,partial:false}:null;
+   imported.push({id,source:'garmin',date:entry.date,elapsed:entry.elapsed,name:String(entry.name||'Actividad Garmin').slice(0,120),
+    garmin:{type:String(entry.type||'').slice(0,64),distanceMeters:entry.distanceMeters},heartRate});
+   ids.add(id);
+  }
+  if(!imported.length)return 0;
+  appStorage.setItem(key,JSON.stringify([...history,...imported]),{insertOnly:true});
+  if(view==='history')renderHistory();
+  return imported.length;
+ },
  snapshot(){
   return {
    workouts:Array.isArray(JSON.parse(appStorage.getItem(KEY)||'[]'))?JSON.parse(appStorage.getItem(KEY)||'[]'):[],
@@ -3996,6 +4028,7 @@ window.__secureAppV2={
   }finally{secureApply=false}
   load();restoreActiveSessionFromStorage();
   if(view==='library')renderLibrary();
+  if(view==='history')renderHistory();
   if(view==='board'&&active)renderBoard();
  },
  busy(){return session||view==='editor'||view==='guided'},
@@ -4041,5 +4074,5 @@ if(usesWorkoutCloud&&!SECURE_AUTH_V2){
   document.getElementById('ggCloudPanel')?.remove();
 }
 </script>
-<script type="module" src="src/account-entry-v2.mjs?v=3.0.3" onerror="document.getElementById('accountWall').dataset.phase='load-error';document.getElementById('accountLaunchMessage').textContent='No se pudo abrir la aplicación.'"></script>
+<script type="module" src="src/account-entry-v2.mjs?v=3.0.4" onerror="document.getElementById('accountWall').dataset.phase='load-error';document.getElementById('accountLaunchMessage').textContent='No se pudo abrir la aplicación.'"></script>
 </body></html>

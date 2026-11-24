@@ -141,6 +141,12 @@ export function createEditionCloud({url,publishableKey,edition,storage,fetchImpl
    JSON.stringify({...cache,rows:cache.rows.filter(profile=>profile.id!==profileId)}));
   return deleted;
  }
+ async function garminActivities(importNow=false){
+  check();
+  if(edition!=='gg'||offline())throw Error('Conéctate a Internet desde BUHARDILLA para usar Garmin.');
+  if(auth.expiresAt<=now()+60_000)await verify();
+  return request('/functions/v1/garmin-activities',{method:importNow?'POST':'GET'});
+ }
  async function getRecords(profileId){
   const uid=owner();assertUUID(profileId);
   const list=[];let offset=0;
@@ -178,7 +184,7 @@ export function createEditionCloud({url,publishableKey,edition,storage,fetchImpl
   return expectedRevision+1;
  }
  return {edition,authKey,get verified(){return verified},get user(){return verified?auth?.user:null},
-  verify,login,register,logout,profiles,createProfile,deleteProfile,getRecords,upsertRevision};
+  verify,login,register,logout,profiles,createProfile,deleteProfile,getRecords,upsertRevision,garminActivities};
 }
 export function profileUUID(uid,profileId){
  assertUUID(uid);
@@ -210,7 +216,7 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
     collective:toMap(collective,'collective'),
     class_state:class_state?{current:clone(class_state)}:{}};
  }
- function changed(kind,content){
+ function changed(kind,content,{insertOnly=false}={}){
   assertKind(kind);
   if(!['workout','history','active','collective','class_state'].includes(kind))return;
   const single=kind==='active'||kind==='class_state';
@@ -219,7 +225,7 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
   for(const [id,item] of Object.entries(after)){
    if(JSON.stringify(before[id])!==JSON.stringify(item)){
     const key=recordKey(kind,id);
-    pending[key]={kind,client_id:id,payload:clone(item),deleted_at:null,at:now()};
+    pending[key]={kind,client_id:id,payload:clone(item),deleted_at:null,at:now(),...(insertOnly&&!before[id]?{insert_only:true}:{})};
    }
   }
   if(!single)for(const id of Object.keys(before)){
@@ -241,6 +247,13 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
    const unresolved={};
    for(const [key,item] of Object.entries(pending)){
     const server=byKey.get(key),revision=shadow[key]?.revision??null;
+    // An import is insert-only. An existing Garmin ID, even a deleted one,
+    // takes precedence over a concurrent import from another device.
+    if(server&&item.insert_only){
+     if(pending[key]===item)delete pending[key];
+     else queued=true;
+     continue;
+    }
     const conflict=Boolean(server)&&(revision===null||Number(server.revision)!==Number(revision));
     if(conflict||(!server&&revision!==null)){
      unresolved[key]=item;continue;
@@ -254,6 +267,7 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
      if(pending[key]===item)delete pending[key];
      else queued=true;
     }catch(error){
+     if(item.insert_only&&error.code==='23505'){queued=true;continue}
      unresolved[key]=item;
      if(!(error instanceof SecureSyncConflict))onState('Cambio pendiente: '+error.message);
     }

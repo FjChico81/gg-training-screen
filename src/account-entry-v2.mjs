@@ -3,7 +3,7 @@
  * This is an integration candidate. NEVER enable in production until both
  * dedicated project schemas, RLS, login and two-device sync are verified.
  */
-import {createEditionCloud,createProfileSync,profileLocalId,profileUUID} from './authenticated-sync-v2.mjs?v=3.0.2';
+import {createEditionCloud,createProfileSync,profileLocalId,profileUUID} from './authenticated-sync-v2.mjs?v=3.0.3';
 const edition=new URLSearchParams(location.search).get('app')==='hf'?'hf':'gg';
 const config=edition==='hf'
  ?(await import('../config/hf-supabase.js')).HF_SUPABASE_CONFIG
@@ -18,6 +18,33 @@ if(!bridge)throw Error('Falta el enlace de la aplicación al motor de acceso.');
 let running=false,controller=null,profiles=[],currentUser=null,selectedProfile=null;
 let profileRefresh=null,profileMissing=false,profileRemoving=false;
 const deleteButton=by('deleteLocalProfile');
+const garminButton=by('garminImport');
+let importingGarmin=false;
+async function showGarminImport(user, profile){
+ garminButton.classList.add('hidden');
+ if(edition!=='gg'||!profile.is_primary||user.offline)return;
+ try{
+  const result=await cloud.garminActivities();
+  if(currentUser===user&&selectedProfile===profile&&result.enabled===true)garminButton.classList.remove('hidden');
+ }catch{ /* Other accounts and deployments without Garmin keep the control hidden. */ }
+}
+garminButton.onclick=async()=>{
+ const user=currentUser,profile=selectedProfile;
+ if(importingGarmin||edition!=='gg'||!user||!profile?.is_primary||profileMissing)return;
+ const status=by('garminImportStatus');
+ importingGarmin=true;garminButton.disabled=true;status.textContent='Consultando Garmin Connect…';
+ try{
+  const result=await cloud.garminActivities(true);
+  const remote=await cloud.getRecords(profile.id);
+  if(!Array.isArray(result.activities))throw Error('Historial de Garmin inválido.');
+  const known=new Set(remote.filter(record=>record.kind==='history').map(record=>record.client_id));
+  if(currentUser!==user||selectedProfile!==profile||profileMissing)return;
+  const received=bridge.importGarminActivities(result.activities.filter(entry=>!known.has('garmin-'+entry?.id)));
+  status.textContent=received===0?'No hay actividades nuevas entre las últimas 30.':received===1?'1 actividad de Garmin incorporada.':received+' actividades de Garmin incorporadas.';
+ }catch(error){
+  if(currentUser===user&&selectedProfile===profile)status.textContent=error.message;
+ }finally{garminButton.disabled=false;importingGarmin=false}
+};
 const syncStatus=text=>{by('accountSyncState').textContent=text};
 function profileStatus(text){
  const status=by('profileActionStatus');
@@ -130,11 +157,14 @@ async function ready(){
  by('accountUser').textContent=user.email||'Cuenta personal';
  by('accountSyncState').textContent='Cuenta verificada. Sincronización activa.';
  unlock();
+ void showGarminImport(user,selectedProfile);
  return true;
 }
 async function signOut(){
  if(bridge.busy()){alert('Finaliza la sesión en curso antes de cerrar sesión.');return}
  await cloud.logout();
+ garminButton.classList.add('hidden');
+ by('garminImportStatus').textContent='';
  bridge.setController(null);
  currentUser=null;selectedProfile=null;controller=null;profileMissing=false;
  updateDeleteButton();
