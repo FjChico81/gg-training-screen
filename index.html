@@ -1,6 +1,6 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.32</title>
-<meta name="apple-mobile-web-app-title" content="BUHARDILLA">
-<link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.33</title>
+<meta name="apple-mobile-web-app-title" content="HF">
+<link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
 // Authentication still controls when app contents become visible.
 document.documentElement.dataset.access='locked';
@@ -47,7 +47,7 @@ if(new URLSearchParams(location.search).get('app')==='hf'){
   document.querySelector('meta[name="apple-mobile-web-app-title"]').remove();
   document.getElementById('homeScreenIcon').href='assets/icons/hf-180.png';
 }else{
-  document.title='BUHARDILLA Fitness';
+  document.title='HF · Hybrid Funcional Club';
   const favicon=document.createElement('link');
   favicon.rel='icon';
   favicon.type='image/png';
@@ -3632,7 +3632,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.32';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.33';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
