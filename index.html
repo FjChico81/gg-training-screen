@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.28</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.29</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -546,6 +546,36 @@ html:not([data-edition="hf"]) body:has(.vector-home:not(.hidden)) .header-settin
 #settingsToggle .home-settings-icon{display:none}
 html:not([data-edition="hf"]) body:has(.vector-home:not(.hidden)) #settingsToggle .settings-symbol{display:none}
 html:not([data-edition="hf"]) body:has(.vector-home:not(.hidden)) #settingsToggle .home-settings-icon{display:block;width:22px;height:22px;fill:currentColor}
+#coachStationForm{max-width:760px;margin-inline:auto}
+#coachStationForm fieldset{min-width:0;border:1px solid var(--line);border-radius:12px;margin:12px 0}
+#stationSelection{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:6px 12px}
+#stationSelection label{display:flex;align-items:center;gap:8px;margin:0;min-height:44px;color:var(--text)}
+#stationSelection input{width:20px;height:20px;min-height:0;flex:none;accent-color:var(--accent)}
+#stationParameters{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px}
+#stationParameters label{margin:0}
+#stationError,#stationTime.countdown-ending{color:#b81914}
+#stationProgress{margin:0}
+#stationTime{font-size:clamp(44px,11vmin,110px);line-height:1;font-variant-numeric:tabular-nums}
+#stationScreen{text-align:center}
+#stationCards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:8px;margin:12px 0}
+#stationCards article{background:#fff;border:1px solid var(--accent);border-radius:12px;padding:9px;overflow-wrap:anywhere}
+#stationCards span,#stationCards strong{display:block}
+#stationCards strong{color:#963407;margin:3px 0;font-size:clamp(16px,2.7vmin,23px)}
+#stationCards h3{color:var(--text);font-size:clamp(16px,3vmin,27px);margin:4px 0}
+#stationCards p{margin:4px 0}
+#stationCards img{display:block;width:100%;height:clamp(70px,19vmin,165px);object-fit:contain}
+#stationControls summary,#coachClassChoice summary{cursor:pointer;font-weight:750;padding:8px}
+#stationBack{margin-top:8px}
+#stationControls .buttons{justify-content:center}
+#coachClassChoice{margin-top:8px}
+body.coach-guided #guidedHeartPanel,
+body.coach-guided #guided :is(#moreSession,#restartTraining,#cancelTraining,#quickAdvance),
+body.coach-guided.coach-controls-hidden #guided .guided-controls button:not(#coachDockToggle){display:none!important}
+body.coach-guided.tv-mode #guided :is(.tv-timing,#restCard){grid-column:1/-1}
+@media (orientation:portrait){
+ .tv-mode.coach-guided #guided .tv-current{grid-row:2}
+ .tv-mode.coach-guided #guided .tv-upcoming{grid-row:3}
+}
 #vectorEditorLibrary{margin:12px 0}
 #vectorEditorLibrary #exerciseLibrary{margin:8px 0 0}
 
@@ -1367,7 +1397,51 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
  <p id="workoutHrLimitHelp" class="muted small">Avisa tras 8 segundos por encima del límite.</p>
 </details>
 <div id="legacyEditor" class="panel" style="background:var(--editor,#304451)"><h3>Editor visual anterior</h3><label for="visualBlock">Bloque</label><select id="visualBlock"></select><div class="buttons"><button id="addBlock" class="alt" type="button">＋ Añadir bloque</button></div><label for="visualType">Tipo de ejercicio</label><select id="visualType"><option value="strength">Fuerza</option><option value="timed">Por tiempo</option><option value="manual">Manual / distancia</option></select><label for="visualName">Ejercicio</label><input id="visualName" placeholder="Ej.: Press banca"><div id="strengthFields" class="setgrid"><label>Series<input id="visualSets" type="number" min="1" max="30" value="3"></label><label>Reps<input id="visualReps" type="number" min="1" max="500" value="8"></label><label>Kg<input id="visualKg" type="number" min="0" max="1000" step="0.25" value="0"></label><label>RIR<input id="visualRir" type="number" min="0" max="15" value="2"></label><label>Descanso (s)<input id="visualRest" type="number" min="0" max="1800" value="90"></label></div><div id="timedFields" class="hidden"><label for="visualDuration">Duración en segundos</label><input id="visualDuration" type="number" min="1" max="7200" value="60"></div><div class="buttons"><button id="addExercise" type="button">＋ Añadir ejercicio</button><button id="cancelVisualEdit" type="button" class="alt hidden">Cancelar edición</button></div><div class="timer-builder"><h3>Bloque de intervalos / EMOM</h3><label for="timerMode">Modalidad</label><select id="timerMode"><option value="intervals">Intervalos</option><option value="emom">EMOM de tiempo fijo</option></select><label for="timerName">Nombre del ejercicio</label><input id="timerName" placeholder="Ej.: SkiErg"><div class="setgrid"><label>Rondas<input id="timerRounds" type="number" min="1" max="50" value="5"></label><label>Trabajo (s)<input id="timerWork" type="number" min="1" max="3600" value="40"></label><label id="timerRestLabel">Recuperación (s)<input id="timerRest" type="number" min="0" max="3600" value="20"></label></div><p id="timerHint" class="muted small">Los intervalos alternan trabajo y recuperación. El descanso final se omite.</p><div class="buttons"><button id="addTimerBlock" type="button">＋ Añadir bloque temporizado</button></div></div></div><details><summary class="gold" style="cursor:pointer;margin:14px 0">Editor de texto avanzado (compatible con rutinas anteriores)</summary><label for="workoutBlocks">Bloques y ejercicios</label><textarea id="workoutBlocks" spellcheck="false" placeholder="Calentamiento:\n5 min bicicleta\nMovilidad dinámica\n\nFuerza:\n3 × 10 sentadillas\n3 × 12 press"></textarea><p class="muted small">Bloque terminado en dos puntos (:), después un ejercicio por línea. Para fuerza escribe, por ejemplo: <strong>Press banca | 3x8 | 90kg | RIR 2 | descanso 90s</strong>. También reconoce «3 × 10 sentadillas». Para ejercicios cronometrados añade <strong>@60</strong> al final (60 segundos). Ejemplo: Bicicleta @120 o Descanso @30. Los ejercicios sin @ avanzan manualmente.</p></details><div class="v2-save"><button id="save">✓ Guardar entrenamiento</button><button id="cancel" class="alt">Cancelar</button></div><p id="editorMessage" class="gold" aria-live="polite"></p></div></section>
-<section id="board" class="hidden"><div class="panel"><div class="row"><div><div class="gold">PIZARRA COMPLETA</div><h2 id="boardName"></h2></div><span id="count" class="muted"></span></div><div id="blocks" class="grid"></div><div class="buttons"><button id="start">▶ Iniciar entrenamiento</button><button id="resume" class="alt hidden">▶ Continuar sesión</button><button id="edit" class="alt">Editar</button><button type="button" class="alt tv-toggle" data-tv-toggle aria-pressed="false">Modo TV</button><button id="back" class="alt">Inicio</button></div></div></section>
+<section id="board" class="hidden"><div class="panel"><div class="row"><div><div class="gold">PIZARRA COMPLETA</div><h2 id="boardName"></h2></div><span id="count" class="muted"></span></div><div id="blocks" class="grid"></div><div class="buttons"><button id="start">▶ Iniciar entrenamiento</button><button id="resume" class="alt hidden">▶ Continuar sesión</button><button id="edit" class="alt">Editar</button><button type="button" class="alt tv-toggle" data-tv-toggle aria-pressed="false">Modo TV</button><button id="back" class="alt">Inicio</button></div>
+<details id="coachClassChoice" class="hidden">
+ <summary>Dirigir clase</summary>
+ <div class="buttons">
+  <button id="coachStartGuided" type="button">Clase guiada</button>
+  <button id="coachSetupStations" type="button" class="alt">Circuito por estaciones</button>
+ </div>
+</details>
+<p id="coachClassNotice" class="muted hidden" role="status"></p>
+</div></section>
+<section id="coachStations" class="hidden">
+ <div class="panel">
+  <div class="gold">Circuito por estaciones</div><h2 id="stationTitle" tabindex="-1"></h2>
+  <div id="coachStationForm"><form id="stationForm">
+   <fieldset>
+    <legend>Elige de 2 a 8 estaciones</legend>
+    <p class="muted small">Se mantiene el orden de la rutina. Cada grupo empieza en una estación y rota al terminar el tiempo común.</p>
+    <div id="stationSelection"></div>
+    <p id="stationCount" class="muted small"></p>
+   </fieldset>
+   <div id="stationParameters">
+    <label>Vueltas<input name="laps" type="number" min="1" max="12" value="3" required></label>
+    <label>Trabajo (s)<input name="work" type="number" min="10" max="1800" value="60" required></label>
+    <label>Cambio (s)<input name="change" type="number" min="0" max="300" value="20" required></label>
+   </div>
+   <p id="stationError" role="alert"></p>
+   <div class="buttons"><button id="stationStart" type="submit">Iniciar circuito</button><button id="stationCancel" type="button" class="alt">Volver a la pizarra</button></div>
+  </form></div>
+  <div id="stationScreen" class="hidden">
+   <h3 id="stationPhase" role="status"></h3>
+   <p id="stationProgress"></p>
+   <strong id="stationTime" class="metric" aria-live="off"></strong>
+   <div id="stationCards"></div>
+   <details id="stationControls" open>
+    <summary>Mandos del entrenador</summary>
+    <div class="buttons">
+     <button id="stationPause" class="alt" type="button">Pausar</button>
+     <button id="stationNext" type="button">Siguiente</button>
+     <button id="stationFinish" class="alt" type="button">Finalizar</button>
+    </div>
+   </details>
+   <button id="stationBack" type="button" hidden>Volver a la pizarra</button>
+  </div>
+ </div>
+</section>
 <section id="guided" class="hidden">
 <div class="half">
 <div class="panel">
@@ -1421,7 +1495,7 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
   <button id="prestartCancel" class="alt" type="button">Cancelar inicio</button></div>
  </div>
 </div>
-<div id="restCard" class="panel hidden" role="status" aria-live="polite"><div id="restLabel" class="gold small">DESCANSO AUTOMÁTICO</div><strong id="restCountdown" aria-live="off">00:00</strong><div id="restNext" class="muted small hidden"></div><button id="skipRest" type="button" class="alt">Omitir</button></div><div class="guided-controls"><div class="guided-primary"><button id="tvCompleteSet" type="button" class="tv-only">✓ Completar serie</button><button id="quickAdvance" type="button">✓ Ejercicio completado</button><button id="quickPause" type="button" class="alt">Pausar</button></div><div class="guided-view-controls"><button id="restartTraining" type="button" class="alt">↻ Reiniciar</button><button id="cancelTraining" type="button" class="alt">✕ Cancelar</button><button type="button" class="alt tv-toggle" data-tv-toggle aria-pressed="false">Modo TV</button><button id="moreSession" type="button" class="alt session-more" aria-expanded="false">▾ Registros y controles</button></div></div><div id="sessionExtras" class="hidden"><button id="tvReturnToTraining" type="button" class="alt tv-return-training">← Volver al entrenamiento</button><div id="actualPanel" class="panel hidden"><h3>RESULTADO REAL DEL EJERCICIO</h3><p id="actualPlanned" class="muted small"></p><label>Cantidad realizada<input id="actualValue" type="number" min="0" step="any" placeholder="Opcional"></label><label>Unidad<select id="actualUnit"><option value="m">Metros</option><option value="km">Kilómetros</option><option value="kcal">Calorías</option><option value="reps">Repeticiones</option><option value="s">Segundos</option></select></label><div class="buttons"><button id="actualSave" class="alt" type="button">Guardar resultado</button></div><p id="actualMessage" class="gold small"></p></div><div id="strengthPanel" class="panel"><div class="row"><h3>REGISTRO DE FUERZA</h3><span class="muted small">Datos reales de cada serie</span></div><div class="setgrid"><label>Repeticiones<input id="reps" type="number" min="0" max="500" step="1" value="10"></label><label>Peso (kg)<input id="weight" type="number" min="0" max="1000" step="0.25" value="0"></label><label>RIR<input id="rir" type="number" min="0" max="15" step="1" value="2"></label><label>Descanso (s)<input id="rest" type="number" min="0" max="1800" step="5" value="90"></label></div><div id="previousSession" class="notice" style="margin:12px 0"></div><div id="seriesProgress" class="gold"></div><div class="buttons"><button id="saveSet" class="alt">Guardar datos</button><button id="cancelEdit" class="alt hidden">Cancelar edición</button><button id="logSet">✓ Completar serie</button><button id="undoSet" class="alt">Deshacer última</button></div><div id="seriesList" class="small"></div></div><div class="panel"><div class="actions"><button id="prev" class="alt">◀ Anterior</button><button id="pause" class="alt">Pausar</button><button id="advance">Siguiente ▶</button><button id="showBoard" class="alt">Ver pizarra</button><button id="finish" class="danger">Finalizar</button></div><p id="status" class="gold" aria-live="polite"></p></div></div></section>
+<div id="restCard" class="panel hidden" role="status" aria-live="polite"><div id="restLabel" class="gold small">DESCANSO AUTOMÁTICO</div><strong id="restCountdown" aria-live="off">00:00</strong><div id="restNext" class="muted small hidden"></div><button id="skipRest" type="button" class="alt">Omitir</button></div><div class="guided-controls"><div class="guided-primary"><button id="tvCompleteSet" type="button" class="tv-only">✓ Completar serie</button><button id="quickAdvance" type="button">✓ Ejercicio completado</button><button id="quickPause" type="button" class="alt">Pausar</button><button id="coachGuidedNext" type="button" class="hidden">Siguiente</button></div><div class="guided-view-controls"><button id="restartTraining" type="button" class="alt">↻ Reiniciar</button><button id="cancelTraining" type="button" class="alt">✕ Cancelar</button><button type="button" class="alt tv-toggle" data-tv-toggle aria-pressed="false">Modo TV</button><button id="moreSession" type="button" class="alt session-more" aria-expanded="false">▾ Registros y controles</button><button id="coachGuidedFinish" type="button" class="alt hidden">Finalizar</button><button id="coachDockToggle" type="button" class="alt hidden" aria-expanded="true">Ocultar mandos</button></div></div><div id="sessionExtras" class="hidden"><button id="tvReturnToTraining" type="button" class="alt tv-return-training">← Volver al entrenamiento</button><div id="actualPanel" class="panel hidden"><h3>RESULTADO REAL DEL EJERCICIO</h3><p id="actualPlanned" class="muted small"></p><label>Cantidad realizada<input id="actualValue" type="number" min="0" step="any" placeholder="Opcional"></label><label>Unidad<select id="actualUnit"><option value="m">Metros</option><option value="km">Kilómetros</option><option value="kcal">Calorías</option><option value="reps">Repeticiones</option><option value="s">Segundos</option></select></label><div class="buttons"><button id="actualSave" class="alt" type="button">Guardar resultado</button></div><p id="actualMessage" class="gold small"></p></div><div id="strengthPanel" class="panel"><div class="row"><h3>REGISTRO DE FUERZA</h3><span class="muted small">Datos reales de cada serie</span></div><div class="setgrid"><label>Repeticiones<input id="reps" type="number" min="0" max="500" step="1" value="10"></label><label>Peso (kg)<input id="weight" type="number" min="0" max="1000" step="0.25" value="0"></label><label>RIR<input id="rir" type="number" min="0" max="15" step="1" value="2"></label><label>Descanso (s)<input id="rest" type="number" min="0" max="1800" step="5" value="90"></label></div><div id="previousSession" class="notice" style="margin:12px 0"></div><div id="seriesProgress" class="gold"></div><div class="buttons"><button id="saveSet" class="alt">Guardar datos</button><button id="cancelEdit" class="alt hidden">Cancelar edición</button><button id="logSet">✓ Completar serie</button><button id="undoSet" class="alt">Deshacer última</button></div><div id="seriesList" class="small"></div></div><div class="panel"><div class="actions"><button id="prev" class="alt">◀ Anterior</button><button id="pause" class="alt">Pausar</button><button id="advance">Siguiente ▶</button><button id="showBoard" class="alt">Ver pizarra</button><button id="finish" class="danger">Finalizar</button></div><p id="status" class="gold" aria-live="polite"></p></div></div></section>
 <section id="sessionSummary" class="hidden"><div class="panel"><div class="gold">RESUMEN DE SESIÓN</div><h2>Entrenamiento terminado</h2><div id="summaryWorkout" class="muted"></div><div id="summaryDuration" class="metric"></div><div id="summaryHeartRate"><dl><div><dt>FC media</dt><dd id="summaryHrAverage">Sin datos</dd></div><div><dt>FC máxima</dt><dd id="summaryHrPeak">Sin datos</dd></div></dl><p id="summaryHrCoverage" class="muted small hidden">Lectura parcial durante la sesión.</p></div>
 <fieldset id="summaryEffort"><legend>Esfuerzo percibido (RPE 1–10)</legend><div id="summaryEffortChoices"><label><input type="radio" name="summaryEffortChoice" value="1"><span>1</span></label><label><input type="radio" name="summaryEffortChoice" value="2"><span>2</span></label><label><input type="radio" name="summaryEffortChoice" value="3"><span>3</span></label><label><input type="radio" name="summaryEffortChoice" value="4"><span>4</span></label><label><input type="radio" name="summaryEffortChoice" value="5"><span>5</span></label><label><input type="radio" name="summaryEffortChoice" value="6"><span>6</span></label><label><input type="radio" name="summaryEffortChoice" value="7"><span>7</span></label><label><input type="radio" name="summaryEffortChoice" value="8"><span>8</span></label><label><input type="radio" name="summaryEffortChoice" value="9"><span>9</span></label><label><input type="radio" name="summaryEffortChoice" value="10"><span>10</span></label></div><output id="summaryEffortValue" aria-live="polite">Selecciona del 1 (muy suave) al 10 (máximo)</output></fieldset>
 <div id="summaryRpeLegacy"><label for="summaryRpe">Esfuerzo percibido (RPE 1–10)</label><input id="summaryRpe" type="number" min="1" max="10" step="1" placeholder="Ej.: 8"></div><label for="summaryPain">¿Has tenido molestias?</label><select id="summaryPain"><option value="">Seleccionar</option><option value="No">No</option><option value="Sí">Sí</option></select><label for="summaryNotes">Observaciones</label><textarea id="summaryNotes" rows="3" placeholder="Respiración, técnica, sensaciones..."></textarea><div class="buttons"><button id="summarySave">Guardar resumen</button><button id="summarySkip" class="alt">Omitir</button></div><p id="summaryMessage" class="gold"></p></div></section>
@@ -1580,6 +1654,7 @@ function openWorkout(id){
  }
  if(active!==id||!session)vectorTargets={};
  active=id;
+ $('coachClassNotice').classList.add('hidden');
  show('board');
 }
 function vectorDose(exercise){
@@ -1971,7 +2046,8 @@ const ggLibrary = {
     return true;
   }
 };
-function show(v){if(v!=='library')$('hrShortcut').open=false;if(view==='guided'&&v!=='guided'){clearTvExerciseGif();if(prestartRemaining>0)prestartRunning=false}if(typeof closeSettings==='function')closeSettings();view=v;updateHFTheme();document.body.classList.toggle('guided-active',v==='guided');if(v==='guided'){$('sessionExtras').classList.add('hidden');$('moreSession').textContent='⚙ Más opciones';$('moreSession').setAttribute('aria-expanded','false')}if(typeof syncWakeLock==='function')void syncWakeLock();['library','editor','board','guided','history','sessionSummary','completedSummary'].forEach(id=>$(id).classList.toggle('hidden',id!==v));if(v==='library'){
+let coachGuided=false, coachStations=null, coachPreviousTv=false;
+function show(v){if(v!=='library')$('hrShortcut').open=false;if(view==='guided'&&v!=='guided'){clearTvExerciseGif();if(prestartRemaining>0)prestartRunning=false}if(typeof closeSettings==='function')closeSettings();view=v;updateHFTheme();document.body.classList.toggle('guided-active',v==='guided');if(v==='guided'){$('sessionExtras').classList.add('hidden');$('moreSession').textContent='⚙ Más opciones';$('moreSession').setAttribute('aria-expanded','false')}if(typeof syncWakeLock==='function')void syncWakeLock();['library','editor','board','guided','history','sessionSummary','completedSummary','coachStations'].forEach(id=>$(id).classList.toggle('hidden',id!==v));if(v==='library'){
   if(usesWorkoutCloud&&!session&&appStorage.getItem(KEY)!==ggLibraryRaw)load();
   renderLibrary();
 }
@@ -2479,7 +2555,7 @@ function renderHFBoardBlock(block){
  blockCard.append(summary,list);
  return blockCard;
 }
-function renderBoard(){ $('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':(isHF?'▶ Entrenar en este dispositivo':'▶ Iniciar entrenamiento');const w=findWorkout(active);if(!w){show('library');return}$('edit').classList.toggle('hidden',vectorDays.has(active)||buhardillaRoutines.has(active));$('boardName').textContent=w.name;const exerciseCount=w.blocks.reduce((total,block)=>total+block.items.length,0);
+function renderBoard(){ $('coachClassChoice').classList.toggle('hidden',isHF||session);$('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':(isHF?'▶ Entrenar en este dispositivo':'▶ Iniciar entrenamiento');const w=findWorkout(active);if(!w){show('library');return}$('edit').classList.toggle('hidden',vectorDays.has(active)||buhardillaRoutines.has(active));$('boardName').textContent=w.name;const exerciseCount=w.blocks.reduce((total,block)=>total+block.items.length,0);
 $('count').textContent=buhardillaRoutines.has(active)?'Duración programada · '+formatSeconds(buhardillaWorkoutDuration(w)):w.blocks.length+' '+(w.blocks.length===1?'bloque':'bloques')+' · '+exerciseCount+' '+(isHF?(exerciseCount===1?'paso':'pasos'):(exerciseCount===1?'ejercicio':'ejercicios'));$('blocks').replaceChildren();if(w.exercises){
  w.exercises.forEach((exercise,index)=>{
    const tile=node('div','','tile');
@@ -2849,7 +2925,7 @@ function renderRoundClock(exercises,amrap,delta=0){
  const display=formatSeconds(Math.floor(roundClock.seconds));
  if($('roundClock').textContent!==display)$('roundClock').textContent=display;
 }
-function saveSession(){try{appStorage.setItem('gg-active-session-v1',JSON.stringify({active:sessionWorkout,step,paused,elapsed,stepElapsed,session,seriesLog,restRemaining,restRunning,transitionTo,draftSets,prestartRemaining,vectorTargets,amrapElapsed,amrapRounds,amrapResults,amrapLastBlock,amrapCurrent,ftElapsed,ftResults,actualResults,...(isHF?{}:{roundClock,sessionHeart,trainingStartedAt})}))}catch(e){}}
+function saveSession(){if(coachGuided)return;try{appStorage.setItem('gg-active-session-v1',JSON.stringify({active:sessionWorkout,step,paused,elapsed,stepElapsed,session,seriesLog,restRemaining,restRunning,transitionTo,draftSets,prestartRemaining,vectorTargets,amrapElapsed,amrapRounds,amrapResults,amrapLastBlock,amrapCurrent,ftElapsed,ftResults,actualResults,...(isHF?{}:{roundClock,sessionHeart,trainingStartedAt})}))}catch(e){}}
 function numeric(id,min,max){const raw=$(id).value;if(raw==='')throw Error('Falta '+id);const v=Number(raw);if(!Number.isFinite(v)||v<min||v>max)throw Error('Valor inválido en '+id);return v}
 function currentStrength(){return steps()[step]?.strength||null}
 function getDraft(){return{reps:vectorDays.has(active)&&$('reps').value===''?null:numeric('reps',0,500),weight:numeric('weight',0,1000),rir:numeric('rir',0,15),rest:numeric('rest',0,1800)}}
@@ -3007,7 +3083,7 @@ $('cancelEdit').onclick=()=>{editingSet=-1;renderSeries();$('status').textConten
 $('saveSet').onclick=()=>{if(prestartRemaining>0)return;try{const values=getDraft();if(editingSet>=0){const entries=seriesLog[step]||[];if(!entries[editingSet])throw Error('La serie ya no existe');entries[editingSet]={...entries[editingSet],...values,correctedAt:new Date().toISOString()};editingSet=-1;saveSession();renderSeries();$('status').textContent='Serie corregida. El descanso no se reinicia.'}else{draftSets[step]=values;saveSession();$('status').textContent='Datos guardados sin iniciar descanso'}}catch(e){alert(e.message)}};
 $('logSet').onclick=()=>{if(prestartRemaining>0)return;try{const a=currentStrength();if(!session||!a)throw Error('Selecciona un ejercicio de fuerza');if(restRunning||transitionTo!==null)return;const entries=seriesLog[step]??=[];if(entries.length>=a.sets)return;const entry={...getDraft(),at:new Date().toISOString()};entries.push(entry);delete draftSets[step];const last=entries.length>=a.sets;if(last&&vectorDays.has(active))entry.rest=0;const exercises=steps();const next=exercises[step+1];const transitionSeconds=last?plannedTransition(exercises[step],next):null;const transition=transitionSeconds!==null;if(transition){transitionTo=step+1;restRemaining=transitionSeconds;restRunning=restRemaining>0}else{transitionTo=null;restRemaining=last?0:entry.rest;restRunning=restRemaining>0}void initAudio();saveSession();if(transition&&restRemaining===0){finishExerciseTransition();return}renderSeries();$('status').textContent=transition?'Descanso entre ejercicios iniciado.':last?'Ejercicio completo. Pulsa Siguiente.':'Serie completada'+(restRunning?'. Descanso iniciado.':'.')}catch(e){alert(e.message)}};
 $('undoSet').onclick=()=>{if(prestartRemaining>0)return;if((seriesLog[step]||[]).length){seriesLog[step].pop();restRemaining=0;restRunning=false;transitionTo=null;saveSession();renderSeries()}};
-let pendingSummaryId=null;function archiveSession(){try{const k='gg-strength-history-v1',h=JSON.parse(appStorage.getItem(k)||'[]');if(!Array.isArray(h))throw Error('Historial inválido');const w=findWorkout(sessionWorkout)||findWorkout(active);const recordId='session-'+Date.now();h.push({id:recordId,workoutId:sessionWorkout,name:w?.name||'Entrenamiento',date:new Date().toISOString(),elapsed,lastReachedStep:step+1,seriesLog:JSON.parse(JSON.stringify(seriesLog)),exerciseNames:w?.blocks.flatMap(b=>b.items.map(x=>decode(x).label))||[],exerciseSnapshot:w?.blocks.flatMap(b=>b.items.map(line=>({block:b.name,label:decode(line).label,raw:line})))||[],vectorDose:w?.exercises?.map(vectorDose),amrapResults:JSON.parse(JSON.stringify(amrapResults)),ftResults:JSON.parse(JSON.stringify(ftResults)),actualResults:JSON.parse(JSON.stringify(actualResults)),...(isHF?{}:{heartRate:sessionHeartSummary(),startedAt:trainingStartedAt})});appStorage.setItem(k,JSON.stringify(h));pendingSummaryId=recordId;return true}catch(e){alert('No se ha podido guardar el historial. No cierres la sesión: revisa el almacenamiento del navegador.');return false}}
+let pendingSummaryId=null;function archiveSession(){if(coachGuided)return true;try{const k='gg-strength-history-v1',h=JSON.parse(appStorage.getItem(k)||'[]');if(!Array.isArray(h))throw Error('Historial inválido');const w=findWorkout(sessionWorkout)||findWorkout(active);const recordId='session-'+Date.now();h.push({id:recordId,workoutId:sessionWorkout,name:w?.name||'Entrenamiento',date:new Date().toISOString(),elapsed,lastReachedStep:step+1,seriesLog:JSON.parse(JSON.stringify(seriesLog)),exerciseNames:w?.blocks.flatMap(b=>b.items.map(x=>decode(x).label))||[],exerciseSnapshot:w?.blocks.flatMap(b=>b.items.map(line=>({block:b.name,label:decode(line).label,raw:line})))||[],vectorDose:w?.exercises?.map(vectorDose),amrapResults:JSON.parse(JSON.stringify(amrapResults)),ftResults:JSON.parse(JSON.stringify(ftResults)),actualResults:JSON.parse(JSON.stringify(actualResults)),...(isHF?{}:{heartRate:sessionHeartSummary(),startedAt:trainingStartedAt})});appStorage.setItem(k,JSON.stringify(h));pendingSummaryId=recordId;return true}catch(e){alert('No se ha podido guardar el historial. No cierres la sesión: revisa el almacenamiento del navegador.');return false}}
 function effortLabel(value){
  return value===10?'Máximo':['Muy suave','Suave','Moderado','Duro','Muy duro'][Math.floor((value-1)/2)];
 }
@@ -3026,7 +3102,7 @@ function resetBuhardillaSummary(){
  if(selected)selected.checked=false;
  $('summaryEffortValue').textContent='Selecciona del 1 (muy suave) al 10 (máximo)';
 }
-function openSessionSummary(){resetBuhardillaSummary();const w=findWorkout(sessionWorkout);$('summaryWorkout').textContent=w?.name||'Entrenamiento';$('summaryDuration').textContent=formatSeconds(Math.floor(elapsed));$('summaryRpe').value='';$('summaryPain').value='';$('summaryNotes').value='';$('summaryMessage').textContent='';show('sessionSummary')}
+function openSessionSummary(){if(coachGuided){exitCoachGuided('Clase finalizada.');return}resetBuhardillaSummary();const w=findWorkout(sessionWorkout);$('summaryWorkout').textContent=w?.name||'Entrenamiento';$('summaryDuration').textContent=formatSeconds(Math.floor(elapsed));$('summaryRpe').value='';$('summaryPain').value='';$('summaryNotes').value='';$('summaryMessage').textContent='';show('sessionSummary')}
 function renderCompletedSummary(record){
  const target=$('completedSummaryBody');
  target.replaceChildren();
@@ -3128,7 +3204,7 @@ function getAmrapAt(index){const w=workouts.find(x=>x.id===(session?sessionWorko
 function updateAmrapDisplay(){const info=getAmrapAt(step),out=$('amrapStatus');out.classList.toggle('hidden',!info);if(!info)return;const round=amrapRounds+1;if(isHF&&document.body.classList.contains('tv-mode'))$('hfTvProgressBar').value=amrapElapsed;out.textContent='AMRAP · '+info.name+' · Ronda '+round+' · Restante '+formatSeconds(Math.max(0,Math.ceil(info.limit-amrapElapsed)))}
 function finishAmrapBlock(info){amrapResults.push({name:info.name,limit:info.limit,rounds:amrapRounds,partial:step-info.start,exerciseCount:info.count,elapsed:Math.min(info.limit,amrapElapsed)});amrapElapsed=0;amrapRounds=0;amrapLastBlock=null;amrapCurrent=null;stepElapsed=0;restRemaining=0;restRunning=false;if(info.end>=steps().length-1){if(!archiveSession())return;session=false;paused=true;saveSession();void releaseWakeLock();openSessionSummary()}else{step=info.end+1;saveSession();show('guided')}}
 function finishExerciseTransition(){if(!session||transitionTo===null)return;const target=transitionTo;transitionTo=null;restRemaining=0;restRunning=false;step=target;stepElapsed=0;editingSet=-1;saveSession();if(view==='guided'){setSessionExtrasOpen(false);renderGuided()}else if(view==='board')renderBoard()}
-function nextStep(){if(prestartRemaining>0)return;if(transitionTo!==null)return;editingSet=-1;const ft=getForTimeAt(step);if(ft){if(step===ft.end)finishForTime(ft,true);else{step++;stepElapsed=0;saveSession();renderGuided()}return}const info=getAmrapAt(step);if(info){if(step===info.end){amrapRounds++;step=info.start}else step++;stepElapsed=0;restRemaining=0;restRunning=false;saveSession();renderGuided();return}const a=currentStrength();if(a&&(seriesLog[step]||[]).length<a.sets){alert('Completa las series programadas antes de avanzar');return}restRemaining=0;restRunning=false;if(step===steps().length-1){if(!archiveSession())return;session=false;paused=true;saveSession();openSessionSummary()}else{step++;stepElapsed=0;saveSession();if(view==='guided')renderGuided();else if(view==='board')renderBoard()}}function beginTrainingSession(){
+function nextStep(skipStrength=false){if(prestartRemaining>0)return;if(transitionTo!==null)return;editingSet=-1;const ft=getForTimeAt(step);if(ft){if(step===ft.end)finishForTime(ft,true);else{step++;stepElapsed=0;saveSession();renderGuided()}return}const info=getAmrapAt(step);if(info){if(step===info.end){amrapRounds++;step=info.start}else step++;stepElapsed=0;restRemaining=0;restRunning=false;saveSession();renderGuided();return}const a=currentStrength();if(skipStrength!==true&&a&&(seriesLog[step]||[]).length<a.sets){alert('Completa las series programadas antes de avanzar');return}restRemaining=0;restRunning=false;if(step===steps().length-1){if(!archiveSession())return;session=false;paused=true;saveSession();openSessionSummary()}else{step++;stepElapsed=0;saveSession();if(view==='guided')renderGuided();else if(view==='board')renderBoard()}}function beginTrainingSession(){
  roundClock={key:null,seconds:0};trainingStartedAt=null;resetSessionHeart();
  resetHeartLimitAlert();
  if(soundEnabled&&workoutHeartLimit(active)!==null)void initAudio();
@@ -3155,7 +3231,7 @@ function cancelTrainingSession(){
  ftElapsed=0;ftResults=[];actualResults={};amrapLastBlock=null;amrapCurrent=null;
  editingSet=-1;seriesLog={};draftSets={};restRemaining=0;restRunning=false;transitionTo=null;
  clockAnchor=Date.now();resetHeartLimitAlert();
- saveSession();syncPrestartOverlay();void releaseWakeLock();show('board');
+ saveSession();syncPrestartOverlay();void releaseWakeLock();if(coachGuided)exitCoachGuided('Clase cancelada.');else show('board');
 }
 $('cancelTraining').onclick=cancelTrainingSession;
 $('restartTraining').onclick=()=>{
@@ -3196,7 +3272,7 @@ let wakeLock=null,wakeWanted=true,wakePending=false;
 try{wakeWanted=appStorage.getItem('gg-wake-enabled')!=='false'}catch(e){}
 function updateWakeButton(){$('wakeToggle').textContent='☀ Mantener pantalla activa: '+(wakeWanted?'activado':'desactivado')}
 async function releaseWakeLock(){const old=wakeLock;wakeLock=null;if(old){try{await old.release()}catch(e){}}}
-async function syncWakeLock(){if(!wakeWanted||!session||paused||document.visibilityState!=='visible'){await releaseWakeLock();$('wakeStatus').textContent=wakeWanted?'Se activa durante la sesión en marcha':'Función desactivada';return}if(wakeLock||wakePending)return;if(!('wakeLock' in navigator)){ $('wakeStatus').textContent='Este navegador no admite mantener la pantalla activa';return}wakePending=true;try{const lock=await navigator.wakeLock.request('screen');wakeLock=lock;lock.addEventListener('release',()=>{if(wakeLock===lock){wakeLock=null;$('wakeStatus').textContent='Bloqueo de pantalla liberado'}});$('wakeStatus').textContent='Pantalla activa durante la sesión'}catch(e){$('wakeStatus').textContent='No disponible en este navegador: usa Safari o revisa Bloqueo automático'}finally{wakePending=false}}
+async function syncWakeLock(){if(!wakeWanted||(!(session&&!paused)&&!coachStations?.running)||document.visibilityState!=='visible'){await releaseWakeLock();$('wakeStatus').textContent=wakeWanted?'Se activa durante la sesión en marcha':'Función desactivada';return}if(wakeLock||wakePending)return;if(!('wakeLock' in navigator)){ $('wakeStatus').textContent='Este navegador no admite mantener la pantalla activa';return}wakePending=true;try{const lock=await navigator.wakeLock.request('screen');wakeLock=lock;lock.addEventListener('release',()=>{if(wakeLock===lock){wakeLock=null;$('wakeStatus').textContent='Bloqueo de pantalla liberado'}});$('wakeStatus').textContent='Pantalla activa durante la sesión'}catch(e){$('wakeStatus').textContent='No disponible en este navegador: usa Safari o revisa Bloqueo automático'}finally{wakePending=false}}
 $('wakeToggle').onclick=()=>{wakeWanted=!wakeWanted;try{appStorage.setItem('gg-wake-enabled',String(wakeWanted))}catch(e){}updateWakeButton();void syncWakeLock()};updateWakeButton();
 function audioStatus(message){$('audioStatus').textContent=message}
 async function initAudio(){try{const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(!AudioContextClass){audioStatus('Este navegador no admite Web Audio');return false}if(!audioCtx)audioCtx=new AudioContextClass();if(audioCtx.state!=='running')await audioCtx.resume();const ok=audioCtx.state==='running';audioStatus(ok?'Audio activado':'Audio bloqueado por el navegador');return ok}catch(e){audioStatus('Error al activar audio: '+e.message);return false}}
@@ -3308,14 +3384,16 @@ function formatSeconds(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+St
  }
  if(session&&!paused){elapsed+=delta;
  const exercises=steps(),amrapInfo=getAmrapAt(step);
- if(!isHF){renderRoundClock(exercises,amrapInfo,delta);creditHeartCoverage(now)}
+ if(!isHF){renderRoundClock(exercises,amrapInfo,delta);if(!coachGuided)creditHeartCoverage(now)}
  const ft=getForTimeAt(step);if(ft){const before=ftElapsed;ftElapsed+=delta;if(ft.limit){updateCountdownSignal(ft.limit,before,ftElapsed);if(ftElapsed>=ft.limit){ftElapsed=ft.limit;finishForTime(ft,false);$('clock').textContent=formatSeconds(Math.floor(elapsed));return}}if(view==='guided')$('ftStatus').textContent='FOR TIME · '+formatSeconds(Math.floor(ftElapsed))+(ft.limit?' / '+formatSeconds(ft.limit):'')}if(amrapInfo){const beforeAmrap=amrapElapsed;amrapElapsed+=delta;updateCountdownSignal(amrapInfo.limit,beforeAmrap,amrapElapsed);if(amrapElapsed>=amrapInfo.limit){finishAmrapBlock(amrapInfo);$('clock').textContent=formatSeconds(Math.floor(elapsed));return}if(view==='guided')updateAmrapDisplay()}const beforeStep=stepElapsed;stepElapsed+=delta;const timed=exercises[step];if(timed?.duration)updateCountdownSignal(timed.duration,beforeStep,stepElapsed);if(restRunning){const beforeRest=restRemaining;restRemaining=Math.max(0,restRemaining-delta);updateCountdownSignal(beforeRest,0,Math.min(delta,beforeRest));if(restRemaining===0){restRunning=false;if(transitionTo!==null){finishExerciseTransition();$('clock').textContent=formatSeconds(Math.floor(elapsed));return}saveSession();$('logSet').disabled=false;$('logSet').textContent='✓ Completar serie';$('status').textContent='Descanso terminado. Siguiente serie lista.'}}if(view==='guided'&&(currentStrength()||transitionTo!==null||isTvTimedRest(timed)))renderRestUI(timed);if(timed?.duration&&stepElapsed>=timed.duration)nextStep();else if(view==='guided'&&timed?.duration)renderStepCountdown(timed)}$('clock').textContent=formatSeconds(Math.floor(elapsed));}setInterval(tick,200);document.addEventListener('visibilitychange',()=>{
  refreshHeart();clockAnchor=Date.now();
  if(document.visibilityState!=='visible'&&prestartRemaining>0){prestartRunning=false;syncPrestartOverlay()}
- saveSession();void syncWakeLock()
+ if(isHF||session)saveSession();
+ void syncWakeLock()
 });window.addEventListener('pagehide',()=>{
  if(prestartRemaining>0)prestartRunning=false;
- saveSession();void releaseWakeLock();
+ if(isHF||session)saveSession();
+ void releaseWakeLock();
 });
 let hrDevice=null,hrCharacteristic=null,hrLastReading=0,hrValue=null;
 const GG_HEART_RATE_ZONES = [
@@ -3333,7 +3411,7 @@ function resetHeartLimitAlert(){
  heartLimitAlerted=false;
 }
 function updateHeartLimit(live,previousReading){
- const limit=session&&view==='guided'?workoutHeartLimit(sessionWorkout):null;
+ const limit=session&&!coachGuided&&view==='guided'?workoutHeartLimit(sessionWorkout):null;
  const status=$('hrLimitStatus');
  if(limit===null||!live||paused||document.visibilityState!=='visible'||hrValue<=limit){
    resetHeartLimitAlert();
@@ -3532,8 +3610,8 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.28';let lastUpdateCheck=0,remoteVersion=null;
-function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.29';let lastUpdateCheck=0,remoteVersion=null;
+function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
  if(!updateBusy()&&appRelease.reopenIfOlder())return;
@@ -4152,7 +4230,7 @@ window.__secureAppV2={
   };
  },
  async apply(payload){
-  if(session&&view==='guided')throw Error('No se sobrescribe una sesión activa.');
+  if((session&&view==='guided')||view==='coachStations')throw Error('No se sobrescribe una actividad activa.');
   secureApply=true;
   try{
    appStorage.setItem(KEY,JSON.stringify(payload.workouts||[]));
@@ -4165,14 +4243,90 @@ window.__secureAppV2={
   if(view==='history')renderHistory();
   if(view==='board'&&active)renderBoard();
  },
- busy(){return session||view==='editor'||view==='guided'},
+ busy(){return session||view==='editor'||view==='guided'||view==='coachStations'},
  setController(c){secureSyncController=c},
 };
 setupHF();
 setupLocalProfiles();
 $('appVersion').textContent='Versión '+GG_APP_VERSION;
 for(const id of ['v2Name','ftLines','circuitLines','amrapLines','emomExercises','visualName','timerName'])setupExercisePicker(id);
-setupExerciseLibrary();setupVectorHome();setupCompactGuided();
+function setCoachGuided(active){
+ coachGuided=active;
+ document.body.classList.toggle('coach-guided',active);
+ document.body.classList.remove('coach-controls-hidden');
+ for(const id of ['coachGuidedNext','coachGuidedFinish','coachDockToggle'])$(id).classList.toggle('hidden',!active);
+ $('coachDockToggle').textContent='Ocultar mandos';
+ $('coachDockToggle').setAttribute('aria-expanded','true');
+}
+function exitCoachGuided(message){
+ session=false;paused=true;sessionWorkout=null;
+ show('board');
+ setCoachGuided(false);
+ if(coachPreviousTv!==document.body.classList.contains('tv-mode'))document.querySelector('#board [data-tv-toggle]').click();
+ $('coachClassNotice').textContent=message;
+ $('coachClassNotice').classList.remove('hidden');
+ $('coachClassChoice').querySelector('summary').focus();
+}
+function setupBuhardillaCoach(){
+ if(isHF)return;
+ const choice=$('coachClassChoice'), notice=$('coachClassNotice');
+ choice.addEventListener('toggle',()=>{if(choice.open)notice.classList.add('hidden')});
+ $('coachStartGuided').onclick=()=>{
+  if(session)return;
+  notice.classList.add('hidden');
+  coachPreviousTv=document.body.classList.contains('tv-mode');
+  setCoachGuided(true);
+  if(!coachPreviousTv)document.querySelector('#board [data-tv-toggle]').click();
+  void initAudio();
+  beginTrainingSession();
+ };
+ $('coachGuidedNext').onclick=()=>{
+  if(!coachGuided||prestartRemaining>0)return;
+  if(transitionTo!==null)finishExerciseTransition();
+  else nextStep(true);
+ };
+ $('coachGuidedFinish').onclick=()=>{
+  if(coachGuided&&confirm('¿Finalizar la clase guiada?'))exitCoachGuided('Clase finalizada.');
+ };
+ $('coachDockToggle').onclick=()=>{
+  const hidden=document.body.classList.toggle('coach-controls-hidden');
+  $('coachDockToggle').textContent=hidden?'Mostrar mandos':'Ocultar mandos';
+  $('coachDockToggle').setAttribute('aria-expanded',String(!hidden));
+ };
+ $('coachSetupStations').onclick=async()=>{
+  const workout=findWorkout(active);
+  if(session||!workout)return;
+  const trigger=$('coachSetupStations');
+  trigger.disabled=true;
+  notice.classList.add('hidden');
+  try{
+   const {mountBuhardillaStations}=await import('./src/buhardilla-stations.mjs?v=1');
+   if(view!=='board'||session||findWorkout(active)!==workout)return;
+   coachStations??=mountBuhardillaStations({
+    root:$('coachStations'),
+    onExit:()=>{show('board');trigger.focus()},
+    onSound:beep,
+    onActivity:()=>void syncWakeLock(),
+    formatTime:formatSeconds
+   });
+   const exercises=steps().filter(exercise=>!isProgrammedRest(exercise)).map(exercise=>{
+    const dose=exercise.strength;
+    return {...exercise,
+     target:dose?[dose.reps+' repeticiones',dose.weight!==null?dose.weight+' kg':''].filter(Boolean).join(' · '):'',
+     gif:techniqueCatalogPath(exercise.techniqueId)||sharedTechniquePath(techniqueKey(exercise.label))
+    };
+   });
+   coachStations.open(workout.name,exercises);
+   show('coachStations');
+   $('stationTitle').focus();
+  }catch(error){
+   notice.textContent='No se pudo abrir el circuito. '+error.message;
+   notice.classList.remove('hidden');
+  }finally{trigger.disabled=false}
+ };
+ $('stationStart').addEventListener('click',()=>void initAudio());
+}
+setupExerciseLibrary();setupVectorHome();setupCompactGuided();setupBuhardillaCoach();
 load();
 if(!SECURE_AUTH_V2)restoreActiveSessionFromStorage();
 show('library');
