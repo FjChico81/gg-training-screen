@@ -8,7 +8,7 @@ const edition=new URLSearchParams(location.search).get('app')==='hf'?'hf':'gg';
 const config=edition==='hf'
  ?(await import('../config/hf-supabase.js')).HF_SUPABASE_CONFIG
  :(await import('../config/gg-supabase.js')).GG_SUPABASE_CONFIG;
-const title=edition==='hf'?'HF · Hybrid Funcional Club':'BUHARDILLA Fitness';
+const title=edition==='hf'?'HF · Hybrid Funcional Club':'HYBRID Funcional Club';
 const wall=document.getElementById('accountWall');
 const by=id=>document.getElementById(id);
 const message=(text,isError=false)=>{by('accountMessage').textContent=text;by('accountMessage').dataset.error=String(isError)};
@@ -55,7 +55,7 @@ async function syncGarmin(manual=false){
    remoteHistory.filter(record=>!record.deleted_at).map(record=>record.payload)
   );
   const received=imported===1?'1 actividad de Garmin incorporada.':imported+' actividades de Garmin incorporadas.';
-  const skipped=overlapping===1?' Se omitió 1 actividad porque coincide con una sesión de BUHARDILLA.':overlapping?' Se omitieron '+overlapping+' actividades porque coinciden con sesiones de BUHARDILLA.':'';
+  const skipped=overlapping===1?' Se omitió 1 actividad porque coincide con una sesión de HYBRID Funcional Club.':overlapping?' Se omitieron '+overlapping+' actividades porque coinciden con sesiones de HYBRID Funcional Club.':'';
   garminStatus.textContent=imported||overlapping?received+skipped:manual?'No hay actividades nuevas entre las últimas 30.':'';
  }catch(error){
   if(stillSelected()&&(manual||garminEnabled))garminStatus.textContent=error.message;

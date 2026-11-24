@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.34</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.35</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -306,29 +306,23 @@ if(new URLSearchParams(location.search).get('app')==='hf'){
 .exercise-picker-group>p{margin:8px 0 4px;font-weight:700}
 .exercise-picker-group>button{display:block;width:100%;min-height:38px;margin-bottom:4px;padding:6px 8px;text-align:left;font-size:14px}
 html[data-edition="hf"]{--menu:#fff;--panel:#f6f6f6;--history:#f4f4f4;--editor:#f5f5f5;--tile:#fff;--line:#d4d4d4;--button-alt:#171717;--outline:#737373;--bg:#fff;--input:#fff;--accent:#ff4d20;--accent-soft:#9b3d00;--muted:#525252;--ink:#101010;--ink-tv:#101010;--text:#111;--history-body:#fff;--surface:#f5f5f5}
-#brandSubtitle{display:none}
-html:not([data-edition="hf"]) body:has(#library.vector-home:not(.hidden))>header .gg-brand-mark{display:none}
-html:not([data-edition="hf"]) body:has(#library.vector-home:not(.hidden))>header .gg-home-hf-symbol{display:block}
-html:not([data-edition="hf"]) body:has(#library.vector-home:not(.hidden))>header #brandTitle,
-html[data-edition="hf"] #brandTitle{font-size:clamp(42px,8vw,68px);line-height:1}
-html:not([data-edition="hf"]) body:has(#library.vector-home:not(.hidden))>header,
-html[data-edition="hf"] body:not(.tv-mode.guided-active)>header{
+#brandTitle{font-size:clamp(42px,8vw,68px);line-height:1}
+body:not(.tv-mode.guided-active)>header{
  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;
 }
-html:not([data-edition="hf"]) body:has(#library.vector-home:not(.hidden))>header>.brand-heading,
-html[data-edition="hf"] body:not(.tv-mode.guided-active)>header>.brand-heading{display:contents}
-html:not([data-edition="hf"]) body:has(#library.vector-home:not(.hidden))>header>.header-settings,
-html[data-edition="hf"] body:not(.tv-mode.guided-active)>header>.header-settings{grid-area:1/2}
-html:not([data-edition="hf"]) body:has(#library.vector-home:not(.hidden))>header #brandSubtitle,
-html[data-edition="hf"] #brandSubtitle{
+body:not(.tv-mode.guided-active)>header>.brand-heading{display:contents}
+body:not(.tv-mode.guided-active)>header>.header-settings{grid-area:1/2}
+#brandSubtitle{
  grid-column:1/-1;display:block;color:#484345;
- font-size:clamp(11px,3.5vw,18px);line-height:1.25;font-weight:850;white-space:nowrap;
+ font-size:clamp(11px,3.5vw,18px);line-height:1.25;font-weight:850;
 }
+.brand-motto{display:none}
+body:has(#library.vector-home:not(.hidden)) .brand-motto,
+html[data-edition="hf"] .brand-motto{display:inline}
 .hf-brand-symbol{
  --hf-logo-orange:#f34a15;
  position:relative;display:block;width:1.9em;aspect-ratio:342.144 / 169;
 }
-.hf-brand-symbol.gg-home-hf-symbol{display:none}
 .hf-brand-symbol::before,.hf-brand-symbol::after{
  content:"";position:absolute;inset:0;
 }
@@ -398,37 +392,9 @@ html:not([data-edition="hf"]){
  --ink-tv:#101010;
  --text:#111;
 }
-.gg-brand-mark{display:none}
 html:not([data-edition="hf"]) body>header{
  padding-bottom:8px;
  background:linear-gradient(105deg,var(--accent) 55%,var(--yellow) 55%) left bottom/100% 4px no-repeat #fff;
-}
-html:not([data-edition="hf"]) .gg-brand-mark{
- display:block;
- position:relative;
- width:min(372px,calc(100vw - 90px));
- background:#fff;
-}
-.gg-brand-wordmark{
- display:block;
- width:100%;
- height:auto;
- clip-path:inset(0 7.5% 0 0);
- filter:saturate(1.25);
-}
-.gg-brand-mark::after{
- /* Align the white standalone emblem with its position in the original wordmark. */
- content:"";
- position:absolute;
- top:20.8%;
- left:92.6%;
- width:5.2%;
- aspect-ratio:1;
- background:#fff url("assets/icons/gg-vector-white-180.png") center/120% no-repeat;
- filter:saturate(1.25);
-}
-html:not([data-edition="hf"]) .tv-mode.guided-active .gg-brand-mark{
- width:min(300px,42vw,calc((var(--tv-header,56px) - 12px) * 5.7679));
 }
 html:not([data-edition="hf"]) :is(.gold,h3,label,.tools-details summary,.technique-picker summary,#cloudSummaryLabel){
  color:var(--text);
@@ -673,32 +639,7 @@ html:not([data-edition="hf"]) .tv-mode #guided #moreSession{
  .tv-mode.guided-active #guided #sessionExtras{z-index:3}
 }
 
-/* Marca BUHARDILLA Fitness: texto nítido y adaptable sin modificar imágenes originales. */
-html:not([data-edition="hf"]) .gg-brand-mark{
- width:auto;max-width:min(520px,calc(100vw - 98px));
-}
-html:not([data-edition="hf"]) .gg-brand-mark::after{content:none}
-html:not([data-edition="hf"]) .buhardilla-wordmark{
- display:flex;align-items:baseline;flex-wrap:nowrap;gap:clamp(3px,.5vw,8px);
- line-height:1;white-space:nowrap;letter-spacing:-.06em;
- font-size:clamp(20px,3.2vw,43px)
-}
-html:not([data-edition="hf"]) .buhardilla-wordmark strong{
- font-weight:1000;font-stretch:condensed;color:#111
-}
-html:not([data-edition="hf"]) .buhardilla-wordmark em{
- font-style:normal;font-weight:850;color:#f06425;letter-spacing:-.035em
-}
-@media(max-width:480px){
- html:not([data-edition="hf"]) .buhardilla-wordmark{font-size:clamp(17px,5.2vw,26px)}
-}
 @media(orientation:landscape){
- html:not([data-edition="hf"]) .tv-mode.guided-active .gg-brand-mark{
-  width:auto;max-width:70vw
- }
- html:not([data-edition="hf"]) .tv-mode.guided-active .buhardilla-wordmark{
-  font-size:clamp(21px,4.6vh,42px)
- }
  /* No reducir el tiempo total en sesiones con cuenta atrás. */
  html:not([data-edition="hf"]) .tv-mode.guided-active #guided .tv-timing.is-timed #clock{
   font-size:clamp(36px,6.5vh,82px);font-weight:900;line-height:1.02
@@ -1289,7 +1230,7 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
   <p class="account-foot">GG FAMILY y HF TRAINING utilizan cuentas y bases de datos independientes. No se importan tus rutinas antiguas.</p>
  </div>
 </div>
-<header class="row" style="margin-bottom:18px"><div class="brand-heading"><h1 id="brandTitle" class="gold"><span class="gg-brand-mark" aria-label="BUHARDILLA Fitness"><span class="buhardilla-wordmark"><strong>BUHARDILLA</strong><em>Fitness</em></span></span><span class="hf-brand-symbol gg-home-hf-symbol" role="img" aria-label="HF"></span></h1><span id="brandSubtitle" class="muted small">Hybrid Funcional Club “GO ALL OUT”</span></div><div class="header-settings">
+<header class="row" style="margin-bottom:18px"><div class="brand-heading"><h1 id="brandTitle" class="gold"><span class="hf-brand-symbol" role="img" aria-label="HF"></span></h1><span id="brandSubtitle" class="muted small">HYBRID Funcional Club<span class="brand-motto"> “GO ALL OUT”</span></span></div><div class="header-settings">
 <button id="fullscreenToggle" class="settings-gear fullscreen-toggle" type="button" aria-label="Activar pantalla completa" title="Activar pantalla completa" aria-pressed="false">
  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
   <path class="fullscreen-enter" d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/>
@@ -1547,7 +1488,7 @@ const KEY='gg-training-screen-workouts-v1', $=id=>document.getElementById(id);
 const isHF=document.documentElement.dataset.edition==='hf';
 const SECURE_AUTH_V2=true; // Candidate: DO NOT MERGE before verified dedicated GG/HF projects.
 let secureNamespace=null,secureApply=false,secureSyncController=null;
-const editionName=isHF?'HF':'BUHARDILLA Fitness';
+const editionName=isHF?'HF':'HYBRID Funcional Club';
 const vectorRoutines=isHF?[]:globalThis.vectorRoutineCatalog??[];
 const vectorDays=new Map(vectorRoutines.flatMap(routine=>routine.days.map(day=>{
  const name=routine.name+' · Día '+day.number;
@@ -3636,7 +3577,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.34';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.35';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
@@ -4226,7 +4167,7 @@ window.__secureAppV2={
  importGarminActivities(activities,remoteHistory=[]){
   if(isHF||!secureNamespace?.endsWith(':personal:')||!secureSyncController)
    throw Error('La importación de Garmin está disponible en el perfil Principal.');
-  if(session)throw Error('Termina tu sesión de BUHARDILLA antes de importar.');
+  if(session)throw Error('Termina tu sesión de HYBRID Funcional Club antes de importar.');
   if(!Array.isArray(activities)||activities.length>30||!Array.isArray(remoteHistory))throw Error('Historial de Garmin inválido.');
   const key='gg-strength-history-v1',history=getHistory();
   const ids=new Set(history.map(entry=>entry?.id)),imported=[];
@@ -4396,5 +4337,5 @@ if(usesWorkoutCloud&&!SECURE_AUTH_V2){
   document.getElementById('ggCloudPanel')?.remove();
 }
 </script>
-<script type="module" src="src/account-entry-v2.mjs?v=3.0.6" onerror="document.getElementById('accountWall').dataset.phase='load-error';document.getElementById('accountLaunchMessage').textContent='No se pudo abrir la aplicación.'"></script>
+<script type="module" src="src/account-entry-v2.mjs?v=3.0.7" onerror="document.getElementById('accountWall').dataset.phase='load-error';document.getElementById('accountLaunchMessage').textContent='No se pudo abrir la aplicación.'"></script>
 </body></html>
