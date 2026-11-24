@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.17</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.18</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -2934,6 +2934,7 @@ function stopHrAttempt(attempt){
  if(hrAttempt!==attempt)return;
  hrAttempt=null;
  clearTimeout(attempt.timeout);
+ attempt.stopScan?.();
  // Also cancels a pending GATT connection on supported browsers.
  try{attempt.device?.gatt?.disconnect()}catch(error){/* The sensor may already be gone. */}
 }
@@ -2965,27 +2966,51 @@ async function finishHrConnection(attempt,device){
    hrNoticeTimer=setTimeout(clearHrNotice,4000);
  }
 }
+function waitForHrAdvertisement(attempt,device){
+ if(typeof device.watchAdvertisements!=='function')return;
+ return new Promise(resolve=>{
+   const controller=new AbortController();
+   const timer=setTimeout(stop,6000);
+   function stop(){
+     if(attempt.stopScan!==stop)return;
+     attempt.stopScan=null;
+     clearTimeout(timer);
+     device.removeEventListener('advertisementreceived',stop);
+     controller.abort();
+     resolve();
+   }
+   attempt.stopScan=stop;
+   device.addEventListener('advertisementreceived',stop,{once:true});
+   Promise.resolve().then(()=>device.watchAdvertisements({signal:controller.signal})).catch(stop);
+ });
+}
 async function reconnectRememberedHr(){
  const bluetooth=navigator.bluetooth;
- if(!bluetooth?.getDevices||hrAttempt||hrDevice?.gatt?.connected)return;
+ if(hrAttempt||hrDevice?.gatt?.connected)return;
  let id;
  try{id=appStorage.getItem(HR_REMEMBERED_DEVICE_KEY)}catch(error){return}
  if(!id)return;
- const status=$('hrConnectionStatus'),attempt={automatic:true};
+ const status=$('hrConnectionStatus');
+ if(typeof bluetooth?.getDevices!=='function'){
+   status.textContent='Este navegador no permite la reconexión automática. Usa Conectar pulsómetro.';
+   return;
+ }
+ const attempt={automatic:true};
  hrAttempt=attempt;
  status.textContent='Reconectando pulsómetro…';
- const fallback=()=>{
+ const fallback=(message='El pulsómetro guardado no responde. Puedes conectarlo manualmente.')=>{
    if(hrAttempt!==attempt)return;
    stopHrAttempt(attempt);
-   status.textContent='Pulsómetro no disponible. Puedes conectarlo manualmente.';
+   status.textContent=message;
    refreshHeart();
  };
- attempt.timeout=setTimeout(fallback,8000);
+ attempt.timeout=setTimeout(()=>fallback(),18000);
  try{
    const devices=await bluetooth.getDevices();
    if(hrAttempt!==attempt)return;
    const device=devices.find(candidate=>candidate.id===id);
-   if(!device){fallback();return}
+   if(!device){fallback('El navegador no ha conservado el permiso del pulsómetro. Vuelve a conectarlo manualmente.');return}
+   await waitForHrAdvertisement(attempt,device);
    await finishHrConnection(attempt,device);
  }catch(error){fallback()}
 }
@@ -3026,7 +3051,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.17';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.18';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
