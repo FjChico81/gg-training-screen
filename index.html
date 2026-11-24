@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.37</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.38</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -325,7 +325,19 @@ html[data-edition="hf"]{--menu:#fff;--panel:#f6f6f6;--history:#f4f4f4;--editor:#
 .history-calendar-key{display:flex;flex-wrap:wrap;gap:4px 12px;margin:8px 0 0;color:var(--muted);font-size:12px}
 .history-calendar-key span::before{content:"●";margin-right:4px;color:#b44722}
 .history-calendar-key span:last-child::before{color:#1766a5}
-#historySelectedDay{margin:12px 0 0;font-weight:750}
+#historyDayDialog{
+ width:min(640px,calc(100% - 24px));max-height:85dvh;padding:0;overflow:auto;
+ border:1px solid #d9d0c9;border-radius:16px;background:#fff;color:#211c19
+}
+#historyDayDialog::backdrop{background:#16110dc0}
+.history-dialog-header{
+ position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;
+ gap:12px;padding:12px 14px;background:#fff;border-bottom:1px solid #e6ddd6
+}
+#historySelectedDay{margin:0;font-size:clamp(15px,4vw,20px);font-weight:800}
+#historyDayClose{min-width:44px;min-height:44px;padding:0;flex:none;font-size:24px}
+#historyEntries{padding:0 14px 8px}
+
 
 .history-nav{display:flex;align-items:stretch;gap:8px}
 .history-nav #garminImport{min-width:0;background:#56a9f4;color:#24282d}
@@ -1100,7 +1112,7 @@ html[data-edition="hf"] #historyViewChoices{display:none}
 #historyViewChoices button,#historyStatsPeriod button{
  background:#fff;color:#28211e;border:1px solid #d1c7c1;min-height:44px
 }
-#historyViewChoices button[aria-pressed="true"],#historyStatsPeriod button[aria-pressed="true"]{
+#historyViewChoices button[aria-expanded="true"],#historyStatsPeriod button[aria-pressed="true"]{
  background:#ffe8dd;color:#692912;border-color:#b74b22;font-weight:800
 }
 #historyStats:not(.hidden){display:grid;gap:12px;margin-top:12px;color:#201a17}
@@ -1299,16 +1311,10 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
 </div>
 <p id="garminImportStatus" class="muted small" role="status"></p>
 <div id="historyViewChoices" class="history-view-choices" role="group" aria-label="Vista del historial">
-<button id="historySessionsTab" type="button" aria-pressed="true" aria-controls="historySessionList">Sesiones</button>
-<button id="historyStatsTab" type="button" aria-pressed="false" aria-controls="historyStats">Estadísticas</button>
+<button id="historyStatsTab" type="button" aria-expanded="false" aria-controls="historyStats">Estadísticas</button>
 </div>
 <div id="historySessionList">
- <p class="notice">Registros guardados en este navegador. No se sincronizan todavía con otros dispositivos.</p>
- <div id="historyLayoutChoices" class="history-view-choices hidden" role="group" aria-label="Formato de las sesiones">
-  <button id="historyCalendarChoice" type="button" aria-pressed="true">Calendario</button>
-  <button id="historyListChoice" type="button" aria-pressed="false">Lista</button>
- </div>
- <section id="historyCalendar" class="history-calendar hidden" aria-label="Calendario de sesiones">
+ <section id="historyCalendar" class="history-calendar" aria-label="Calendario de sesiones">
   <div class="history-month-nav">
    <button id="historyPrevMonth" class="alt" type="button" aria-label="Mes anterior">‹</button>
    <span id="historyCalendarMonth" aria-live="polite"></span>
@@ -1321,8 +1327,13 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
   <div id="historyCalendarDays" class="history-calendar-grid"></div>
   <p class="history-calendar-key"><span>HF</span><span>Garmin</span></p>
  </section>
- <p id="historySelectedDay" class="hidden" aria-live="polite"></p>
- <div id="historyEntries"></div>
+ <dialog id="historyDayDialog" aria-labelledby="historySelectedDay">
+  <div class="history-dialog-header">
+   <h3 id="historySelectedDay"></h3>
+   <button id="historyDayClose" class="alt" type="button" aria-label="Cerrar actividades del día" autofocus>×</button>
+  </div>
+  <div id="historyEntries"></div>
+ </dialog>
 </div>
 <div id="historyStats" class="hidden">
  <section class="stats-panel" aria-labelledby="historyActivityTitle">
@@ -2059,7 +2070,7 @@ const ggLibrary = {
   }
 };
 let coachGuided=false, coachStations=null, coachPreviousTv=false;
-function show(v){if(v!=='library')$('hrShortcut').open=false;if(view==='guided'&&v!=='guided'){clearTvExerciseGif();if(prestartRemaining>0)prestartRunning=false}if(typeof closeSettings==='function')closeSettings();view=v;updateHFTheme();document.body.classList.toggle('guided-active',v==='guided');if(v==='guided'){$('sessionExtras').classList.add('hidden');$('moreSession').textContent='⚙ Más opciones';$('moreSession').setAttribute('aria-expanded','false')}if(typeof syncWakeLock==='function')void syncWakeLock();['library','editor','board','guided','history','sessionSummary','completedSummary','coachStations'].forEach(id=>$(id).classList.toggle('hidden',id!==v));if(v==='library'){
+function show(v){if(v!=='history'&&$('historyDayDialog').open)$('historyDayDialog').close();if(v!=='library')$('hrShortcut').open=false;if(view==='guided'&&v!=='guided'){clearTvExerciseGif();if(prestartRemaining>0)prestartRunning=false}if(typeof closeSettings==='function')closeSettings();view=v;updateHFTheme();document.body.classList.toggle('guided-active',v==='guided');if(v==='guided'){$('sessionExtras').classList.add('hidden');$('moreSession').textContent='⚙ Más opciones';$('moreSession').setAttribute('aria-expanded','false')}if(typeof syncWakeLock==='function')void syncWakeLock();['library','editor','board','guided','history','sessionSummary','completedSummary','coachStations'].forEach(id=>$(id).classList.toggle('hidden',id!==v));if(v==='library'){
   if(usesWorkoutCloud&&!session&&appStorage.getItem(KEY)!==ggLibraryRaw)load();
   renderLibrary();
 }
@@ -2308,14 +2319,14 @@ function renderProfileStats(records){
 }
 function selectHistoryView(stats){
  historyStatsOpen=!isHF&&stats;
- $('historySessionsTab').setAttribute('aria-pressed',String(!historyStatsOpen));
- $('historyStatsTab').setAttribute('aria-pressed',String(historyStatsOpen));
+ const statsToggle=$('historyStatsTab');
+ statsToggle.setAttribute('aria-expanded',String(historyStatsOpen));
+ statsToggle.textContent=historyStatsOpen?'Volver al calendario':'Estadísticas';
  $('historySessionList').classList.toggle('hidden',historyStatsOpen);
  $('historyStats').classList.toggle('hidden',!historyStatsOpen);
  renderHistory();
 }
-$('historySessionsTab').onclick=()=>selectHistoryView(false);
-$('historyStatsTab').onclick=()=>selectHistoryView(true);
+$('historyStatsTab').onclick=()=>selectHistoryView(!historyStatsOpen);
 $('historyStatsPeriod').addEventListener('click',event=>{
  const button=event.target.closest('button[data-period]');
  if(!button)return;
@@ -2323,7 +2334,6 @@ $('historyStatsPeriod').addEventListener('click',event=>{
  for(const option of $('historyStatsPeriod').querySelectorAll('button'))option.setAttribute('aria-pressed',String(option===button));
  renderProfileStats(getHistory());
 });
-let historyCalendarMode=true;
 let historyMonth=null,historyDay=null;
 const historyMonthLabel=new Intl.DateTimeFormat('es-ES',{month:'long',year:'numeric'});
 const historyDayLabel=new Intl.DateTimeFormat('es-ES',{dateStyle:'full'});
@@ -2335,12 +2345,11 @@ function historyDate(value){
 function historyDateKey(date){
  return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
 }
-function setHistoryLayout(calendar){
- historyCalendarMode=calendar;
- renderHistory();
-}
-$('historyCalendarChoice').onclick=()=>setHistoryLayout(true);
-$('historyListChoice').onclick=()=>setHistoryLayout(false);
+const historyDayDialog=$('historyDayDialog');
+$('historyDayClose').onclick=()=>historyDayDialog.close();
+historyDayDialog.addEventListener('close',()=>{
+ if(view==='history'&&!historyStatsOpen)$('historyCalendarDays').querySelector('[aria-pressed="true"]')?.focus();
+});
 function moveHistoryMonth(step){
  historyMonth=new Date(historyMonth.getFullYear(),historyMonth.getMonth()+step,1);
  historyDay=null;
@@ -2352,7 +2361,6 @@ function renderHistoryCalendar(entries){
  const today=new Date(),todayKey=historyDateKey(today);
  historyMonth??=new Date(today.getFullYear(),today.getMonth(),1);
  const year=historyMonth.getFullYear(),month=historyMonth.getMonth();
- const prefix=historyDateKey(historyMonth).slice(0,7);
  const byDay=new Map();
  for(const entry of entries){
   const date=historyDate(entry.record.date);
@@ -2361,9 +2369,7 @@ function renderHistoryCalendar(entries){
   if(!byDay.has(key))byDay.set(key,[]);
   byDay.get(key).push(entry);
  }
- historyDay??=[...byDay.keys()].sort().at(-1)||(todayKey.startsWith(prefix)?todayKey:historyDateKey(historyMonth));
  $('historyCalendarMonth').textContent=historyMonthLabel.format(historyMonth);
- $('historySelectedDay').textContent=historyDayLabel.format(historyDate(historyDay));
  const days=$('historyCalendarDays');
  days.replaceChildren();
  for(let blank=0;blank<(historyMonth.getDay()+6)%7;blank++)days.append(node('span',''));
@@ -2372,6 +2378,7 @@ function renderHistoryCalendar(entries){
   const button=node('button','','history-day');
   button.type='button';
   button.setAttribute('aria-pressed',String(key===historyDay));
+  button.setAttribute('aria-haspopup','dialog');
   button.setAttribute('aria-label',historyDayLabel.format(date)+', '+items.length+(items.length===1?' sesión':' sesiones'));
   if(key===todayKey)button.setAttribute('aria-current','date');
   const markers=node('span','','history-day-markers');
@@ -2383,7 +2390,8 @@ function renderHistoryCalendar(entries){
   button.onclick=()=>{
    historyDay=key;
    renderHistory();
-   days.querySelector('[aria-pressed="true"]').focus();
+   historyDayDialog.showModal();
+   historyDayDialog.scrollTop=0;
   };
   days.append(button);
  }
@@ -2395,14 +2403,17 @@ function renderHistory(){
   renderProfileStats(getHistory());
   return;
  }
- const box=$('historyEntries');box.replaceChildren();const records=getHistory(),indices=isHF?records.map((_,index)=>index):visibleHistoryIndices(records),sorted=indices.map(index=>({record:records[index],index})).reverse();if(!isHF)sorted.sort((a,b)=>(Date.parse(b.record.date)||0)-(Date.parse(a.record.date)||0));$('historyUndoDelete').classList.toggle('hidden',isHF||!appStorage.getItem(HISTORY_RECOVERY_KEY));const calendar=!isHF&&historyCalendarMode;
- $('historyLayoutChoices').classList.toggle('hidden',isHF);
- $('historyCalendarChoice').setAttribute('aria-pressed',String(calendar));
- $('historyListChoice').setAttribute('aria-pressed',String(!calendar));
- $('historyCalendar').classList.toggle('hidden',!calendar);
- $('historySelectedDay').classList.toggle('hidden',!calendar);
- const displayed=calendar?renderHistoryCalendar(sorted):sorted;
- if(!displayed.length)box.append(node('p',calendar?'No hay sesiones en este día.':'Todavía no hay sesiones finalizadas guardadas.','muted'));
+ const records=getHistory();
+ const indices=isHF?records.map((_,index)=>index):visibleHistoryIndices(records);
+ const sorted=indices.map(index=>({record:records[index],index}))
+  .sort((a,b)=>(Date.parse(b.record.date)||0)-(Date.parse(a.record.date)||0)||b.index-a.index);
+ $('historyUndoDelete').classList.toggle('hidden',isHF||!appStorage.getItem(HISTORY_RECOVERY_KEY));
+ const displayed=renderHistoryCalendar(sorted);
+ if(!historyDay)return;
+ $('historySelectedDay').textContent=historyDayLabel.format(historyDate(historyDay));
+ const box=$('historyEntries');
+ box.replaceChildren();
+ if(!displayed.length)box.append(node('p','No hay sesiones en este día.','muted'));
  displayed.forEach(({record:r,index})=>{const card=node('div','','tile');card.style.margin='12px 0';const heading=node('div','','row history-entry-heading');heading.append(node('h3',r.name||'Entrenamiento'));if(!isHF){const del=node('button','Eliminar sesión','danger');del.type='button';del.setAttribute('aria-label','Eliminar sesión '+(r.name||'Entrenamiento'));del.onclick=()=>deleteHistoryEntry(r,index);heading.append(del)}card.append(heading);if(!isHF&&r.source==='garmin')card.append(node('p','Garmin Connect'+(r.garmin?.distanceMeters?' · '+workoutStatsMetrics.distance.format(r.garmin.distanceMeters):''),'muted small'));const date=new Date(r.date);card.append(node('p',(isNaN(date.getTime())?'Fecha no disponible':date.toLocaleString('es-ES'))+' · '+formatSeconds(Math.floor(r.elapsed||0)),'muted'));if(!isHF){const heart=r.heartRate;card.append(node('p',heart?'FC media '+heartRateText(heart.average)+' · FC máxima '+heartRateText(heart.peak)+(heart.partial?' · Lectura parcial':''):'FC media y máxima · Sin datos','muted small'))}const details=node('div','','history-detail hidden');const toggle=node('button','▸ Ver ejercicios y series','history-toggle');toggle.type='button';toggle.onclick=()=>{const opening=details.classList.contains('hidden');details.classList.toggle('hidden',!opening);toggle.textContent=(opening?'▾':'▸')+' Ver ejercicios y series'};if(r.source!=='garmin')card.append(toggle);const w=workouts.find(x=>x.id===r.workoutId);let items=Array.isArray(r.exerciseSnapshot)?r.exerciseSnapshot:null;if(!items||!items.length){if(Array.isArray(r.exerciseNames)&&r.exerciseNames.length){items=r.exerciseNames.map((label,i)=>({label,raw:label,block:'',index:i}))}else if(w){items=w.blocks.flatMap(b=>b.items.map(line=>({label:decode(line).label,raw:line,block:b.name})))}}if(items&&items.length){items=groupHistoricalItems(items,w);details.append(node('p',items.length+' pasos programados · agrupados por bloque','gold small'));let currentBlock=null,blockBody=null,blockNumber=0;items.forEach((item,i)=>{const blockName=item.block||'Ejercicios';if(blockName!==currentBlock){currentBlock=blockName;blockNumber++;const section=node('section','','history-block');const head=node('button','','history-block-head');head.type='button';const label=node('span',blockName);const indicator=node('span','▸');head.append(label,indicator);blockBody=node('div','','history-block-body hidden');const ownBody=blockBody;head.onclick=()=>{const opening=ownBody.classList.contains('hidden');ownBody.classList.toggle('hidden',!opening);indicator.textContent=opening?'▾':'▸'};section.append(head,blockBody);details.append(section)}const raw=item.raw||item.label||'',d=decode(raw),group=node('div','','history-exercise');const title=node('div','','history-exercise-title');let kind='REP';if(d.duration)kind='TIEMPO';else if(/\b\d+(?:[.,]\d+)?\s*(?:m|km)\b/i.test(raw))kind='DIST';else if(d.strength)kind='FUERZA';const chip=node('span',kind,'history-kind');title.append(chip,node('strong',(i+1)+'. '+(item.label||d.label||raw)));group.append(title);if(r.vectorDose?.[i])group.append(node('div',r.vectorDose[i],'muted small'));else if(d.duration)group.append(node('div','Duración programada: '+formatSeconds(d.duration),'muted small'));else if(d.strength)group.append(node('div','Programado: '+d.strength.sets+' × '+d.strength.reps+' · '+(d.strength.weight??0)+' kg','muted small'));else if(readTechniqueLink(raw).text!==item.label)group.append(node('div',readTechniqueLink(raw).text,'muted small'));if(d.instructions)group.append(node('p','Indicaciones: '+d.instructions,'muted small exercise-instruction-preview'));const actual=r.actualResults?.[i];if(actual)group.append(node('div','Realizado: '+actual.value+' '+actual.unit,'gold small'));const sets=r.seriesLog?.[i]||[];if(Array.isArray(sets))sets.forEach((e,n)=>group.append(node('div','Serie '+(n+1)+': '+(e.reps??'—')+' rep · '+e.weight+' kg · RIR '+e.rir+' · descanso '+e.rest+'s','small')));blockBody.append(group)})}else{details.append(node('p','Esta sesión antigua no conserva el detalle de ejercicios.','muted small'))}card.append(details);if(Array.isArray(r.ftResults))for(const result of r.ftResults)card.append(node('p','FOR TIME '+result.name+' · '+(result.complete?'Completado':'Límite alcanzado')+' · '+formatSeconds(Math.floor(result.seconds))+' · '+result.steps+'/'+result.total+' pasos','gold'));if(Array.isArray(r.amrapResults)&&r.amrapResults.length){for(const result of r.amrapResults){const p=node('p','AMRAP '+result.name+': '+result.rounds+' rondas completas + '+result.partial+' ejercicios · '+formatSeconds(result.elapsed),'gold');card.append(p)}}if(r.rpe!==undefined||r.pain||r.notes){const report=node('div','','notice');report.style.marginTop='10px';report.textContent='RPE: '+(r.rpe??'—')+' · Molestias: '+(r.pain||'—')+(r.notes?' · '+r.notes:'');card.append(report)}const prior=r.workoutId?records.filter(x=>x.workoutId===r.workoutId&&x.id!==r.id&&new Date(x.date)<new Date(r.date)).at(-1):null;if(prior){const diff=Math.round((r.elapsed||0)-(prior.elapsed||0));card.append(node('p','Respecto a la sesión anterior: '+(diff===0?'mismo tiempo':diff<0?Math.abs(diff)+' s menos':diff+' s más')+' · comparación orientativa','muted small'))}box.append(card)})}
 function getHistory(){try{const data=JSON.parse(appStorage.getItem('gg-strength-history-v1')||'[]');return Array.isArray(data)?data:[]}catch(e){return[]}}
 function normalizedName(v){return String(v||'').trim().toLocaleLowerCase('es-ES').replace(/\s+/g,' ')}
@@ -3700,7 +3711,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.37';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.38';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
