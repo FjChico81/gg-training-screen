@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.35</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.36</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -306,6 +306,9 @@ if(new URLSearchParams(location.search).get('app')==='hf'){
 .exercise-picker-group>p{margin:8px 0 4px;font-weight:700}
 .exercise-picker-group>button{display:block;width:100%;min-height:38px;margin-bottom:4px;padding:6px 8px;text-align:left;font-size:14px}
 html[data-edition="hf"]{--menu:#fff;--panel:#f6f6f6;--history:#f4f4f4;--editor:#f5f5f5;--tile:#fff;--line:#d4d4d4;--button-alt:#171717;--outline:#737373;--bg:#fff;--input:#fff;--accent:#ff4d20;--accent-soft:#9b3d00;--muted:#525252;--ink:#101010;--ink-tv:#101010;--text:#111;--history-body:#fff;--surface:#f5f5f5}
+.history-nav{display:flex;align-items:stretch;gap:8px}
+.history-nav #garminImport{min-width:0;background:#56a9f4;color:#24282d}
+.history-nav #historyBack{margin-inline-start:auto}
 #brandTitle{font-size:clamp(42px,8vw,68px);line-height:1}
 body:not(.tv-mode.guided-active)>header{
  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;
@@ -1268,7 +1271,11 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
 <p id="exerciseLibraryCount" class="muted small" aria-live="polite"></p>
 <div id="exerciseLibraryResults"></div>
 </div></section>
-<section id="history" class="hidden"><div class="panel"><div class="row"><h2>Historial de sesiones</h2><div class="actions"><button id="historyUndoDelete" class="alt hidden" type="button">↶ Deshacer eliminación</button><button id="historyBack" class="alt">Inicio</button></div></div><button id="garminImport" type="button" class="alt hidden">Sincronizar Garmin ahora</button>
+<section id="history" class="hidden"><div class="panel"><div class="row"><h2>Historial de sesiones</h2><button id="historyUndoDelete" class="alt hidden" type="button">↶ Deshacer eliminación</button></div>
+<div class="history-nav">
+ <button id="garminImport" type="button" class="alt hidden">Sincronizar Garmin ahora</button>
+ <button id="historyBack" class="alt" type="button">Inicio</button>
+</div>
 <p id="garminImportStatus" class="muted small" role="status"></p>
 <div id="historyViewChoices" class="history-view-choices" role="group" aria-label="Vista del historial">
 <button id="historySessionsTab" type="button" aria-pressed="true" aria-controls="historySessionList">Sesiones</button>
@@ -3577,7 +3584,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.35';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.36';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
