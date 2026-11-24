@@ -3,7 +3,7 @@
  * This is an integration candidate. NEVER enable in production until both
  * dedicated project schemas, RLS, login and two-device sync are verified.
  */
-import {createEditionCloud,createProfileSync,profileLocalId,profileUUID} from './authenticated-sync-v2.mjs?v=3.0.3';
+import {createEditionCloud,createProfileSync,profileLocalId,profileUUID} from './authenticated-sync-v2.mjs?v=3.0.4';
 const edition=new URLSearchParams(location.search).get('app')==='hf'?'hf':'gg';
 const config=edition==='hf'
  ?(await import('../config/hf-supabase.js')).HF_SUPABASE_CONFIG
@@ -17,48 +17,61 @@ const bridge=window.__secureAppV2;
 if(!bridge)throw Error('Falta el enlace de la aplicación al motor de acceso.');
 let running=false,controller=null,profiles=[],currentUser=null,selectedProfile=null;
 let profileRefresh=null,profileMissing=false,profileRemoving=false;
-const deleteButton=by('deleteLocalProfile');
-const garminButton=by('garminImport');
-let importingGarmin=false;
-async function showGarminImport(user, profile){
- garminButton.classList.add('hidden');
- if(edition!=='gg'||!profile.is_primary||user.offline)return;
- try{
-  const result=await cloud.garminActivities();
-  if(currentUser===user&&selectedProfile===profile&&result.enabled===true)garminButton.classList.remove('hidden');
- }catch{ /* Other accounts and deployments without Garmin keep the control hidden. */ }
+const deleteButton=by('deleteLocalProfile'),editButton=by('editLocalProfile');
+const garminButton=by('garminImport'),garminStatus=by('garminImportStatus');
+let importingGarmin=false,garminPending=false,garminEnabled=null,lastGarminAttempt=0;
+function canSyncGarmin(user,profile){
+ return edition==='gg'&&user&&profile?.is_primary&&profile.id===user.id&&!profileMissing;
 }
-garminButton.onclick=async()=>{
+async function syncGarmin(manual=false){
  const user=currentUser,profile=selectedProfile;
- if(importingGarmin||edition!=='gg'||!user||!profile?.is_primary||profileMissing)return;
- const status=by('garminImportStatus');
- if(bridge.busy()){status.textContent='Termina tu sesión de BUHARDILLA antes de importar.';return}
- importingGarmin=true;garminButton.disabled=true;status.textContent='Consultando Garmin Connect…';
+ const stillSelected=()=>currentUser===user&&selectedProfile?.id===profile.id&&!profileMissing;
+ if(importingGarmin||running||!canSyncGarmin(user,profile)||document.documentElement.dataset.access!=='unlocked'||!navigator.onLine)return;
+ if(bridge.busy()){
+  if(manual)garminStatus.textContent='Se sincronizará al terminar la sesión o cerrar el editor.';
+  garminPending=true;
+  return;
+ }
+ importingGarmin=true;garminPending=false;garminButton.disabled=true;lastGarminAttempt=Date.now();
+ if(manual)garminStatus.textContent='Consultando Garmin Connect…';
  try{
+  if(garminEnabled!==true){
+   const result=await cloud.garminActivities();
+   if(!stillSelected()||running)return;
+   garminEnabled=result.enabled===true;
+   garminButton.classList.toggle('hidden',!garminEnabled);
+   if(!garminEnabled)return;
+  }
+  if(bridge.busy()){garminPending=true;return}
   const result=await cloud.garminActivities(true);
   const remote=await cloud.getRecords(profile.id);
   if(!Array.isArray(result.activities))throw Error('Historial de Garmin inválido.');
+  if(!stillSelected()||running)return;
+  if(bridge.busy()){garminPending=true;return}
   const remoteHistory=remote.filter(record=>record.kind==='history');
   const known=new Set(remoteHistory.map(record=>record.client_id));
-  if(currentUser!==user||selectedProfile!==profile||profileMissing)return;
   const {imported,overlapping}=bridge.importGarminActivities(
    result.activities.filter(entry=>!known.has('garmin-'+entry?.id)),
    remoteHistory.filter(record=>!record.deleted_at).map(record=>record.payload)
   );
   const received=imported===1?'1 actividad de Garmin incorporada.':imported+' actividades de Garmin incorporadas.';
   const skipped=overlapping===1?' Se omitió 1 actividad porque coincide con una sesión de BUHARDILLA.':overlapping?' Se omitieron '+overlapping+' actividades porque coinciden con sesiones de BUHARDILLA.':'';
-  status.textContent=imported||overlapping?received+skipped:'No hay actividades nuevas entre las últimas 30.';
+  garminStatus.textContent=imported||overlapping?received+skipped:manual?'No hay actividades nuevas entre las últimas 30.':'';
  }catch(error){
-  if(currentUser===user&&selectedProfile===profile)status.textContent=error.message;
+  if(stillSelected()&&(manual||garminEnabled))garminStatus.textContent=error.message;
+  if(stillSelected()&&!navigator.onLine)garminPending=true;
  }finally{garminButton.disabled=false;importingGarmin=false}
-};
+}
+garminButton.onclick=()=>void syncGarmin(true);
+
 const syncStatus=text=>{by('accountSyncState').textContent=text};
 function profileStatus(text){
  const status=by('profileActionStatus');
  status.textContent=text;
  status.classList.toggle('hidden',!text);
 }
-function updateDeleteButton(){
+function updateProfileButtons(){
+ editButton.classList.toggle('hidden',edition!=='gg'||!selectedProfile||profileMissing);
  deleteButton.classList.toggle('hidden',!selectedProfile||selectedProfile.is_primary||selectedProfile.id===currentUser?.id||profileMissing);
  deleteButton.disabled=profileRemoving;
 }
@@ -94,6 +107,7 @@ function leaveMissingProfile(){
 function schedule(){
  if((!controller&&!profileMissing)||running||profileRemoving||!navigator.onLine||document.visibilityState==='hidden')return;
  if(profileMissing){leaveMissingProfile();return}
+ if(garminPending)void syncGarmin();
  if(profileRefresh||bridge.busy())return;
  profileRefresh=refreshProfiles().finally(()=>{profileRefresh=null});
 }
@@ -105,12 +119,15 @@ async function refreshProfiles(){
   if(!latest.some(profile=>profile.id===selectedProfile?.id)){
    profiles=latest;
    profileMissing=true;
-   updateDeleteButton();
+   updateProfileButtons();
    leaveMissingProfile();
    return;
   }
   const roster=rows=>JSON.stringify(rows.map(({id,name,is_primary})=>[id,name,is_primary]));
-  if(roster(latest)!==roster(profiles))bridge.setProfiles(user.id,latest);
+  if(roster(latest)!==roster(profiles)){
+   bridge.setProfiles(user.id,latest);
+   selectedProfile=latest.find(profile=>profile.id===selectedProfile.id);
+  }
   profiles=latest;
   void controller.synchronize();
  }catch(error){
@@ -127,8 +144,9 @@ async function ready(){
  bridge.setProfiles(user.id,profiles);
  selectedProfile=checkedProfile();
  profileMissing=false;
+ garminEnabled=null;garminPending=Boolean(canSyncGarmin(user,selectedProfile));lastGarminAttempt=0;
  profileStatus('');
- updateDeleteButton();
+ updateProfileButtons();
  if(!selectedProfile)throw Error('Perfil no autorizado.');
  const localId=profileLocalId(user.id,selectedProfile.id);
  const requested=new URLSearchParams(location.search).get('perfil')||'personal';
@@ -164,17 +182,17 @@ async function ready(){
  by('accountUser').textContent=user.email||'Cuenta personal';
  by('accountSyncState').textContent='Cuenta verificada. Sincronización activa.';
  unlock();
- void showGarminImport(user,selectedProfile);
  return true;
 }
 async function signOut(){
  if(bridge.busy()){alert('Finaliza la sesión en curso antes de cerrar sesión.');return}
  await cloud.logout();
  garminButton.classList.add('hidden');
- by('garminImportStatus').textContent='';
+ garminStatus.textContent='';
+ garminPending=false;garminEnabled=null;
  bridge.setController(null);
  currentUser=null;selectedProfile=null;controller=null;profileMissing=false;
- updateDeleteButton();
+ updateProfileButtons();
  locked();message('Sesión cerrada. Inicia sesión para acceder.');
 }
 async function addProfile(){
@@ -185,6 +203,25 @@ async function addProfile(){
  profiles=[...profiles,created];
  bridge.setProfiles(currentUser.id,profiles);
  goToProfile(profileLocalId(currentUser.id,created.id));
+}
+async function renameSelectedProfile(){
+ const user=currentUser,profile=selectedProfile;
+ if(edition!=='gg'||!user||!profile||profileMissing)return;
+ const name=prompt('Nuevo nombre del perfil',profile.name)?.trim();
+ if(!name||name===profile.name)return;
+ editButton.disabled=true;
+ profileStatus('Guardando nombre…');
+ try{
+  await profileRefresh;
+  const saved=await cloud.renameProfile(profile.id,name);
+  if(currentUser!==user||selectedProfile!==profile)return;
+  profiles=profiles.map(row=>row.id===saved.id?saved:row);
+  selectedProfile=saved;
+  bridge.setProfiles(user.id,profiles);
+  profileStatus('Nombre del perfil actualizado.');
+ }catch(error){
+  profileStatus(error?.message||'No se pudo actualizar el nombre del perfil.');
+ }finally{editButton.disabled=false}
 }
 async function removeSelectedProfile(){
  const profile=selectedProfile;
@@ -197,7 +234,7 @@ async function removeSelectedProfile(){
  if(!navigator.onLine){profileStatus('Conéctate a Internet para eliminar el perfil.');return}
  if(!confirm('¿Eliminar el perfil «'+profile.name+'»? Sus rutinas e historial sincronizados se borrarán de la cuenta. Esta acción no se puede deshacer.'))return;
  profileRemoving=true;
- updateDeleteButton();
+ updateProfileButtons();
  profileStatus('Eliminando perfil…');
  try{
   await profileRefresh;
@@ -215,7 +252,7 @@ async function removeSelectedProfile(){
   profileStatus('No se pudo confirmar la eliminación. Comprueba la conexión y vuelve a intentarlo.');
  }finally{
   profileRemoving=false;
-  updateDeleteButton();
+  updateProfileButtons();
   if(!profileMissing)schedule();
  }
 }
@@ -235,16 +272,23 @@ by('accountRegister').onclick=()=>run(async()=>{
 by('accountRetry').onclick=()=>run(ready);
 by('accountLogout').onclick=()=>run(signOut);
 by('addLocalProfile').onclick=()=>run(addProfile);
+editButton.onclick=()=>run(renameSelectedProfile);
 async function run(action){
  if(running||profileRemoving)return;
  setBusy(true);
  try{await action()}
  catch(error){locked();message(error?.message||'No se pudo verificar tu cuenta.',true)}
- finally{setBusy(false)}
+ finally{
+  setBusy(false);
+  if(garminPending)void syncGarmin();
+ }
 }
 window.addEventListener('online',schedule);
 window.addEventListener('focus',schedule);
-document.addEventListener('visibilitychange',schedule);
+document.addEventListener('visibilitychange',()=>{
+ if(document.visibilityState==='visible'&&canSyncGarmin(currentUser,selectedProfile)&&Date.now()-lastGarminAttempt>=60000)garminPending=true;
+ schedule();
+});
 window.addEventListener('pagehide',()=>{});
 setInterval(schedule,30000);
 void run(ready);

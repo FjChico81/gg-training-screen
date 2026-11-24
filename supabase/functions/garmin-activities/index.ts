@@ -83,10 +83,11 @@ export function createGarminHandler({supabaseUrl, publishableKey, owner, garminK
  };
 }
 
-if (import.meta.main) {
+if (typeof Deno !== 'undefined') {
+ const publishableKeys = JSON.parse(Deno.env.get('SUPABASE_PUBLISHABLE_KEYS') || '{}');
  Deno.serve(createGarminHandler({
   supabaseUrl: Deno.env.get('SUPABASE_URL'),
-  publishableKey: Deno.env.get('SUPABASE_ANON_KEY'),
+  publishableKey: publishableKeys.default || Deno.env.get('SUPABASE_ANON_KEY'),
   owner: Deno.env.get('GARMIN_OWNER_USER_ID'),
   garminKey: Deno.env.get('GARMIN_PERSONAL_API_KEY'),
   webOrigin: Deno.env.get('GARMIN_WEB_ORIGIN') || 'https://fjchico81.github.io'
