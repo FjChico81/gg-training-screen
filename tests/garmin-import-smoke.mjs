@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
+import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
 import {activitySummary, createGarminHandler} from '../supabase/functions/garmin-activities/index.ts';
 import {createProfileSync} from '../src/authenticated-sync-v2.mjs';
 
@@ -14,7 +16,7 @@ const garminRow={activityId:42,activityName:'Carrera',activityType:{typeKey:'run
 test('Garmin response publishes only summary fields with a UTC timestamp',()=>{
  assert.deepEqual(activitySummary(garminRow),{
   id:'42',name:'Carrera',type:'running',date:'2026-11-23T07:30:00.000Z',
-  elapsed:3600,distanceMeters:10000,averageHeartRate:150,peakHeartRate:172
+  elapsed:3600,elapsedWallSeconds:3600,distanceMeters:10000,averageHeartRate:150,peakHeartRate:172
  });
  assert.equal(activitySummary({...garminRow,parentId:50}),null);
  assert.equal(activitySummary({...garminRow,startTimeGMT:'invalid'}),null);
@@ -77,4 +79,26 @@ test('an import skips existing IDs and respects Garmin entries deleted on a diff
  await new Promise(resolve=>setImmediate(resolve));
  assert.deepEqual(applied.history,[]);
  assert.deepEqual(JSON.parse(storage.getItem('gg-test:sync-v2-pending')),{});
+});
+
+const historySource=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const intervalStart=historySource.indexOf('function workoutHistoryInterval(');
+const intervalEnd=historySource.indexOf('function renderProfileStats(',intervalStart);
+const helpers=runInNewContext(historySource.slice(intervalStart,intervalEnd)+'\n;({overlapsBuhardilla,buhardillaHistoryIntervals,visibleHistoryIndices});');
+
+test('matching Garmin and BUHARDILLA times count once, with independent activities preserved',()=>{
+ const workout={date:'2026-11-24T10:45:00Z',elapsed:1800,startedAt:'2026-11-24T10:00:00Z'};
+ const garmin={source:'garmin',date:'2026-11-24T10:02:00Z',elapsed:1400,garmin:{elapsedWallSeconds:2400}};
+ const separate={source:'garmin',date:'2026-11-24T10:44:30Z',elapsed:1200};
+ const intervals=helpers.buhardillaHistoryIntervals([workout]);
+ assert.equal(helpers.overlapsBuhardilla(garmin,intervals),true);
+ assert.equal(helpers.overlapsBuhardilla(separate,intervals),false);
+ assert.deepEqual(Array.from(helpers.visibleHistoryIndices([garmin,workout,separate])),[1,2]);
+});
+
+test('older BUHARDILLA sessions estimate the start from the saved end time and duration',()=>{
+ const legacy={date:'2026-11-24T00:10:00Z',elapsed:1800};
+ const beforeMidnight={date:'2026-11-23T23:40:00Z',elapsed:1800};
+ const intervals=helpers.buhardillaHistoryIntervals([legacy]);
+ assert.equal(helpers.overlapsBuhardilla(beforeMidnight,intervals),true);
 });

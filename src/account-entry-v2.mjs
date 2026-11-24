@@ -32,15 +32,22 @@ garminButton.onclick=async()=>{
  const user=currentUser,profile=selectedProfile;
  if(importingGarmin||edition!=='gg'||!user||!profile?.is_primary||profileMissing)return;
  const status=by('garminImportStatus');
+ if(bridge.busy()){status.textContent='Termina tu sesión de BUHARDILLA antes de importar.';return}
  importingGarmin=true;garminButton.disabled=true;status.textContent='Consultando Garmin Connect…';
  try{
   const result=await cloud.garminActivities(true);
   const remote=await cloud.getRecords(profile.id);
   if(!Array.isArray(result.activities))throw Error('Historial de Garmin inválido.');
-  const known=new Set(remote.filter(record=>record.kind==='history').map(record=>record.client_id));
+  const remoteHistory=remote.filter(record=>record.kind==='history');
+  const known=new Set(remoteHistory.map(record=>record.client_id));
   if(currentUser!==user||selectedProfile!==profile||profileMissing)return;
-  const received=bridge.importGarminActivities(result.activities.filter(entry=>!known.has('garmin-'+entry?.id)));
-  status.textContent=received===0?'No hay actividades nuevas entre las últimas 30.':received===1?'1 actividad de Garmin incorporada.':received+' actividades de Garmin incorporadas.';
+  const {imported,overlapping}=bridge.importGarminActivities(
+   result.activities.filter(entry=>!known.has('garmin-'+entry?.id)),
+   remoteHistory.filter(record=>!record.deleted_at).map(record=>record.payload)
+  );
+  const received=imported===1?'1 actividad de Garmin incorporada.':imported+' actividades de Garmin incorporadas.';
+  const skipped=overlapping===1?' Se omitió 1 actividad porque coincide con una sesión de BUHARDILLA.':overlapping?' Se omitieron '+overlapping+' actividades porque coinciden con sesiones de BUHARDILLA.':'';
+  status.textContent=imported||overlapping?received+skipped:'No hay actividades nuevas entre las últimas 30.';
  }catch(error){
   if(currentUser===user&&selectedProfile===profile)status.textContent=error.message;
  }finally{garminButton.disabled=false;importingGarmin=false}

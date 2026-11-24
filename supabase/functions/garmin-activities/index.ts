@@ -20,6 +20,7 @@ export function activitySummary(activity) {
   type: String(activity.activityType?.typeKey ?? '').slice(0, 64),
   date: new Date(time).toISOString(),
   elapsed,
+  elapsedWallSeconds: Math.max(elapsed, numberInRange(activity.elapsedDuration, 1, 604800) ?? elapsed),
   distanceMeters: numberInRange(activity.distance, 1, 10000000),
   averageHeartRate: numberInRange(activity.averageHR, 25, 240),
   peakHeartRate: numberInRange(activity.maxHR, 25, 240)
