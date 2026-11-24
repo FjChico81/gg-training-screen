@@ -20,30 +20,41 @@ function launch(path, { saved, offline = false } = {}) {
   querySelector: () => ({ remove() {} }),
   getElementById: () => ({ href: 'test.png' }), createElement: () => ({})
  };
+ const location = { href: url.href, search: url.search, replace: href => redirects.push(new URL(href)) };
  const context = vm.createContext({
   document, URL, URLSearchParams, navigator: { onLine: !offline },
-  location: { href: url.href, search: url.search, replace: href => redirects.push(new URL(href)) },
+  location, history: { replaceState: (_, __, href) => { location.href = href.href; location.search = href.search; } },
   localStorage: { getItem: () => state.version, setItem: (_, version) => { state.version = version; } }
  });
  vm.runInContext(head, context);
- return { redirects, state, document, version: title.match(/\d+\.\d+\.\d+$/)[0] };
+ return { redirects, state, document, location, version: title.match(/\d+\.\d+\.\d+$/)[0] };
 }
 
-test('a returning icon launches the highest previously served version while keeping edition and profile', () => {
- const first = launch('?app=hf&perfil=test');
+test('a returning icon launches the highest previously served version while keeping the main app profile', () => {
+ const first = launch('?perfil=test');
  assert.equal(first.state.version, first.version);
  assert.equal(first.redirects.length, 0);
- const cached = launch('?app=hf&perfil=test', { saved: '3.11.0' });
+ const cached = launch('?perfil=test', { saved: '3.11.0' });
  assert.equal(cached.redirects.length, 1);
  const params = cached.redirects[0].searchParams;
- assert.equal(params.get('app'), 'hf');
+ assert.equal(params.has('app'), false);
  assert.equal(params.get('perfil'), 'test');
  assert.equal(params.get('_gg_v'), '3.11.0');
  assert.match(params.get('_actualiza'), /^\d+$/);
  assert.equal(cached.state.version, '3.11.0');
  assert.equal(cached.document.documentElement.dataset.access, 'locked');
- assert.equal(launch('?app=hf&_gg_v=3.11.0', { saved: '3.11.0' }).redirects.length, 0);
+ assert.equal(launch('?_gg_v=3.11.0', { saved: '3.11.0' }).redirects.length, 0);
  assert.equal(launch('', { saved: '3.11.0', offline: true }).redirects.length, 0);
+});
+
+test('legacy bookmarks open the main app and drop the old HF profile', () => {
+ const retired = launch('?app=hf&perfil=legacy');
+ assert.equal(retired.location.href, scope);
+ assert.equal(retired.document.documentElement.dataset.edition, undefined);
+ assert.equal(retired.document.title, 'HF · Hybrid Funcional Club');
+ const legacyClass = readFileSync(resolve(root, 'hf-class-display.html'), 'utf8');
+ assert.match(legacyClass, /Content-Security-Policy" content="script-src 'none'"/);
+ assert.match(legacyClass, /http-equiv="refresh" content="0; url=\.\/"/);
 });
 
 test('the worker refreshes only the two public entry paths and can reopen their HTML offline', async () => {
