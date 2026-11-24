@@ -3,7 +3,7 @@
  * This is an integration candidate. NEVER enable in production until both
  * dedicated project schemas, RLS, login and two-device sync are verified.
  */
-import {createEditionCloud,createProfileSync,profileLocalId,profileUUID} from './authenticated-sync-v2.mjs?v=3.0.2';
+import {createEditionCloud,createProfileSync,profileLocalId,profileUUID} from './authenticated-sync-v2.mjs?v=3.0.3';
 const edition=new URLSearchParams(location.search).get('app')==='hf'?'hf':'gg';
 const config=edition==='hf'
  ?(await import('../config/hf-supabase.js')).HF_SUPABASE_CONFIG
@@ -17,14 +17,15 @@ const bridge=window.__secureAppV2;
 if(!bridge)throw Error('Falta el enlace de la aplicación al motor de acceso.');
 let running=false,controller=null,profiles=[],currentUser=null,selectedProfile=null;
 let profileRefresh=null,profileMissing=false,profileRemoving=false;
-const deleteButton=by('deleteLocalProfile');
+const deleteButton=by('deleteLocalProfile'),editButton=by('editLocalProfile');
 const syncStatus=text=>{by('accountSyncState').textContent=text};
 function profileStatus(text){
  const status=by('profileActionStatus');
  status.textContent=text;
  status.classList.toggle('hidden',!text);
 }
-function updateDeleteButton(){
+function updateProfileButtons(){
+ editButton.classList.toggle('hidden',edition!=='gg'||!selectedProfile||profileMissing);
  deleteButton.classList.toggle('hidden',!selectedProfile||selectedProfile.is_primary||selectedProfile.id===currentUser?.id||profileMissing);
  deleteButton.disabled=profileRemoving;
 }
@@ -71,12 +72,15 @@ async function refreshProfiles(){
   if(!latest.some(profile=>profile.id===selectedProfile?.id)){
    profiles=latest;
    profileMissing=true;
-   updateDeleteButton();
+   updateProfileButtons();
    leaveMissingProfile();
    return;
   }
   const roster=rows=>JSON.stringify(rows.map(({id,name,is_primary})=>[id,name,is_primary]));
-  if(roster(latest)!==roster(profiles))bridge.setProfiles(user.id,latest);
+  if(roster(latest)!==roster(profiles)){
+   bridge.setProfiles(user.id,latest);
+   selectedProfile=latest.find(profile=>profile.id===selectedProfile.id);
+  }
   profiles=latest;
   void controller.synchronize();
  }catch(error){
@@ -94,7 +98,7 @@ async function ready(){
  selectedProfile=checkedProfile();
  profileMissing=false;
  profileStatus('');
- updateDeleteButton();
+ updateProfileButtons();
  if(!selectedProfile)throw Error('Perfil no autorizado.');
  const localId=profileLocalId(user.id,selectedProfile.id);
  const requested=new URLSearchParams(location.search).get('perfil')||'personal';
@@ -137,7 +141,7 @@ async function signOut(){
  await cloud.logout();
  bridge.setController(null);
  currentUser=null;selectedProfile=null;controller=null;profileMissing=false;
- updateDeleteButton();
+ updateProfileButtons();
  locked();message('Sesión cerrada. Inicia sesión para acceder.');
 }
 async function addProfile(){
@@ -148,6 +152,25 @@ async function addProfile(){
  profiles=[...profiles,created];
  bridge.setProfiles(currentUser.id,profiles);
  goToProfile(profileLocalId(currentUser.id,created.id));
+}
+async function renameSelectedProfile(){
+ const user=currentUser,profile=selectedProfile;
+ if(edition!=='gg'||!user||!profile||profileMissing)return;
+ const name=prompt('Nuevo nombre del perfil',profile.name)?.trim();
+ if(!name||name===profile.name)return;
+ editButton.disabled=true;
+ profileStatus('Guardando nombre…');
+ try{
+  await profileRefresh;
+  const saved=await cloud.renameProfile(profile.id,name);
+  if(currentUser!==user||selectedProfile!==profile)return;
+  profiles=profiles.map(row=>row.id===saved.id?saved:row);
+  selectedProfile=saved;
+  bridge.setProfiles(user.id,profiles);
+  profileStatus('Nombre del perfil actualizado.');
+ }catch(error){
+  profileStatus(error?.message||'No se pudo actualizar el nombre del perfil.');
+ }finally{editButton.disabled=false}
 }
 async function removeSelectedProfile(){
  const profile=selectedProfile;
@@ -160,7 +183,7 @@ async function removeSelectedProfile(){
  if(!navigator.onLine){profileStatus('Conéctate a Internet para eliminar el perfil.');return}
  if(!confirm('¿Eliminar el perfil «'+profile.name+'»? Sus rutinas e historial sincronizados se borrarán de la cuenta. Esta acción no se puede deshacer.'))return;
  profileRemoving=true;
- updateDeleteButton();
+ updateProfileButtons();
  profileStatus('Eliminando perfil…');
  try{
   await profileRefresh;
@@ -178,7 +201,7 @@ async function removeSelectedProfile(){
   profileStatus('No se pudo confirmar la eliminación. Comprueba la conexión y vuelve a intentarlo.');
  }finally{
   profileRemoving=false;
-  updateDeleteButton();
+  updateProfileButtons();
   if(!profileMissing)schedule();
  }
 }
@@ -198,6 +221,7 @@ by('accountRegister').onclick=()=>run(async()=>{
 by('accountRetry').onclick=()=>run(ready);
 by('accountLogout').onclick=()=>run(signOut);
 by('addLocalProfile').onclick=()=>run(addProfile);
+editButton.onclick=()=>run(renameSelectedProfile);
 async function run(action){
  if(running||profileRemoving)return;
  setBusy(true);
