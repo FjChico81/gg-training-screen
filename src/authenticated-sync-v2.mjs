@@ -126,6 +126,22 @@ export function createEditionCloud({url,publishableKey,edition,storage,fetchImpl
    JSON.stringify({uid,rows:[...cache.rows,rows[0]],at:now()}));
   return rows[0];
  }
+ async function renameProfile(profileId,name){
+  const uid=owner(),clean=String(name||'').trim();
+  assertUUID(profileId);
+  if(!clean||clean.length>60)throw Error('Escribe un nombre de entre 1 y 60 caracteres.');
+  if(offline())throw Error('Conéctate a Internet para editar el perfil.');
+  if(auth.expiresAt<=now()+60_000)await verify();
+  const rows=await request('/rest/v1/training_profiles_v2?select=id,owner_id,name,is_primary,updated_at&owner_id=eq.'+uid+'&id=eq.'+profileId,{
+   method:'PATCH',headers:{Prefer:'return=representation'},body:{name:clean}});
+  const saved=Array.isArray(rows)&&rows.length===1?rows[0]:null;
+  if(saved?.id!==profileId||saved.owner_id!==uid||saved.name!==clean)throw Error('No se pudo confirmar el nombre del perfil.');
+  const cacheKey=authKey+':profiles:'+uid;
+  const cache=safeJSON(storage.getItem(cacheKey),null);
+  if(cache?.uid===uid&&Array.isArray(cache.rows))storage.setItem(cacheKey,
+   JSON.stringify({...cache,rows:cache.rows.map(row=>row.id===saved.id?saved:row)}));
+  return saved;
+ }
  async function deleteProfile(profileId){
   const uid=owner();
   assertUUID(profileId);
@@ -178,7 +194,7 @@ export function createEditionCloud({url,publishableKey,edition,storage,fetchImpl
   return expectedRevision+1;
  }
  return {edition,authKey,get verified(){return verified},get user(){return verified?auth?.user:null},
-  verify,login,register,logout,profiles,createProfile,deleteProfile,getRecords,upsertRevision};
+  verify,login,register,logout,profiles,createProfile,renameProfile,deleteProfile,getRecords,upsertRevision};
 }
 export function profileUUID(uid,profileId){
  assertUUID(uid);
