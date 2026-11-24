@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.31</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.32</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -302,12 +302,20 @@ if(new URLSearchParams(location.search).get('app')==='hf'){
 .exercise-picker-group>p{margin:8px 0 4px;font-weight:700}
 .exercise-picker-group>button{display:block;width:100%;min-height:38px;margin-bottom:4px;padding:6px 8px;text-align:left;font-size:14px}
 html[data-edition="hf"]{--menu:#fff;--panel:#f6f6f6;--history:#f4f4f4;--editor:#f5f5f5;--tile:#fff;--line:#d4d4d4;--button-alt:#171717;--outline:#737373;--bg:#fff;--input:#fff;--accent:#ff4d20;--accent-soft:#9b3d00;--muted:#525252;--ink:#101010;--ink-tv:#101010;--text:#111;--history-body:#fff;--surface:#f5f5f5}
+#brandSubtitle{display:none}
+html:not([data-edition="hf"]) body:has(#library.vector-home:not(.hidden))>header .gg-brand-mark{display:none}
+html:not([data-edition="hf"]) body:has(#library.vector-home:not(.hidden))>header .gg-home-hf-symbol{display:block}
+html:not([data-edition="hf"]) body:has(#library.vector-home:not(.hidden))>header #brandTitle,
 html[data-edition="hf"] #brandTitle{font-size:clamp(42px,8vw,68px);line-height:1}
+html:not([data-edition="hf"]) body:has(#library.vector-home:not(.hidden))>header,
 html[data-edition="hf"] body:not(.tv-mode.guided-active)>header{
  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;
 }
+html:not([data-edition="hf"]) body:has(#library.vector-home:not(.hidden))>header>.brand-heading,
 html[data-edition="hf"] body:not(.tv-mode.guided-active)>header>.brand-heading{display:contents}
+html:not([data-edition="hf"]) body:has(#library.vector-home:not(.hidden))>header>.header-settings,
 html[data-edition="hf"] body:not(.tv-mode.guided-active)>header>.header-settings{grid-area:1/2}
+html:not([data-edition="hf"]) body:has(#library.vector-home:not(.hidden))>header #brandSubtitle,
 html[data-edition="hf"] #brandSubtitle{
  grid-column:1/-1;display:block;color:#484345;
  font-size:clamp(11px,3.5vw,18px);line-height:1.25;font-weight:850;white-space:nowrap;
@@ -316,6 +324,7 @@ html[data-edition="hf"] #brandSubtitle{
  --hf-logo-orange:#f34a15;
  position:relative;display:block;width:1.9em;aspect-ratio:342.144 / 169;
 }
+.hf-brand-symbol.gg-home-hf-symbol{display:none}
 .hf-brand-symbol::before,.hf-brand-symbol::after{
  content:"";position:absolute;inset:0;
 }
@@ -1211,14 +1220,9 @@ html[data-access="locked"] body{background:#17191f!important}
 }
 #accountWall:not([data-phase="login"]) .account-panel,
 #accountWall[data-phase="login"] .account-launch,
-#accountWall:not([data-phase="load-error"]) #accountLaunchRetry,
-html:not([data-edition="hf"]) .account-launch-hf,
-html[data-edition="hf"] .account-launch-gg{display:none}
+#accountWall:not([data-phase="load-error"]) #accountLaunchRetry{display:none}
 #accountWall .account-launch{text-align:center}
-#accountWall .account-launch h1{font-size:clamp(26px,7vw,44px);letter-spacing:-.04em}
-#accountWall .account-launch .account-launch-gg{font-size:clamp(20px,8.25vw,56px);white-space:nowrap}
-#accountWall .account-launch em{margin-left:.22em;color:var(--accent);font-style:normal}
-html[data-edition="hf"] #accountWall .account-launch-hf{
+#accountWall .account-launch .account-launch-hf{
  color:#111;font-size:clamp(26px,8.2vw,44px);line-height:1.03;
  font-weight:950;letter-spacing:.015em;margin:0 0 18px;
 }
@@ -1255,7 +1259,6 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
 <div id="hrConnectedNotice" role="status" aria-atomic="true"></div>
 <div id="accountWall" data-phase="loading" role="region" aria-label="Acceso a la aplicación">
  <div class="account-launch">
-  <h1 class="account-launch-gg">BUHARDILLA<em>Fitness</em></h1>
   <h1 class="account-launch-hf">
    <span class="hf-brand-symbol" aria-hidden="true"></span>
    <span class="hf-brand-name">HYBRID</span>
@@ -1282,7 +1285,7 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
   <p class="account-foot">GG FAMILY y HF TRAINING utilizan cuentas y bases de datos independientes. No se importan tus rutinas antiguas.</p>
  </div>
 </div>
-<header class="row" style="margin-bottom:18px"><div class="brand-heading"><h1 id="brandTitle" class="gold"><span class="gg-brand-mark" aria-label="BUHARDILLA Fitness"><span class="buhardilla-wordmark"><strong>BUHARDILLA</strong><em>Fitness</em></span></span></h1><span id="brandSubtitle" class="muted small hidden">GO ALL OUT</span></div><div class="header-settings">
+<header class="row" style="margin-bottom:18px"><div class="brand-heading"><h1 id="brandTitle" class="gold"><span class="gg-brand-mark" aria-label="BUHARDILLA Fitness"><span class="buhardilla-wordmark"><strong>BUHARDILLA</strong><em>Fitness</em></span></span><span class="hf-brand-symbol gg-home-hf-symbol" role="img" aria-label="HF"></span></h1><span id="brandSubtitle" class="muted small">Hybrid Funcional Club “GO ALL OUT”</span></div><div class="header-settings">
 <button id="fullscreenToggle" class="settings-gear fullscreen-toggle" type="button" aria-label="Activar pantalla completa" title="Activar pantalla completa" aria-pressed="false">
  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
   <path class="fullscreen-enter" d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/>
@@ -1871,8 +1874,6 @@ function setupHF(){
  brandSymbol.setAttribute('role','img');
  brandSymbol.setAttribute('aria-label','HF');
  $('brandTitle').replaceChildren(brandSymbol);
- $('brandSubtitle').textContent='Hybrid Funcional Club “GO ALL OUT”';
- $('brandSubtitle').classList.remove('hidden');
  $('library').querySelector('.library-title').textContent='Clases y entrenamientos';
  const intro=node('p','Prepara la sesión y preséntala desde un móvil conectado a TV o directamente en un iPad o tablet. No hace falta emparejar dispositivos.','hf-class-intro');
  const heading=$('library').querySelector('.library-title');
@@ -3631,7 +3632,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.31';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.32';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
