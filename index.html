@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.40</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.41</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -1106,15 +1106,31 @@ html:not([data-edition="hf"]) #guided .hr-zone-segment:not([data-hr-zone="1"]){b
 /* Historial y estadísticas del perfil activo. */
 html[data-edition="hf"] #historyViewChoices{display:none}
 .history-view-choices{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
-#historyViewChoices button,#historyStatsPeriod button{
+#historyViewChoices button,#historyStatsSections button,#historyStatsPeriod button{
  background:#fff;color:#28211e;border:1px solid #d1c7c1;min-height:44px
 }
-#historyViewChoices button[aria-expanded="true"],#historyStatsPeriod button[aria-pressed="true"]{
+#historyViewChoices button[aria-expanded="true"],#historyStatsSections button[aria-pressed="true"],#historyStatsPeriod button[aria-pressed="true"]{
  background:#ffe8dd;color:#692912;border-color:#b74b22;font-weight:800
 }
 #historyStats:not(.hidden){display:grid;gap:12px;margin-top:12px;color:#201a17}
 #historyStats .stats-panel{border:1px solid #ded2ca;background:#fff;border-radius:12px;padding:clamp(12px,2.5vw,20px)}
-#historyStats h3{margin:0 0 8px}
+body:has(#history.showing-stats:not(.hidden))>header,
+#history.showing-stats :is(.history-nav,#garminImportStatus){display:none}
+#history.showing-stats>.panel{padding:12px;margin-bottom:0}
+#history.showing-stats #historyHeading{gap:8px;align-items:center}
+#history.showing-stats #historyTitle{margin:0}
+#history.showing-stats #historyViewChoices{margin:0}
+#history.showing-stats #historyStatsTab{padding:6px 10px}
+#historyStatsSections.history-view-choices{margin:0}
+#historyStatsSections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#historyStats .stats-filters label{margin:0;font-size:.9rem;min-width:0}
+#historyStats .stats-filters select{width:100%;min-width:0;font-size:.95rem;padding-inline:8px}
+#historyStatsPeriod button,#historyStatsSections button{padding:6px 10px}
+#historyStats .stats-chart-pagination{
+ display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;text-align:center;margin-top:8px;
+}
+#historyStats .stats-chart-pagination button{padding:0;min-height:44px}
+#historyStats .stats-chart-pagination button:disabled{opacity:.45}
 #historyStats .stats-periods,#historyStats .stats-filters:not(.hidden){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 #historyStats .stats-period{border:1px solid #ded2ca;border-radius:9px;padding:10px}
 #historyStats .stats-period:first-child{background:#fff4ed;border-color:#edc8b6}
@@ -1123,18 +1139,16 @@ html[data-edition="hf"] #historyViewChoices{display:none}
 #historyStats .stats-period strong{display:block;margin:6px 0;font-size:clamp(1rem,3vw,1.35rem)}
 #historyStats .stats-filters select{margin:4px 0 0}
 #historyStats .stats-chart{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
-#historyStats .stats-chart{max-height:28rem;overflow:auto}
 #historyStats button.stats-chart-row{
  display:grid;grid-template-columns:auto minmax(20px,1fr) auto;gap:3px 9px;align-items:center;
  width:100%;min-height:48px;padding:6px;text-align:left;background:#fff;color:#201a17;
  border:1px solid #e8ddd6;border-radius:7px;font-weight:500
 }
-#historyStats .stats-chart-name{grid-column:1/-1;overflow-wrap:anywhere;font-size:.85em}
+#historyStats .stats-chart-name{grid-column:1/-1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.85em}
 #historyStats .stats-chart-total{font-size:1.15rem;margin:8px 0 4px}
 #historyStats .stats-chart-track{display:block;border-radius:10px;background:#f2e9e3;height:9px}
 #historyStats .stats-chart-fill{display:block;border-radius:inherit;background:#ba481e;height:100%}
 #historyStats .stats-chart-value{text-align:right;font-variant-numeric:tabular-nums}
-@media(max-width:410px){#historyStats .stats-filters{grid-template-columns:1fr}}
 /* Pizarra de Buhardilla: cada ejercicio tiene sus datos e indicaciones. */
 #board .gg-board-block{background:#fff;border:1px solid #e3d8cd;padding:clamp(12px,2.5vw,22px)}
 #board .gg-board-block:only-child{grid-column:1/-1}
@@ -1301,7 +1315,7 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
 <p id="exerciseLibraryCount" class="muted small" aria-live="polite"></p>
 <div id="exerciseLibraryResults"></div>
 </div></section>
-<section id="history" class="hidden"><div class="panel"><div class="row"><h2>Historial de sesiones</h2><button id="historyUndoDelete" class="alt hidden" type="button">↶ Deshacer eliminación</button></div>
+<section id="history" class="hidden"><div class="panel"><div class="row" id="historyHeading"><h2 id="historyTitle">Historial de sesiones</h2><button id="historyUndoDelete" class="alt hidden" type="button">↶ Deshacer eliminación</button></div>
 <div class="history-nav">
  <button id="garminImport" type="button" class="alt hidden">Sincronizar Garmin ahora</button>
  <button id="historyBack" class="alt" type="button">Inicio</button>
@@ -1333,16 +1347,18 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
  </dialog>
 </div>
 <div id="historyStats" class="hidden">
- <section class="stats-panel" aria-labelledby="historyActivityTitle">
-  <h3 id="historyActivityTitle">Actividad</h3>
+ <div id="historyStatsSections" class="history-view-choices" role="group" aria-label="Sección de estadísticas">
+  <button id="historyActivityTab" type="button" aria-pressed="true" aria-controls="historyActivityPanel">Actividad</button>
+  <button id="historyProgressTab" type="button" aria-pressed="false" aria-controls="historyProgressPanel">Por ejercicio</button>
+ </div>
+ <section id="historyActivityPanel" class="stats-panel" aria-labelledby="historyActivityTab">
   <div id="historyStatsPeriod" class="history-view-choices" role="group" aria-label="Periodo de actividad">
    <button type="button" data-period="week" aria-pressed="true">Semana</button>
    <button type="button" data-period="month" aria-pressed="false">Mes</button>
   </div>
   <div id="historyActivity" class="stats-periods"></div>
  </section>
- <section class="stats-panel" aria-labelledby="historyProgressTitle">
-  <h3 id="historyProgressTitle">Progreso por ejercicio</h3>
+ <section id="historyProgressPanel" class="stats-panel hidden" aria-labelledby="historyProgressTab">
   <div id="historyStatsFilters" class="stats-filters">
    <label for="historyStatsExercise">Ejercicio<select id="historyStatsExercise"></select></label>
    <label for="historyStatsMetric">Medida<select id="historyStatsMetric"></select></label>
@@ -2131,7 +2147,8 @@ function undoHistoryDeletion(){
  }catch(error){alert('No se ha podido deshacer: '+error.message)}
 }
 $('historyUndoDelete').onclick=undoHistoryDeletion;
-let historyStatsOpen=false,historyStatsPeriod='week';
+let historyStatsOpen=false,historyStatsPeriod='week',historyProgressPage=0;
+const historyProgressPageSize=3;
 const statsDateFormat=new Intl.DateTimeFormat('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit'});
 const statsNumberFormat=new Intl.NumberFormat('es-ES',{maximumFractionDigits:2});
 const workoutStatsMetrics={
@@ -2243,8 +2260,11 @@ function renderExerciseProgress(timeline){
   sum:totals.sum+entry[key],maximum:Math.max(totals.maximum,entry[key])
  }),{sum:0,maximum:1});
  const format=workoutStatsMetrics[key].format;
+ const pageCount=Math.ceil(points.length/historyProgressPageSize);
+ historyProgressPage=Math.min(historyProgressPage,pageCount-1);
+ const end=points.length-historyProgressPage*historyProgressPageSize;
  const chart=node('ol','','stats-chart');
- for(const entry of points){
+ for(const entry of points.slice(Math.max(0,end-historyProgressPageSize),end)){
   const point=node('li'),track=node('span','','stats-chart-track'),fill=node('span','','stats-chart-fill');
   track.setAttribute('aria-hidden','true');
   fill.style.width=(entry[key]/maximum*100)+'%';
@@ -2264,6 +2284,28 @@ function renderExerciseProgress(timeline){
   body.append(node('p','Total · '+total,'stats-chart-total'));
  }
  body.append(node('p',points.length+(points.length===1?' registro':' registros')+' · '+workoutStatsMetrics[key].label,'muted small'),chart);
+ if(pageCount>1){
+  const navigation=node('div','','stats-chart-pagination');
+  const pageButton=(label,icon,change)=>{
+   const button=node('button',icon,'alt');
+   button.type='button';
+   button.setAttribute('aria-label',label);
+   button.dataset.pageChange=change;
+   const next=historyProgressPage+change;
+   button.disabled=next<0||next>=pageCount;
+   button.onclick=()=>{
+    historyProgressPage=next;
+    renderExerciseProgress(timeline);
+    const buttons=body.querySelectorAll('.stats-chart-pagination button:not(:disabled)');
+    (Array.from(buttons).find(option=>Number(option.dataset.pageChange)===change)??buttons[0])?.focus();
+   };
+   return button;
+  };
+  navigation.append(pageButton('Registros más recientes','‹',-1),
+   node('span',(historyProgressPage+1)+' / '+pageCount,'muted small'),
+   pageButton('Registros anteriores','›',1));
+  body.append(navigation);
+ }
 }
 // BUHARDILLA archives the finish time. Garmin supplies the start time.
 function workoutHistoryInterval(record){
@@ -2312,18 +2354,38 @@ function renderProfileStats(records){
  fillStatsSelect($('historyStatsExercise'),options);
  $('historyStatsFilters').classList.toggle('hidden',!options.length);
  renderExerciseProgress(timeline);
- $('historyStatsExercise').onchange=$('historyStatsMetric').onchange=()=>renderExerciseProgress(timeline);
+ $('historyStatsExercise').onchange=$('historyStatsMetric').onchange=()=>{
+  historyProgressPage=0;
+  renderExerciseProgress(timeline);
+ };
 }
 function selectHistoryView(stats){
  historyStatsOpen=!isHF&&stats;
+ $('history').classList.toggle('showing-stats',historyStatsOpen);
+ $('historyTitle').textContent=historyStatsOpen?'Estadísticas':'Historial de sesiones';
  const statsToggle=$('historyStatsTab');
  statsToggle.setAttribute('aria-expanded',String(historyStatsOpen));
- statsToggle.textContent=historyStatsOpen?'Volver al calendario':'Estadísticas';
+ statsToggle.textContent=historyStatsOpen?'‹ Calendario':'Estadísticas';
+ const viewChoices=$('historyViewChoices');
+ if(historyStatsOpen)$('historyHeading').append(viewChoices);
+ else $('garminImportStatus').after(viewChoices);
  $('historySessionList').classList.toggle('hidden',historyStatsOpen);
  $('historyStats').classList.toggle('hidden',!historyStatsOpen);
  renderHistory();
 }
-$('historyStatsTab').onclick=()=>selectHistoryView(!historyStatsOpen);
+$('historyStatsTab').onclick=()=>{
+ selectHistoryView(!historyStatsOpen);
+ $('historyStatsTab').focus({preventScroll:true});
+ window.scrollTo(0,0);
+};
+function selectStatsSection(progress){
+ $('historyActivityTab').setAttribute('aria-pressed',String(!progress));
+ $('historyProgressTab').setAttribute('aria-pressed',String(progress));
+ $('historyActivityPanel').classList.toggle('hidden',progress);
+ $('historyProgressPanel').classList.toggle('hidden',!progress);
+}
+$('historyActivityTab').onclick=()=>selectStatsSection(false);
+$('historyProgressTab').onclick=()=>selectStatsSection(true);
 $('historyStatsPeriod').addEventListener('click',event=>{
  const button=event.target.closest('button[data-period]');
  if(!button)return;
@@ -3708,7 +3770,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.40';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.41';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
