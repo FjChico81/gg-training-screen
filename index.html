@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.39</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.40</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -440,9 +440,9 @@ html:not([data-edition="hf"]) :is(input,select,textarea){
  border-color:var(--outline);
 }
 html:not([data-edition="hf"]) .header-settings .settings-gear{
- background:var(--yellow);
- color:var(--ink);
- border-color:var(--ink);
+ background:#fff;
+ color:#343434;
+ border-color:var(--line);
 }
 html:not([data-edition="hf"]) :is(#library,#editor,#board,#history,#sessionSummary){
  border-top:1px solid var(--line);
@@ -555,12 +555,9 @@ html:not([data-edition="hf"]) :is(button,select,input,summary):focus-visible{
 .vector-home-section>:not(summary){margin-inline:14px}
 .vector-home-section #vectorRoutines{padding-bottom:1px}
 .vector-home .library-empty-card{margin:12px 0;border:0;background:#f5f5f5}
-html:not([data-edition="hf"]) body:has(.vector-home:not(.hidden)) .header-settings .settings-gear{
- background:#fff;color:#343434;border:1px solid #d4d4d4;border-radius:12px;font-size:21px;
-}
 #settingsToggle .home-settings-icon{display:none}
-html:not([data-edition="hf"]) body:has(.vector-home:not(.hidden)) #settingsToggle .settings-symbol{display:none}
-html:not([data-edition="hf"]) body:has(.vector-home:not(.hidden)) #settingsToggle .home-settings-icon{display:block;width:22px;height:22px;fill:currentColor}
+html:not([data-edition="hf"]) #settingsToggle .settings-symbol{display:none}
+html:not([data-edition="hf"]) #settingsToggle .home-settings-icon{display:block;width:22px;height:22px;fill:currentColor}
 #coachStationForm{max-width:760px;margin-inline:auto}
 #coachStationForm fieldset{min-width:0;border:1px solid var(--line);border-radius:12px;margin:12px 0}
 #stationSelection{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:6px 12px}
@@ -3711,7 +3708,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.39';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.40';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
