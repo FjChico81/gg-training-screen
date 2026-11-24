@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.25</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.26</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -478,6 +478,25 @@ html:not([data-edition="hf"]) :is(button,select,input,summary):focus-visible{
  background:#f5f5f5;border-radius:14px;padding:6px 10px;
 }
 .vector-profile-row #localProfilePanel{flex:1 1 9rem;min-width:0;margin:0}
+#library.vector-home #localProfilePanel{
+ display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 8px;align-items:center
+}
+#localProfileNotice{grid-column:1/-1}
+#hrShortcut{position:relative;min-width:44px}
+#hrShortcut summary{
+ display:grid;place-items:center;min-height:44px;border-radius:10px;
+ font-size:24px;line-height:1;color:#62666b;cursor:pointer;list-style:none
+}
+#hrShortcut summary::-webkit-details-marker{display:none}
+#hrShortcut[data-connected="true"] summary{color:#0766bb}
+#hrShortcut[open] summary{background:#fff;box-shadow:inset 0 0 0 1px #ced5dc}
+#hrShortcutMenu{
+ position:absolute;top:calc(100% + 5px);right:0;z-index:5;
+ display:grid;gap:8px;width:min(270px,calc(100vw - 44px));padding:10px;
+ background:#fff;border:1px solid #d3d6da;border-radius:12px;box-shadow:0 8px 22px #0002
+}
+#hrShortcutMenu button{width:100%;min-height:44px;white-space:normal;text-align:left}
+#hrShortcutMenu #hrConnectionStatus{overflow-wrap:anywhere}
 .vector-profile-row #localProfilePanel label{font-size:14px;gap:6px;color:#525252}
 .vector-profile-row #localProfilePanel select{
  min-width:0;max-width:72%;font-size:16px;font-weight:700;
@@ -1225,6 +1244,10 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
 <button id="forceRefresh" class="alt" type="button" style="grid-column:1/-1">↻ Recargar versión sin borrar datos</button><button id="accountLogout" class="alt" type="button" style="grid-column:1/-1">Cerrar sesión</button><p id="accountUser" class="muted small" style="grid-column:1/-1"></p><p id="accountSyncState" class="muted small" role="status" style="grid-column:1/-1"></p><span id="updateStatus" class="muted small" style="grid-column:1/-1" aria-live="polite"></span><span id="audioStatus" class="muted small" aria-live="polite">Audio sin comprobar</span><details class="settings-data"><summary>Datos</summary><div class="settings-data-actions"><button id="backupButton" class="alt">↓ Copia de seguridad</button><input id="restoreFile" class="hidden" type="file" accept=".json,application/json" aria-label="Seleccionar copia de seguridad GG Mobile"></div></details><button id="addLocalProfile" type="button" class="alt settings-wide">Añadir perfil</button><button id="editLocalProfile" type="button" class="alt settings-wide hidden">Editar nombre del perfil</button><button id="deleteLocalProfile" type="button" class="danger settings-wide hidden">Eliminar perfil actual</button><p id="profileActionStatus" class="muted small settings-wide hidden" role="status"></p><p id="appVersion" class="muted small settings-wide"></p></div></div></header><div id="updateBanner" class="panel hidden" style="border:1px solid var(--accent,#dbc396)"><div class="row"><span id="updateBannerText">Hay una versión nueva de GG Mobile</span><button id="applyUpdate" type="button">Actualizar ahora</button></div></div>
 <section id="library"><div class="panel"><h2 class="library-title">Mis entrenamientos</h2><div id="localProfilePanel">
 <label for="localProfileSelect">Perfil<select id="localProfileSelect"></select></label>
+<details id="hrShortcut" class="hidden" data-connected="false">
+ <summary id="hrShortcutToggle" aria-label="Pulsómetro desconectado"><span aria-hidden="true">♥︎</span></summary>
+ <div id="hrShortcutMenu"></div>
+</details>
 <span id="localProfileNotice" class="muted small hidden">Solo en este dispositivo</span>
 </div><div class="home-actions"><button id="new">＋ Crear entrenamiento</button><button id="historyButton" class="alt">Historial</button></div><button id="exerciseLibraryOpen" type="button" class="alt">Biblioteca de ejercicios</button><details id="ggCloudPanel" class="tools-details library-cloud"><summary><span id="cloudSummaryLabel">☁ Sincronización GG</span><span id="cloudSummaryState" class="cloud-summary-state" aria-hidden="true"></span></summary><p class="notice">Inicia sesión con la misma cuenta en ambos dispositivos. Las nuevas rutinas y las ediciones guardadas se sincronizan automáticamente. En este navegador las rutinas siguen disponibles tras cerrar sesión.</p><label>Correo<input id="ggCloudEmail" type="email" autocomplete="username"></label><label for="ggCloudPassword">Contraseña</label><div class="gg-cloud-password"><input id="ggCloudPassword" type="password" autocomplete="current-password"><button type="button" id="ggCloudShowPassword" aria-controls="ggCloudPassword" aria-label="Ver contraseña"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="3"/><path class="gg-cloud-eye-slash" d="M3 3l18 18"/></svg></button></div><label class="gg-cloud-remember"><input type="checkbox" id="ggCloudRemember" checked> Recordar mi correo en este dispositivo</label><div class="buttons"><button type="button" id="ggCloudRegister" class="alt">Crear cuenta</button><button type="button" id="ggCloudLogin" disabled>Entrar</button><button type="button" id="ggCloudLogout" class="alt">Salir</button></div><p id="ggCloudStatus" class="notice" role="status">Cargando sincronización…</p><button type="button" id="ggCloudList" class="alt">Sincronizar ahora</button><ul id="ggCloudRemote"></ul></details><div id="libraryFilters" class="library-filters hidden">
 <input id="librarySearch" type="search" aria-label="Buscar entrenamiento" placeholder="Buscar por nombre…" autocomplete="off">
@@ -1938,7 +1961,7 @@ const ggLibrary = {
     return true;
   }
 };
-function show(v){if(view==='guided'&&v!=='guided'){clearTvExerciseGif();if(prestartRemaining>0)prestartRunning=false}if(typeof closeSettings==='function')closeSettings();view=v;updateHFTheme();document.body.classList.toggle('guided-active',v==='guided');if(v==='guided'){$('sessionExtras').classList.add('hidden');$('moreSession').textContent='⚙ Más opciones';$('moreSession').setAttribute('aria-expanded','false')}if(typeof syncWakeLock==='function')void syncWakeLock();['library','editor','board','guided','history','sessionSummary','completedSummary'].forEach(id=>$(id).classList.toggle('hidden',id!==v));if(v==='library'){
+function show(v){if(v!=='library')$('hrShortcut').open=false;if(view==='guided'&&v!=='guided'){clearTvExerciseGif();if(prestartRemaining>0)prestartRunning=false}if(typeof closeSettings==='function')closeSettings();view=v;updateHFTheme();document.body.classList.toggle('guided-active',v==='guided');if(v==='guided'){$('sessionExtras').classList.add('hidden');$('moreSession').textContent='⚙ Más opciones';$('moreSession').setAttribute('aria-expanded','false')}if(typeof syncWakeLock==='function')void syncWakeLock();['library','editor','board','guided','history','sessionSummary','completedSummary'].forEach(id=>$(id).classList.toggle('hidden',id!==v));if(v==='library'){
   if(usesWorkoutCloud&&!session&&appStorage.getItem(KEY)!==ggLibraryRaw)load();
   renderLibrary();
 }
@@ -3332,6 +3355,12 @@ function refreshHeart(previousReading){
  updateHeartLimit(live,previousReading);
  $('disconnectHr').classList.toggle('hidden',!connected);
  $('connectHr').textContent=connected?'♥ Pulsómetro conectado':'♥ Conectar pulsómetro Bluetooth';
+ if(!isHF){
+  $('connectHr').classList.toggle('hidden',Boolean(connected));
+  $('hrShortcut').dataset.connected=String(Boolean(connected));
+  const label=connected?'Pulsómetro conectado':'Pulsómetro desconectado';
+  if($('hrShortcutToggle').getAttribute('aria-label')!==label)$('hrShortcutToggle').setAttribute('aria-label',label);
+ }
 }
 function onHrReading(event){const d=event.target.value;if(!d||d.byteLength<2)return;const flags=d.getUint8(0),is16=!!(flags&1);if(d.byteLength<(is16?3:2))return;const bpm=is16?d.getUint16(1,true):d.getUint8(1);if(bpm<25||bpm>240)return;const previousReading=hrLastReading;hrValue=bpm;hrLastReading=Date.now();
  if(!isHF&&session&&!paused&&prestartRemaining<=0){
@@ -3464,6 +3493,18 @@ $('disconnectHr').onclick=()=>{
  if(hrDevice)onHrDisconnect();
 };
 if(!isHF){
+ const shortcut=$('hrShortcut');
+ $('hrShortcutMenu').append($('connectHr'),$('disconnectHr'),$('hrConnectionStatus'));
+ shortcut.classList.remove('hidden');
+ document.addEventListener('click',event=>{
+  if(shortcut.open&&!shortcut.contains(event.target))shortcut.open=false;
+ });
+ shortcut.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&shortcut.open){
+   shortcut.open=false;
+   $('hrShortcutToggle').focus();
+  }
+ });
  // Wait until the profile is selected and the account screen has opened.
  new MutationObserver(()=>{
    if(document.documentElement.dataset.access==='unlocked'){
@@ -3475,7 +3516,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.25';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.26';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
