@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.16</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.17</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -1028,6 +1028,16 @@ body.tv-mode #guided:not(.tv-rest) .tv-current{background:#fff;border-color:#f34
 #editor fieldset{border:0;margin:0;padding:0;min-width:0}
 #editor .tabata-times{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,100px),1fr));gap:8px}
 
+#hrConnectedNotice{
+ position:fixed;z-index:2100;inset-inline-start:50%;
+ inset-block-start:calc(env(safe-area-inset-top,0px) + 14px);
+ transform:translateX(-50%);max-width:calc(100% - 24px);width:max-content;
+ padding:10px 16px;border-radius:12px;background:#171717;color:#fff;
+ box-shadow:0 4px 16px #0003;text-align:center;font-weight:750;font-size:14px;
+ pointer-events:none;
+}
+#hrConnectedNotice:empty{opacity:0}
+
 /* Secure v2 gate. Until authenticated by GG FAMILY / HF TRAINING, no app UI is visible. */
 html[data-access="locked"] body > :not(#accountWall):not(script){
  visibility:hidden!important;pointer-events:none!important;
@@ -1085,6 +1095,7 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
 #accountWall #accountMessage[data-error="true"]{color:#b81e1e;font-weight:700}
 #accountWall .account-foot{font-size:12px;color:#555}
 </style></head><body>
+<div id="hrConnectedNotice" role="status" aria-atomic="true"></div>
 <div id="accountWall" data-phase="loading" role="region" aria-label="Acceso a la aplicación">
  <div class="account-launch">
   <h1 class="account-launch-gg">BUHARDILLA<em>Fitness</em></h1>
@@ -2905,11 +2916,117 @@ function refreshHeart(previousReading){
  $('connectHr').textContent=connected?'♥ Pulsómetro conectado':'♥ Conectar pulsómetro Bluetooth';
 }
 function onHrReading(event){const d=event.target.value;if(!d||d.byteLength<2)return;const flags=d.getUint8(0),is16=!!(flags&1);if(d.byteLength<(is16?3:2))return;const bpm=is16?d.getUint16(1,true):d.getUint8(1);if(bpm<25||bpm>240)return;const previousReading=hrLastReading;hrValue=bpm;hrLastReading=Date.now();$('hrConnectionStatus').textContent='Conectado: '+(hrDevice?.name||'Sensor Bluetooth')+' · '+bpm+' ppm';refreshHeart(previousReading)}
-function onHrDisconnect(){hrValue=null;hrCharacteristic=null;$('hrConnectionStatus').textContent='Sensor desconectado';refreshHeart()}
-$('connectHr').onclick=async()=>{if(hrDevice?.gatt?.connected)return;const status=$('hrConnectionStatus');if(!navigator.bluetooth?.requestDevice){status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';return}try{status.textContent='Buscando sensor…';const device=await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});hrDevice=device;device.addEventListener('gattserverdisconnected',onHrDisconnect);const server=await device.gatt.connect(),service=await server.getPrimaryService('heart_rate'),characteristic=await service.getCharacteristic('heart_rate_measurement');await characteristic.startNotifications();characteristic.addEventListener('characteristicvaluechanged',onHrReading);hrCharacteristic=characteristic;status.textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';refreshHeart()}catch(e){status.textContent=e.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+e.message;refreshHeart()}};
-$('disconnectHr').onclick=()=>{if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();onHrDisconnect()};
+const HR_REMEMBERED_DEVICE_KEY='heart-rate-device-v1';
+let hrAttempt=null,hrNoticeTimer;
+function clearHrNotice(){
+ clearTimeout(hrNoticeTimer);
+ $('hrConnectedNotice').textContent='';
+}
+function onHrDisconnect(){
+ hrCharacteristic?.removeEventListener('characteristicvaluechanged',onHrReading);
+ hrDevice?.removeEventListener('gattserverdisconnected',onHrDisconnect);
+ hrDevice=null;hrCharacteristic=null;hrValue=null;hrLastReading=0;
+ clearHrNotice();
+ $('hrConnectionStatus').textContent='Sensor desconectado';
+ refreshHeart();
+}
+function stopHrAttempt(attempt){
+ if(hrAttempt!==attempt)return;
+ hrAttempt=null;
+ clearTimeout(attempt.timeout);
+ // Also cancels a pending GATT connection on supported browsers.
+ try{attempt.device?.gatt?.disconnect()}catch(error){/* The sensor may already be gone. */}
+}
+async function finishHrConnection(attempt,device){
+ if(hrAttempt!==attempt)return;
+ attempt.device=device;
+ const server=await device.gatt.connect();
+ if(hrAttempt!==attempt)return;
+ const service=await server.getPrimaryService('heart_rate');
+ if(hrAttempt!==attempt)return;
+ const characteristic=await service.getCharacteristic('heart_rate_measurement');
+ if(hrAttempt!==attempt)return;
+ await characteristic.startNotifications();
+ if(hrAttempt!==attempt)return;
+ if(!device.gatt.connected)throw Error('El sensor se ha desconectado.');
+ clearTimeout(attempt.timeout);
+ hrAttempt=null;
+ hrDevice=device;hrCharacteristic=characteristic;
+ device.addEventListener('gattserverdisconnected',onHrDisconnect);
+ characteristic.addEventListener('characteristicvaluechanged',onHrReading);
+ if(!isHF&&!attempt.automatic&&device.id){
+   try{appStorage.setItem(HR_REMEMBERED_DEVICE_KEY,device.id)}catch(error){/* Manual connection still works. */}
+ }
+ $('hrConnectionStatus').textContent='Conectado: '+(device.name||'Sensor')+' · esperando pulsaciones';
+ refreshHeart();
+ if(attempt.automatic){
+   clearHrNotice();
+   $('hrConnectedNotice').textContent='Dispositivo de FC conectado';
+   hrNoticeTimer=setTimeout(clearHrNotice,4000);
+ }
+}
+async function reconnectRememberedHr(){
+ const bluetooth=navigator.bluetooth;
+ if(!bluetooth?.getDevices||hrAttempt||hrDevice?.gatt?.connected)return;
+ let id;
+ try{id=appStorage.getItem(HR_REMEMBERED_DEVICE_KEY)}catch(error){return}
+ if(!id)return;
+ const status=$('hrConnectionStatus'),attempt={automatic:true};
+ hrAttempt=attempt;
+ status.textContent='Reconectando pulsómetro…';
+ const fallback=()=>{
+   if(hrAttempt!==attempt)return;
+   stopHrAttempt(attempt);
+   status.textContent='Pulsómetro no disponible. Puedes conectarlo manualmente.';
+   refreshHeart();
+ };
+ attempt.timeout=setTimeout(fallback,8000);
+ try{
+   const devices=await bluetooth.getDevices();
+   if(hrAttempt!==attempt)return;
+   const device=devices.find(candidate=>candidate.id===id);
+   if(!device){fallback();return}
+   await finishHrConnection(attempt,device);
+ }catch(error){fallback()}
+}
+$('connectHr').onclick=async()=>{
+ if(hrDevice?.gatt?.connected||(hrAttempt&&!hrAttempt.automatic))return;
+ const status=$('hrConnectionStatus'),bluetooth=navigator.bluetooth;
+ if(!bluetooth?.requestDevice){
+   status.textContent='Este navegador no permite Web Bluetooth. Prueba GG Mobile desde Bluefy en iPhone o Chrome en Android/PC.';
+   return;
+ }
+ if(hrAttempt)stopHrAttempt(hrAttempt);
+ const attempt={automatic:false};
+ hrAttempt=attempt;
+ status.textContent='Buscando sensor…';
+ try{
+   const device=await bluetooth.requestDevice({filters:[{services:['heart_rate']}],optionalServices:['battery_service']});
+   await finishHrConnection(attempt,device);
+ }catch(error){
+   if(hrAttempt!==attempt)return;
+   stopHrAttempt(attempt);
+   status.textContent=error.name==='NotFoundError'?'No se ha seleccionado ningún sensor':'Error Bluetooth: '+error.message;
+   refreshHeart();
+ }
+};
+$('disconnectHr').onclick=()=>{
+ if(hrDevice?.gatt?.connected)hrDevice.gatt.disconnect();
+ if(hrDevice)onHrDisconnect();
+};
+if(!isHF){
+ // Wait until the profile is selected and the account screen has opened.
+ new MutationObserver(()=>{
+   if(document.documentElement.dataset.access==='unlocked'){
+     void reconnectRememberedHr();
+   }else{
+     if(hrAttempt)stopHrAttempt(hrAttempt);
+     if(hrDevice)$('disconnectHr').click();
+   }
+ }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
+}
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.16';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.17';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
