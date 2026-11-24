@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.29</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.30</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -564,10 +564,13 @@ html:not([data-edition="hf"]) body:has(.vector-home:not(.hidden)) #settingsToggl
 #stationCards h3{color:var(--text);font-size:clamp(16px,3vmin,27px);margin:4px 0}
 #stationCards p{margin:4px 0}
 #stationCards img{display:block;width:100%;height:clamp(70px,19vmin,165px);object-fit:contain}
-#stationControls summary,#coachClassChoice summary{cursor:pointer;font-weight:750;padding:8px}
+#stationControls summary{cursor:pointer;font-weight:750;padding:8px}
 #stationBack{margin-top:8px}
 #stationControls .buttons{justify-content:center}
-#coachClassChoice{margin-top:8px}
+#boardEndActions{display:contents}
+#boardEndActions:has(#coachClassToggle:not(.hidden)){
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-width:100%
+}
 body.coach-guided #guidedHeartPanel,
 body.coach-guided #guided :is(#moreSession,#restartTraining,#cancelTraining,#quickAdvance),
 body.coach-guided.coach-controls-hidden #guided .guided-controls button:not(#coachDockToggle){display:none!important}
@@ -1397,14 +1400,14 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
  <p id="workoutHrLimitHelp" class="muted small">Avisa tras 8 segundos por encima del límite.</p>
 </details>
 <div id="legacyEditor" class="panel" style="background:var(--editor,#304451)"><h3>Editor visual anterior</h3><label for="visualBlock">Bloque</label><select id="visualBlock"></select><div class="buttons"><button id="addBlock" class="alt" type="button">＋ Añadir bloque</button></div><label for="visualType">Tipo de ejercicio</label><select id="visualType"><option value="strength">Fuerza</option><option value="timed">Por tiempo</option><option value="manual">Manual / distancia</option></select><label for="visualName">Ejercicio</label><input id="visualName" placeholder="Ej.: Press banca"><div id="strengthFields" class="setgrid"><label>Series<input id="visualSets" type="number" min="1" max="30" value="3"></label><label>Reps<input id="visualReps" type="number" min="1" max="500" value="8"></label><label>Kg<input id="visualKg" type="number" min="0" max="1000" step="0.25" value="0"></label><label>RIR<input id="visualRir" type="number" min="0" max="15" value="2"></label><label>Descanso (s)<input id="visualRest" type="number" min="0" max="1800" value="90"></label></div><div id="timedFields" class="hidden"><label for="visualDuration">Duración en segundos</label><input id="visualDuration" type="number" min="1" max="7200" value="60"></div><div class="buttons"><button id="addExercise" type="button">＋ Añadir ejercicio</button><button id="cancelVisualEdit" type="button" class="alt hidden">Cancelar edición</button></div><div class="timer-builder"><h3>Bloque de intervalos / EMOM</h3><label for="timerMode">Modalidad</label><select id="timerMode"><option value="intervals">Intervalos</option><option value="emom">EMOM de tiempo fijo</option></select><label for="timerName">Nombre del ejercicio</label><input id="timerName" placeholder="Ej.: SkiErg"><div class="setgrid"><label>Rondas<input id="timerRounds" type="number" min="1" max="50" value="5"></label><label>Trabajo (s)<input id="timerWork" type="number" min="1" max="3600" value="40"></label><label id="timerRestLabel">Recuperación (s)<input id="timerRest" type="number" min="0" max="3600" value="20"></label></div><p id="timerHint" class="muted small">Los intervalos alternan trabajo y recuperación. El descanso final se omite.</p><div class="buttons"><button id="addTimerBlock" type="button">＋ Añadir bloque temporizado</button></div></div></div><details><summary class="gold" style="cursor:pointer;margin:14px 0">Editor de texto avanzado (compatible con rutinas anteriores)</summary><label for="workoutBlocks">Bloques y ejercicios</label><textarea id="workoutBlocks" spellcheck="false" placeholder="Calentamiento:\n5 min bicicleta\nMovilidad dinámica\n\nFuerza:\n3 × 10 sentadillas\n3 × 12 press"></textarea><p class="muted small">Bloque terminado en dos puntos (:), después un ejercicio por línea. Para fuerza escribe, por ejemplo: <strong>Press banca | 3x8 | 90kg | RIR 2 | descanso 90s</strong>. También reconoce «3 × 10 sentadillas». Para ejercicios cronometrados añade <strong>@60</strong> al final (60 segundos). Ejemplo: Bicicleta @120 o Descanso @30. Los ejercicios sin @ avanzan manualmente.</p></details><div class="v2-save"><button id="save">✓ Guardar entrenamiento</button><button id="cancel" class="alt">Cancelar</button></div><p id="editorMessage" class="gold" aria-live="polite"></p></div></section>
-<section id="board" class="hidden"><div class="panel"><div class="row"><div><div class="gold">PIZARRA COMPLETA</div><h2 id="boardName"></h2></div><span id="count" class="muted"></span></div><div id="blocks" class="grid"></div><div class="buttons"><button id="start">▶ Iniciar entrenamiento</button><button id="resume" class="alt hidden">▶ Continuar sesión</button><button id="edit" class="alt">Editar</button><button type="button" class="alt tv-toggle" data-tv-toggle aria-pressed="false">Modo TV</button><button id="back" class="alt">Inicio</button></div>
-<details id="coachClassChoice" class="hidden">
- <summary>Dirigir clase</summary>
- <div class="buttons">
-  <button id="coachStartGuided" type="button">Clase guiada</button>
-  <button id="coachSetupStations" type="button" class="alt">Circuito por estaciones</button>
- </div>
-</details>
+<section id="board" class="hidden"><div class="panel"><div class="row"><div><div class="gold">PIZARRA COMPLETA</div><h2 id="boardName"></h2></div><span id="count" class="muted"></span></div><div id="blocks" class="grid"></div><div class="buttons"><button id="start">▶ Iniciar entrenamiento</button><button id="resume" class="alt hidden">▶ Continuar sesión</button><button id="edit" class="alt">Editar</button><button type="button" class="alt tv-toggle" data-tv-toggle aria-pressed="false">Modo TV</button><div id="boardEndActions">
+ <button id="back" class="alt">Inicio</button>
+ <button id="coachClassToggle" class="alt hidden" type="button" aria-controls="coachClassChoice" aria-expanded="false">Dirigir clase</button>
+</div></div>
+<div id="coachClassChoice" class="buttons hidden">
+ <button id="coachStartGuided" type="button">Clase guiada</button>
+ <button id="coachSetupStations" type="button" class="alt">Circuito por estaciones</button>
+</div>
 <p id="coachClassNotice" class="muted hidden" role="status"></p>
 </div></section>
 <section id="coachStations" class="hidden">
@@ -1655,6 +1658,7 @@ function openWorkout(id){
  if(active!==id||!session)vectorTargets={};
  active=id;
  $('coachClassNotice').classList.add('hidden');
+ setCoachClassChoice(false);
  show('board');
 }
 function vectorDose(exercise){
@@ -2555,7 +2559,11 @@ function renderHFBoardBlock(block){
  blockCard.append(summary,list);
  return blockCard;
 }
-function renderBoard(){ $('coachClassChoice').classList.toggle('hidden',isHF||session);$('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':(isHF?'▶ Entrenar en este dispositivo':'▶ Iniciar entrenamiento');const w=findWorkout(active);if(!w){show('library');return}$('edit').classList.toggle('hidden',vectorDays.has(active)||buhardillaRoutines.has(active));$('boardName').textContent=w.name;const exerciseCount=w.blocks.reduce((total,block)=>total+block.items.length,0);
+function renderBoard(){
+ const classUnavailable=isHF||session;
+ $('coachClassToggle').classList.toggle('hidden',classUnavailable);
+ if(classUnavailable)setCoachClassChoice(false);
+ $('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':(isHF?'▶ Entrenar en este dispositivo':'▶ Iniciar entrenamiento');const w=findWorkout(active);if(!w){show('library');return}$('edit').classList.toggle('hidden',vectorDays.has(active)||buhardillaRoutines.has(active));$('boardName').textContent=w.name;const exerciseCount=w.blocks.reduce((total,block)=>total+block.items.length,0);
 $('count').textContent=buhardillaRoutines.has(active)?'Duración programada · '+formatSeconds(buhardillaWorkoutDuration(w)):w.blocks.length+' '+(w.blocks.length===1?'bloque':'bloques')+' · '+exerciseCount+' '+(isHF?(exerciseCount===1?'paso':'pasos'):(exerciseCount===1?'ejercicio':'ejercicios'));$('blocks').replaceChildren();if(w.exercises){
  w.exercises.forEach((exercise,index)=>{
    const tile=node('div','','tile');
@@ -3610,7 +3618,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.29';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.30';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
@@ -4265,12 +4273,20 @@ function exitCoachGuided(message){
  if(coachPreviousTv!==document.body.classList.contains('tv-mode'))document.querySelector('#board [data-tv-toggle]').click();
  $('coachClassNotice').textContent=message;
  $('coachClassNotice').classList.remove('hidden');
- $('coachClassChoice').querySelector('summary').focus();
+ $('coachClassToggle').focus();
+}
+function setCoachClassChoice(open){
+ $('coachClassChoice').classList.toggle('hidden',!open);
+ $('coachClassToggle').setAttribute('aria-expanded',String(open));
 }
 function setupBuhardillaCoach(){
  if(isHF)return;
- const choice=$('coachClassChoice'), notice=$('coachClassNotice');
- choice.addEventListener('toggle',()=>{if(choice.open)notice.classList.add('hidden')});
+ const toggle=$('coachClassToggle'), notice=$('coachClassNotice');
+ toggle.onclick=()=>{
+  const open=toggle.getAttribute('aria-expanded')==='false';
+  if(open)notice.classList.add('hidden');
+  setCoachClassChoice(open);
+ };
  $('coachStartGuided').onclick=()=>{
   if(session)return;
   notice.classList.add('hidden');
