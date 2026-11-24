@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.26</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.27</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -351,6 +351,8 @@ html[data-edition="hf"] #brandSubtitle{
 .settings-data summary{display:list-item;list-style:revert;width:auto;height:auto;padding:8px;border:1px solid var(--outline,#526574);font-size:14px}
 .settings-data summary::-webkit-details-marker{display:revert}
 .settings-data-actions{display:grid;margin-top:8px}
+html:not([data-edition="hf"]) #settingsPanel :is(#closeSettings,#soundTest,#forceRefresh,#audioStatus,.settings-data,#accountSyncState:empty){display:none}
+html:not([data-edition="hf"]) #settingsPanel #soundToggle{grid-column:1/-1}
 #appVersion{margin:4px 0}
 @media(max-width:440px){.library-filters{grid-template-columns:1fr}}
 #localProfilePanel{margin:8px 0 12px}
@@ -485,7 +487,7 @@ html:not([data-edition="hf"]) :is(button,select,input,summary):focus-visible{
 #hrShortcut{position:relative;min-width:44px}
 #hrShortcut summary{
  display:grid;place-items:center;min-height:44px;border-radius:10px;
- font-size:24px;line-height:1;color:#62666b;cursor:pointer;list-style:none
+ font-size:28px;line-height:1;color:#62666b;cursor:pointer;list-style:none
 }
 #hrShortcut summary::-webkit-details-marker{display:none}
 #hrShortcut[data-connected="true"] summary{color:#0766bb}
@@ -541,6 +543,7 @@ html:not([data-edition="hf"]) :is(button,select,input,summary):focus-visible{
 html:not([data-edition="hf"]) body:has(.vector-home:not(.hidden)) .header-settings .settings-gear{
  background:#fff;color:#343434;border:1px solid #d4d4d4;border-radius:12px;font-size:21px;
 }
+html:not([data-edition="hf"]) body:has(.vector-home:not(.hidden)) .header-settings #settingsToggle{font-size:25px}
 #vectorEditorLibrary{margin:12px 0}
 #vectorEditorLibrary #exerciseLibrary{margin:8px 0 0}
 
@@ -3259,6 +3262,12 @@ fullscreenToggle.addEventListener('click',async()=>{
 document.addEventListener('fullscreenchange',updateFullscreenToggle);
 updateFullscreenToggle();
 const settingsMenu=$('settingsPanel'),settingsToggle=$('settingsToggle');
+if(!isHF){
+ const backupButton=$('backupButton');
+ backupButton.classList.add('settings-wide');
+ $('restoreButton').before(backupButton);
+ settingsMenu.append($('accountLogout'));
+}
 function closeSettings(){settingsMenu.classList.add('hidden');settingsToggle.setAttribute('aria-expanded','false')}
 function toggleSettings(){const isClosed=settingsMenu.classList.contains('hidden');settingsMenu.classList.toggle('hidden',!isClosed);settingsToggle.setAttribute('aria-expanded',String(isClosed))}
 settingsToggle.addEventListener('click',toggleSettings);
@@ -3516,7 +3525,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.26';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.27';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
@@ -4192,5 +4201,5 @@ if(usesWorkoutCloud&&!SECURE_AUTH_V2){
   document.getElementById('ggCloudPanel')?.remove();
 }
 </script>
-<script type="module" src="src/account-entry-v2.mjs?v=3.0.5" onerror="document.getElementById('accountWall').dataset.phase='load-error';document.getElementById('accountLaunchMessage').textContent='No se pudo abrir la aplicación.'"></script>
+<script type="module" src="src/account-entry-v2.mjs?v=3.0.6" onerror="document.getElementById('accountWall').dataset.phase='load-error';document.getElementById('accountLaunchMessage').textContent='No se pudo abrir la aplicación.'"></script>
 </body></html>
