@@ -121,7 +121,7 @@ test('collective HF history and checkpoint use separate record kinds',async()=>{
  assert.equal(latest.class_state.step,2);
  assert.deepEqual(transport.rows.map(x=>x.kind).sort(),['class_state','collective']);
 });
-test('login wall protects both apps and HF class direct URL',()=>{
+test('login protects the main app and the legacy class no longer loads its account module',()=>{
  const html=readFileSync(resolve(root,'index.html'),'utf8');
  const hf=readFileSync(resolve(root,'hf-class-display.html'),'utf8');
  const sql=readFileSync(resolve(root,'infra/sql/authenticated-sync-v2.sql'),'utf8');
@@ -129,7 +129,7 @@ test('login wall protects both apps and HF class direct URL',()=>{
  assert.match(html,/id="accountWall"/);
  assert.match(html,/src="src\/account-entry-v2\.mjs(?:\?v=[0-9.]+)?"/);
  assert.match(hf,/data-access="locked"/);
- assert.match(hf,/src="src\/hf-class-access-v2\.mjs"/);
+ assert.doesNotMatch(hf,/src="src\/hf-class-access-v2\.mjs"/);
  assert.match(sql,/alter table public\.training_records_v2 enable row level security/);
  assert.match(sql,/to authenticated/);
  assert.match(sql,/\(select auth\.uid\(\)\) = owner_id/);
