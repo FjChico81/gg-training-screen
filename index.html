@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.41</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.42</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -325,17 +325,17 @@ html[data-edition="hf"]{--menu:#fff;--panel:#f6f6f6;--history:#f4f4f4;--editor:#
 .history-calendar-key{display:flex;flex-wrap:wrap;gap:4px 12px;margin:8px 0 0;color:var(--muted);font-size:12px}
 .history-calendar-key span::before{content:"●";margin-right:4px;color:#b44722}
 .history-calendar-key span:last-child::before{color:#1766a5}
-#historyDayDialog{
+#historyDayDialog,#historyActivitySearchDialog{
  width:min(640px,calc(100% - 24px));max-height:85dvh;padding:0;overflow:auto;
  border:1px solid #d9d0c9;border-radius:16px;background:#fff;color:#211c19
 }
-#historyDayDialog::backdrop{background:#16110dc0}
+:is(#historyDayDialog,#historyActivitySearchDialog)::backdrop{background:#16110dc0}
 .history-dialog-header{
  position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;
  gap:12px;padding:12px 14px;background:#fff;border-bottom:1px solid #e6ddd6
 }
-#historySelectedDay{margin:0;font-size:clamp(15px,4vw,20px);font-weight:800}
-#historyDayClose{min-width:44px;min-height:44px;padding:0;flex:none;font-size:24px}
+#historySelectedDay,#historyActivitySearchTitle{margin:0;font-size:clamp(15px,4vw,20px);font-weight:800}
+#historyDayClose,#historyActivitySearchClose{min-width:44px;min-height:44px;padding:0;flex:none;font-size:24px}
 #historyEntries{padding:0 14px 8px}
 
 
@@ -1131,6 +1131,14 @@ body:has(#history.showing-stats:not(.hidden))>header,
 }
 #historyStats .stats-chart-pagination button{padding:0;min-height:44px}
 #historyStats .stats-chart-pagination button:disabled{opacity:.45}
+#historyActivityFilter{
+ width:100%;min-height:44px;padding:6px 10px;margin-bottom:8px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+ background:#fff;color:#28211e;border:1px solid #d1c7c1;
+}
+#historyActivitySearchDialog input{width:calc(100% - 28px);margin:12px 14px 0}
+#historyActivitySearchResults{display:grid;gap:6px;padding:8px 14px 14px}
+#historyActivitySearchResults button{padding:8px 10px;text-align:left;overflow-wrap:anywhere}
+#historyActivitySearchResults button[aria-pressed="true"]{background:#ffe8dd;color:#692912}
 #historyStats .stats-periods,#historyStats .stats-filters:not(.hidden){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 #historyStats .stats-period{border:1px solid #ded2ca;border-radius:9px;padding:10px}
 #historyStats .stats-period:first-child{background:#fff4ed;border-color:#edc8b6}
@@ -1356,7 +1364,16 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
    <button type="button" data-period="week" aria-pressed="true">Semana</button>
    <button type="button" data-period="month" aria-pressed="false">Mes</button>
   </div>
-  <div id="historyActivity" class="stats-periods"></div>
+  <button id="historyActivityFilter" type="button" aria-haspopup="dialog" aria-controls="historyActivitySearchDialog">Buscar actividad</button>
+  <div id="historyActivity" class="stats-periods" aria-live="polite"></div>
+  <dialog id="historyActivitySearchDialog" aria-labelledby="historyActivitySearchTitle">
+   <div class="history-dialog-header">
+    <h3 id="historyActivitySearchTitle">Buscar actividad</h3>
+    <button id="historyActivitySearchClose" class="alt" type="button" aria-label="Cerrar búsqueda">×</button>
+   </div>
+   <input id="historyActivitySearchQuery" type="search" aria-label="Nombre de la actividad" placeholder="Ej.: bici, carrera o natación" autocomplete="off" autofocus>
+   <div id="historyActivitySearchResults"></div>
+  </dialog>
  </section>
  <section id="historyProgressPanel" class="stats-panel hidden" aria-labelledby="historyProgressTab">
   <div id="historyStatsFilters" class="stats-filters">
@@ -2147,7 +2164,7 @@ function undoHistoryDeletion(){
  }catch(error){alert('No se ha podido deshacer: '+error.message)}
 }
 $('historyUndoDelete').onclick=undoHistoryDeletion;
-let historyStatsOpen=false,historyStatsPeriod='week',historyProgressPage=0;
+let historyStatsOpen=false,historyStatsPeriod='week',historyProgressPage=0,historyActivityKey='';
 const historyProgressPageSize=3;
 const statsDateFormat=new Intl.DateTimeFormat('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit'});
 const statsNumberFormat=new Intl.NumberFormat('es-ES',{maximumFractionDigits:2});
@@ -2179,6 +2196,7 @@ function activityPeriods(now,period){
 }
 function renderHistoryActivity(records){
  const target=$('historyActivity');
+ const searching=Boolean(historyActivityKey);
  const now=new Date(),[previous,start,end]=activityPeriods(now,historyStatsPeriod);
  const monthly=historyStatsPeriod==='month';
  const periods=[
@@ -2187,10 +2205,10 @@ function renderHistoryActivity(records){
  ];
  target.replaceChildren(...periods.map(period=>{
   const entries=records.filter(entry=>entry.date>=period.from&&entry.date<period.to&&entry.date<=now);
-  const duration=entries.reduce((total,{record})=>{
-   const seconds=Number(record.elapsed);
-   return total+(Number.isFinite(seconds)&&seconds>0?seconds:0);
-  },0);
+  const times=entries.map(entry=>searching?entry.time:Number(entry.record.elapsed))
+   .filter(seconds=>Number.isFinite(seconds)&&seconds>0);
+  const duration=times.reduce((total,seconds)=>total+seconds,0);
+  const distances=entries.map(entry=>entry.distance).filter(meters=>Number.isFinite(meters)&&meters>0);
   const card=node('div','','stats-period');
   const inclusiveEnd=new Date(period.current?now:period.to);
   if(!period.current)inclusiveEnd.setDate(inclusiveEnd.getDate()-1);
@@ -2198,12 +2216,13 @@ function renderHistoryActivity(records){
    node('h4',period.label),
    node('p',statsDateFormat.format(period.from)+' – '+statsDateFormat.format(inclusiveEnd),'muted'),
    node('strong',entries.length+(entries.length===1?' sesión':' sesiones')),
-   node('p',formatStatsDuration(duration)+' de entrenamiento')
+   node('p',searching&&entries.length&&!times.length?'Sin tiempo registrado':formatStatsDuration(duration)+(searching?'':' de entrenamiento'))
   );
+  if(distances.length)card.append(node('p',workoutStatsMetrics.distance.format(distances.reduce((total,meters)=>total+meters,0))));
   return card;
  }));
 }
-function registeredExerciseStats(record){
+function registeredExerciseStats(record,includeUnmeasured=false){
  const result=new Map();
  const labels=Array.isArray(record.exerciseNames)?record.exerciseNames:[];
  const snapshots=Array.isArray(record.exerciseSnapshot)?record.exerciseSnapshot:[];
@@ -2233,7 +2252,7 @@ function registeredExerciseStats(record){
    if(actual.unit==='s')entry.time=(entry.time??0)+actual.value;
    if(actual.unit==='m'||actual.unit==='km')entry.distance=(entry.distance??0)+actual.value*(actual.unit==='km'?1000:1);
   }
-  if(Object.keys(entry).length>1)result.set(key,entry);
+  if(includeUnmeasured||Object.keys(entry).length>1)result.set(key,entry);
  }
  return result;
 }
@@ -2342,15 +2361,28 @@ function renderProfileStats(records){
   return {record,index,date:record.date?new Date(record.date):null};
  })
   .filter(entry=>entry.date&&Number.isFinite(entry.date.getTime())).sort((a,b)=>a.date-b.date);
- renderHistoryActivity(dated);
- const timeline=new Map();
+ const activities=new Map(),timeline=new Map();
  for(const {record,date,index} of dated){
-  for(const [key,entry] of registeredExerciseStats(record)){
+  const exercises=registeredExerciseStats(record,true);
+  for(const [key,entry] of exercises){
+   const point={...entry,date,record,index};
+   if(!activities.has(key))activities.set(key,[]);
+   activities.get(key).push(point);
+   if(Object.keys(entry).length===1)continue;
    if(!timeline.has(key))timeline.set(key,[]);
-   timeline.get(key).push({...entry,date,record,index});
+   timeline.get(key).push(point);
+  }
+  if(!exercises.size&&record.name){
+   const key='session:'+normalizedName(record.name);
+   if(!activities.has(key))activities.set(key,[]);
+   activities.get(key).push({label:record.name,time:Number(record.elapsed),date,record,index});
   }
  }
- const options=Array.from(timeline,([key,entries])=>[key,entries.at(-1).label]).sort((a,b)=>a[1].localeCompare(b[1],'es'));
+ const labels=entries=>Array.from(entries,([key,points])=>[key,points.at(-1).label])
+  .sort((a,b)=>a[1].localeCompare(b[1],'es'));
+ renderActivityFilter(labels(activities));
+ renderHistoryActivity(activities.get(historyActivityKey)??dated);
+ const options=labels(timeline);
  fillStatsSelect($('historyStatsExercise'),options);
  $('historyStatsFilters').classList.toggle('hidden',!options.length);
  renderExerciseProgress(timeline);
@@ -2358,6 +2390,43 @@ function renderProfileStats(records){
   historyProgressPage=0;
   renderExerciseProgress(timeline);
  };
+}
+const activitySearchDialog=$('historyActivitySearchDialog');
+const activitySearchQuery=$('historyActivitySearchQuery');
+const activityFilter=$('historyActivityFilter');
+const activitySearchName=value=>normalizedName(value).normalize('NFD').replace(/\p{M}/gu,'');
+$('historyActivitySearchClose').onclick=()=>activitySearchDialog.close();
+function renderActivityFilter(options){
+ if(!options.some(([key])=>key===historyActivityKey))historyActivityKey='';
+ const selected=options.find(([key])=>key===historyActivityKey)?.[1];
+ activityFilter.textContent=selected?'Actividad · '+selected:'Buscar actividad';
+ activityFilter.title=activityFilter.textContent;
+ const results=$('historyActivitySearchResults');
+ const renderResults=()=>{
+  const query=activitySearchName(activitySearchQuery.value);
+  const matches=options.filter(([,label])=>activitySearchName(label).includes(query));
+  const choices=[['','Todas las actividades'],...matches].map(([key,label])=>{
+   const button=node('button',label,'alt');
+   button.type='button';
+   button.setAttribute('aria-pressed',String(key===historyActivityKey));
+   button.onclick=()=>{
+    historyActivityKey=key;
+    activitySearchDialog.close();
+    renderHistory();
+   };
+   return button;
+  });
+  if(!matches.length)choices.push(node('p',query?'No hay actividades que coincidan.':'Aún no hay actividades registradas.','muted'));
+  results.replaceChildren(...choices);
+ };
+ activitySearchQuery.oninput=renderResults;
+ activityFilter.onclick=()=>{
+  activitySearchQuery.value='';
+  renderResults();
+  activitySearchDialog.showModal();
+  activitySearchQuery.focus();
+ };
+ if(activitySearchDialog.open)renderResults();
 }
 function selectHistoryView(stats){
  historyStatsOpen=!isHF&&stats;
@@ -3770,7 +3839,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.41';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.42';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
