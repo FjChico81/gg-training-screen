@@ -55,7 +55,7 @@ async function syncGarmin(manual=false){
    remoteHistory.filter(record=>!record.deleted_at).map(record=>record.payload)
   );
   const received=imported===1?'1 actividad de Garmin incorporada.':imported+' actividades de Garmin incorporadas.';
-  const skipped=overlapping===1?' Se omitió 1 actividad porque coincide con una sesión de HYBRID Funcional Club.':overlapping?' Se omitieron '+overlapping+' actividades porque coinciden con sesiones de HYBRID Funcional Club.':'';
+  const skipped=overlapping===1?' Se omitió 1 actividad porque coincide con una sesión de HF.':overlapping?' Se omitieron '+overlapping+' actividades porque coinciden con sesiones de HF.':'';
   garminStatus.textContent=imported||overlapping?received+skipped:manual?'No hay actividades nuevas entre las últimas 30.':'';
  }catch(error){
   if(stillSelected()&&(manual||garminEnabled))garminStatus.textContent=error.message;
