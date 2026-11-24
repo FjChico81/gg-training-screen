@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.24</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.25</title>
 <meta name="apple-mobile-web-app-title" content="BUHARDILLA">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/gg-vector-white-180.png">
 <script>
@@ -1066,20 +1066,18 @@ html[data-edition="hf"] #historyViewChoices{display:none}
 #historyStats .stats-period strong{display:block;margin:6px 0;font-size:clamp(1rem,3vw,1.35rem)}
 #historyStats .stats-filters select{margin:4px 0 0}
 #historyStats .stats-chart{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
-#historyStats .stats-chart li{display:grid;grid-template-columns:5.2em minmax(20px,1fr) minmax(4.3em,auto);gap:7px;align-items:center}
+#historyStats .stats-chart{max-height:28rem;overflow:auto}
+#historyStats button.stats-chart-row{
+ display:grid;grid-template-columns:auto minmax(20px,1fr) auto;gap:3px 9px;align-items:center;
+ width:100%;min-height:48px;padding:6px;text-align:left;background:#fff;color:#201a17;
+ border:1px solid #e8ddd6;border-radius:7px;font-weight:500
+}
+#historyStats .stats-chart-name{grid-column:1/-1;overflow-wrap:anywhere;font-size:.85em}
+#historyStats .stats-chart-total{font-size:1.15rem;margin:8px 0 4px}
 #historyStats .stats-chart-track{display:block;border-radius:10px;background:#f2e9e3;height:9px}
 #historyStats .stats-chart-fill{display:block;border-radius:inherit;background:#ba481e;height:100%}
 #historyStats .stats-chart-value{text-align:right;font-variant-numeric:tabular-nums}
 @media(max-width:410px){#historyStats .stats-filters{grid-template-columns:1fr}}
-#historySelectionList{max-height:23rem;overflow:auto;margin:10px 0;padding:0;list-style:none;border-block:1px solid #e4dad3}
-#historySelectionList li+li{border-top:1px solid #eee6e1}
-#historySelectionList label{display:flex;align-items:center;gap:10px;margin:0;padding:8px 4px;min-height:46px;cursor:pointer}
-#historySelectionList input{flex:none;width:20px;height:20px;margin:0;accent-color:#b34621}
-#historySelectionList strong,#historySelectionList small{display:block;overflow-wrap:anywhere}
-#historySelectionList small{margin-top:3px}
-#historySelectionTotal{margin:8px 0;font-weight:800}
-#historySelectionActions{display:flex;flex-wrap:wrap;gap:8px}
-#historySelectionActions button:disabled{opacity:.55;cursor:default}
 /* Pizarra de Buhardilla: cada ejercicio tiene sus datos e indicaciones. */
 #board .gg-board-block{background:#fff;border:1px solid #e3d8cd;padding:clamp(12px,2.5vw,22px)}
 #board .gg-board-block:only-child{grid-column:1/-1}
@@ -1258,15 +1256,6 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
    <button type="button" data-period="month" aria-pressed="false">Mes</button>
   </div>
   <div id="historyActivity" class="stats-periods"></div>
- </section>
- <section class="stats-panel" aria-labelledby="historySelectionTitle">
-  <h3 id="historySelectionTitle">Sumar actividades</h3>
-  <p id="historySelectionTotal" aria-live="polite">Marca las actividades que quieras sumar.</p>
-  <ul id="historySelectionList" aria-label="Actividades del historial"></ul>
-  <div id="historySelectionActions">
-   <button id="historyClearSelection" type="button" class="alt" disabled>Quitar selección</button>
-   <button id="historyDeleteSelection" type="button" class="danger" disabled>Eliminar seleccionadas</button>
-  </div>
  </section>
  <section class="stats-panel" aria-labelledby="historyProgressTitle">
   <h3 id="historyProgressTitle">Progreso por ejercicio</h3>
@@ -2119,85 +2108,34 @@ function renderExerciseProgress(timeline){
   body.replaceChildren(node('p','El progreso aparecerá cuando guardes series o resultados de un ejercicio.','muted'));
   return;
  }
- const points=series.filter(entry=>entry[key]!==undefined).slice(-12);
- const maximum=Math.max(1,...points.map(entry=>entry[key]));
+ const points=series.filter(entry=>Number.isFinite(entry[key]));
+ if(!points.length){body.replaceChildren();return}
+ const {sum,maximum}=points.reduce((totals,entry)=>({
+  sum:totals.sum+entry[key],maximum:Math.max(totals.maximum,entry[key])
+ }),{sum:0,maximum:1});
+ const format=workoutStatsMetrics[key].format;
  const chart=node('ol','','stats-chart');
  for(const entry of points){
   const point=node('li'),track=node('span','','stats-chart-track'),fill=node('span','','stats-chart-fill');
   track.setAttribute('aria-hidden','true');
   fill.style.width=(entry[key]/maximum*100)+'%';
   track.append(fill);
-  point.append(node('span',statsDateFormat.format(entry.date)),track,node('strong',workoutStatsMetrics[key].format(entry[key]),'stats-chart-value'));
+  const button=node('button','','stats-chart-row');
+  button.type='button';
+  button.setAttribute('aria-label','Opciones de '+(entry.record.name||'Entrenamiento')+' del '+statsDateFormat.format(entry.date));
+  button.onclick=()=>deleteHistoryEntry(entry.record,entry.index);
+  button.append(node('span',statsDateFormat.format(entry.date)),track,node('strong',format(entry[key]),'stats-chart-value'),
+   node('small',entry.record.name||'Entrenamiento','stats-chart-name muted'));
+  point.append(button);
   chart.append(point);
  }
- body.replaceChildren(node('p',points.length===1?'1 registro · '+workoutStatsMetrics[key].label:'Últimos '+points.length+' registros · '+workoutStatsMetrics[key].label,'muted small'),chart);
-}
-const selectedHistoryActivities=new Set();
-let selectableHistoryActivities=[],historySelectionVersion='';
-function recordedActivityDistance(record){
- if(record.source==='garmin'){
-  const meters=Number(record.garmin?.distanceMeters);
-  return Number.isFinite(meters)&&meters>0?meters:0;
+ body.replaceChildren();
+ if(key==='time'||key==='distance'){
+  const total=key==='distance'?statsNumberFormat.format(sum/1000)+' km':format(sum);
+  body.append(node('p','Total · '+total,'stats-chart-total'));
  }
- return Object.values(record.actualResults??{}).reduce((total,result)=>{
-  const value=Number(result?.value);
-  if(!Number.isFinite(value)||value<=0)return total;
-  if(result.unit==='km')return total+value*1000;
-  return result.unit==='m'?total+value:total;
- },0);
+ body.append(node('p',points.length+(points.length===1?' registro':' registros')+' · '+workoutStatsMetrics[key].label,'muted small'),chart);
 }
-function renderSelectionTotal(){
- const selected=selectableHistoryActivities.filter(entry=>selectedHistoryActivities.has(entry.key));
- const seconds=selected.reduce((total,{seconds})=>total+seconds,0);
- const meters=selected.reduce((total,{meters})=>total+meters,0);
- const distance=statsNumberFormat.format(meters/1000)+' km registrados';
- $('historySelectionTotal').textContent=selected.length
-  ?(selected.length===1?'1 actividad':selected.length+' actividades')+' · '+formatStatsDuration(seconds)+' · '+distance
-  :'Marca las actividades que quieras sumar.';
- $('historyClearSelection').disabled=$('historyDeleteSelection').disabled=!selected.length;
-}
-function renderHistorySelection(records,indices){
- selectableHistoryActivities=indices.map(index=>{
-  const record=records[index],elapsed=Number(record.elapsed);
-  return {record,index,key:record.id||'legacy:'+index+':'+JSON.stringify(record),
-   seconds:Number.isFinite(elapsed)&&elapsed>0?elapsed:0,meters:recordedActivityDistance(record)};
- }).sort((a,b)=>(Date.parse(b.record.date)||0)-(Date.parse(a.record.date)||0));
- const keys=new Set(selectableHistoryActivities.map(entry=>entry.key));
- for(const key of selectedHistoryActivities)if(!keys.has(key))selectedHistoryActivities.delete(key);
- const version=JSON.stringify(selectableHistoryActivities.map(({record,key,seconds,meters})=>[key,record.name,record.date,seconds,meters]));
- if(version!==historySelectionVersion){
-  historySelectionVersion=version;
-  const list=$('historySelectionList');
-  list.replaceChildren(...selectableHistoryActivities.map(({record,key,seconds,meters})=>{
-   const item=node('li'),label=node('label'),checkbox=document.createElement('input'),text=node('span');
-   checkbox.type='checkbox';checkbox.value=key;checkbox.checked=selectedHistoryActivities.has(key);
-   const date=new Date(record.date);
-   const details=[Number.isFinite(date.getTime())?statsDateFormat.format(date):'Sin fecha',formatStatsDuration(seconds),
-    meters?workoutStatsMetrics.distance.format(meters):'Sin distancia registrada'];
-   text.append(node('strong',record.name||'Entrenamiento'),node('small',details.join(' · '),'muted'));
-   label.append(checkbox,text);item.append(label);
-   return item;
-  }));
-  if(!selectableHistoryActivities.length)list.append(node('li','Todavía no hay actividades guardadas.','muted'));
- }
- renderSelectionTotal();
-}
-$('historySelectionList').onchange=event=>{
- const box=event.target;
- if(box.type!=='checkbox')return;
- if(box.checked)selectedHistoryActivities.add(box.value);
- else selectedHistoryActivities.delete(box.value);
- renderSelectionTotal();
-};
-$('historyClearSelection').onclick=()=>{
- selectedHistoryActivities.clear();
- for(const box of $('historySelectionList').querySelectorAll('input[type=checkbox]'))box.checked=false;
- renderSelectionTotal();
-};
-$('historyDeleteSelection').onclick=()=>{
- deleteHistoryEntries(selectableHistoryActivities.filter(entry=>selectedHistoryActivities.has(entry.key))
-  .map(({record,index})=>({record,index})));
-};
 // BUHARDILLA archives the finish time. Garmin supplies the start time.
 function workoutHistoryInterval(record){
  const date=Date.parse(record?.date),seconds=Number(record?.elapsed);
@@ -2228,17 +2166,17 @@ function visibleHistoryIndices(history){
  return history.flatMap((record,index)=>record&&(record.source!=='garmin'||!overlapsBuhardilla(record,intervals))?[index]:[]);
 }
 function renderProfileStats(records){
- const indices=visibleHistoryIndices(records);
- renderHistorySelection(records,indices);
- records=indices.map(index=>records[index]);
- const dated=records.map(record=>({record,date:record?.date?new Date(record.date):null}))
+ const dated=visibleHistoryIndices(records).map(index=>{
+  const record=records[index];
+  return {record,index,date:record.date?new Date(record.date):null};
+ })
   .filter(entry=>entry.date&&Number.isFinite(entry.date.getTime())).sort((a,b)=>a.date-b.date);
  renderHistoryActivity(dated);
  const timeline=new Map();
- for(const {record,date} of dated){
+ for(const {record,date,index} of dated){
   for(const [key,entry] of registeredExerciseStats(record)){
    if(!timeline.has(key))timeline.set(key,[]);
-   timeline.get(key).push({...entry,date});
+   timeline.get(key).push({...entry,date,record,index});
   }
  }
  const options=Array.from(timeline,([key,entries])=>[key,entries.at(-1).label]).sort((a,b)=>a[1].localeCompare(b[1],'es'));
@@ -3537,7 +3475,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.24';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.25';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
