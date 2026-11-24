@@ -64,7 +64,10 @@ async function syncGarmin(manual=false){
 }
 garminButton.onclick=()=>void syncGarmin(true);
 
-const syncStatus=text=>{by('accountSyncState').textContent=text};
+function syncStatus(text){
+ const conflict='Hay cambios en conflicto. Se conservan localmente; revisa antes de continuar.';
+ by('accountSyncState').textContent=edition==='gg'&&text===conflict?'':text;
+}
 function profileStatus(text){
  const status=by('profileActionStatus');
  status.textContent=text;
