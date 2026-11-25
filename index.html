@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.43</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.44</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -523,9 +523,9 @@ html:not([data-edition="hf"]) :is(button,select,input,summary):focus-visible{
  flex:0 0 auto;background:#fff;color:var(--ink);border:1px solid #d4d4d4;
  padding:6px 10px;min-height:44px;font-size:14px;
 }
-.vector-home .home-actions{margin:14px 0;gap:10px}
-.vector-home .home-actions #new{
- min-height:52px;border-radius:12px;text-align:center;font-size:16px;line-height:1.25;
+.vector-home .home-actions{margin:14px 0;justify-content:flex-end}
+.vector-home-section>.vector-home-create{
+ display:block;width:calc(100% - 28px);margin-block:12px;min-height:46px;
 }
 .vector-home .home-actions #historyButton{
  background:#fff;color:var(--ink);border:1px solid #d4d4d4;border-radius:12px;font-size:14px;
@@ -1852,14 +1852,15 @@ function setupVectorHome(){
  savedCount.id='vectorSavedCount';
  saved.append(vectorHomeSummary('MIS ENTRENAMIENTOS','▤',savedCount));
  $('libraryFilters').before(saved);
- saved.append($('libraryFilters'),$('saved'));
+ $('new').classList.add('vector-home-create');
+ saved.append($('new'),$('libraryFilters'),$('saved'));
 
  const classes=node('details','','tools-details vector-home-section');
  classes.id='vectorMyClasses';
  const classCount=node('small','');
  classCount.id='vectorClassCount';
  classes.append(vectorHomeSummary('MIS CLASES','▤',classCount));
- const createClass=node('button','＋ Crear clase');
+ const createClass=node('button','＋ Crear clase','vector-home-create');
  createClass.type='button';
  createClass.onclick=()=>edit(null,true);
  const prepared=node('details','','tools-details');
@@ -2736,11 +2737,6 @@ function renderLibrary(){
    empty.append(illustration,node('h3','Aún no tienes entrenamientos'));
    if(isHF){
      empty.append(node('p','Al crear una rutina, puedes combinar fuerza, cardio e intervalos en la misma sesión.','muted'));
-   }else{
-     const create=node('button','Crear mi primer entrenamiento');
-     create.type='button';
-     create.onclick=()=>$('new').click();
-     empty.append(create);
    }
    target.append(empty);
    return;
@@ -3924,7 +3920,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.43';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.44';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
