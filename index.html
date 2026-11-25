@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.45</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.46</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -1591,8 +1591,8 @@ const vectorDays=new Map(vectorRoutines.flatMap(routine=>routine.days.map(day=>{
  return [day.id,{...day,name,routine,blocks:[{name:day.focus||name,items}]}];
 })));
 const buhardillaFolders=isHF?[]:[
- {name:'TONOFICACIÓN',routines:makeTonificationRoutines()},
- {name:'ACONDICIONADO FÍSICO',routines:makeConditioningRoutines()}
+ {name:'Tonificación',routines:makeTonificationRoutines()},
+ {name:'Acondicionamiento Físico',routines:makeConditioningRoutines()}
 ];
 const buhardillaRoutines=new Map(buhardillaFolders.flatMap(folder=>folder.routines.map(workout=>[workout.id,workout])));
 function timedBuhardillaBlock(name,exercises,restAfter=''){
@@ -1863,7 +1863,9 @@ function setupVectorHome(){
  saved.append(vectorHomeSummary('MIS ENTRENAMIENTOS','▤',savedCount));
  $('libraryFilters').before(saved);
  $('new').classList.add('vector-home-create');
- saved.append($('new'),$('libraryFilters'),$('saved'));
+ const assignedRoutines=node('div','','hidden');
+ assignedRoutines.id='buhardillaRoutineSection';
+ saved.append($('new'),assignedRoutines,$('libraryFilters'),$('saved'));
 
  const classes=node('details','','tools-details vector-home-section');
  classes.id='vectorMyClasses';
@@ -1891,10 +1893,6 @@ function setupVectorHome(){
  $('vectorRoutines').before(routines);
  routines.append($('vectorRoutines'));
 
- const buhardilla=node('details','','tools-details vector-home-section hidden');
- buhardilla.id='buhardillaRoutineSection';
- routines.before(buhardilla);
-
  mountEditorExerciseLibrary('vectorEditorLibrary');
 }
 function renderBuhardillaAssignments(){
@@ -1904,11 +1902,8 @@ function renderBuhardillaAssignments(){
   .filter(folder=>folder.routines.length);
  const total=folders.reduce((sum,folder)=>sum+folder.routines.length,0);
  target.classList.toggle('hidden',total===0);
- if(!total){target.replaceChildren();return}
  const opened=new Set(Array.from(target.querySelectorAll('details[open]'),element=>element.dataset.folder));
- const label=total===1?'1 rutina':total+' rutinas';
- const count=folders.length===1?label:label+' · '+folders.length+' subcarpetas';
- target.replaceChildren(vectorHomeSummary('Rutinas Buhardilla','▦',node('small',count)));
+ target.replaceChildren();
  for(const folder of folders){
    const section=node('details','','tools-details');
    section.dataset.folder=folder.name;
@@ -1927,6 +1922,7 @@ function renderBuhardillaAssignments(){
    }
    target.append(section);
  }
+ return total;
 }
 function mountEditorExerciseLibrary(id){
  const library=$('exerciseLibrary');
@@ -2741,12 +2737,14 @@ function copyToMyClasses(workout){
 function renderLibrary(){
  renderVectorRoutines();
  const personalWorkouts=isHF?workouts:workouts.filter(workout=>!workout.classPrepared);
+ const assignedCount=isHF?0:renderBuhardillaAssignments();
  if(!isHF){
    renderMyClasses();
-   renderBuhardillaAssignments();
-   const count=personalWorkouts.length;
-   $('vectorSavedCount').textContent=count===0?'Aún no tienes entrenamientos guardados':
-     count===1?'1 entrenamiento guardado':count+' entrenamientos guardados';
+   const personalCount=personalWorkouts.length;
+   const labels=[];
+   if(personalCount)labels.push(personalCount===1?'1 entrenamiento guardado':personalCount+' entrenamientos guardados');
+   if(assignedCount)labels.push(assignedCount===1?'1 rutina asignada':assignedCount+' rutinas asignadas');
+   $('vectorSavedCount').textContent=labels.join(' · ')||'Aún no tienes entrenamientos guardados';
  }
  const target=$('saved'),search=$('librarySearch'),category=$('libraryCategory');
  target.replaceChildren();
@@ -2755,6 +2753,7 @@ function renderLibrary(){
  if(!personalWorkouts.length){
    search.value='';
    category.value='Todos';
+   if(assignedCount)return;
    const empty=node('div','','library-empty-card');
    const illustration=node('span','','library-empty-icon');
    illustration.setAttribute('aria-hidden','true');
@@ -3945,7 +3944,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.45';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.46';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
