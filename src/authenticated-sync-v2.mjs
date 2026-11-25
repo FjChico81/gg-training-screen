@@ -214,6 +214,12 @@ export function profileLocalId(uid,profileUUIDValue){
  return uid===profileUUIDValue?'personal':profileUUIDValue.replace(/-/g,'');
 }
 export function recordKey(kind,id){assertKind(kind);assertId(id);return kind+':'+id}
+function buhardillaRoutineIds(rows){
+ const assignment=rows.find(record=>record.kind==='preferences'&&record.client_id==='buhardilla-routines'&&!record.deleted_at);
+ const ids=assignment?.payload?.routineIds;
+ return Array.isArray(ids)?ids.filter(id=>typeof id==='string'):[];
+}
+
 export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocked=()=>false,onState=()=>{},now=Date.now}){
  const stateKey=prefix+'sync-v2-state',pendingKey=prefix+'sync-v2-pending';
  let shadow=safeJSON(storage.getItem(stateKey),{}),pending=safeJSON(storage.getItem(pendingKey),{});
@@ -306,7 +312,8 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
    }
    // If pending conflicted with remote, keep the local draft and alert.
    const view={workouts:Object.values(mapped.workout),history:Object.values(mapped.history),active:mapped.active.current||null,
-    collective:Object.values(mapped.collective),class_state:mapped.class_state.current||null};
+    collective:Object.values(mapped.collective),class_state:mapped.class_state.current||null,
+    buhardillaRoutineIds:buhardillaRoutineIds(remote)};
    if(!blocked())await onApply(view,{initial:false,conflicts:Object.keys(unresolved).length});
    seedLocal(view);persist();
    onState(Object.keys(unresolved).length
@@ -325,7 +332,8 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
   for(const [k,item] of Object.entries(pending)){if(!map[item.kind])continue;
    if(item.deleted_at)delete map[item.kind][item.client_id];else map[item.kind][item.client_id]=clone(item.payload)}
   const result={workouts:Object.values(map.workout),history:Object.values(map.history),active:map.active.current||null,
-    collective:Object.values(map.collective),class_state:map.class_state.current||null};
+    collective:Object.values(map.collective),class_state:map.class_state.current||null,
+    buhardillaRoutineIds:buhardillaRoutineIds(rows)};
   await onApply(result,{initial:true});seedLocal(result);persist();
   if(Object.keys(pending).length)void synchronize();
   return result;

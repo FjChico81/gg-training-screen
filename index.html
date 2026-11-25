@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.44</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.45</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -1576,6 +1576,7 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
 <script>
 'use strict';
 const CLASS_RUNS_KEY='gg-class-runs-v1';
+const BUHARDILLA_ASSIGNMENT_KEY='gg-buhardilla-assigned-v1';
 const KEY='gg-training-screen-workouts-v1', $=id=>document.getElementById(id);
 const isHF=document.documentElement.dataset.edition==='hf';
 const SECURE_AUTH_V2=true; // Candidate: DO NOT MERGE before verified dedicated GG/HF projects.
@@ -1702,7 +1703,16 @@ function buhardillaWorkoutDuration(workout){
  return workout.blocks.flatMap(block=>block.items).reduce((total,line)=>total+decode(line).duration,0);
 }
 let vectorTargets={};
-function findWorkout(id){return vectorDays.get(id)??buhardillaRoutines.get(id)??workouts.find(workout=>workout.id===id)}
+function assignedBuhardillaIds(){
+ try{
+  const ids=JSON.parse(appStorage.getItem(BUHARDILLA_ASSIGNMENT_KEY)||'[]');
+  return new Set(Array.isArray(ids)?ids:[]);
+ }catch{ return new Set() }
+}
+function findWorkout(id){
+ const assigned=assignedBuhardillaIds().has(id)||session&&sessionWorkout===id;
+ return vectorDays.get(id)??(assigned?buhardillaRoutines.get(id):undefined)??workouts.find(workout=>workout.id===id);
+}
 function openWorkout(id){
  if(session&&sessionWorkout!==id){
    alert('Finaliza el entrenamiento en curso antes de abrir otro.');
@@ -1881,11 +1891,28 @@ function setupVectorHome(){
  $('vectorRoutines').before(routines);
  routines.append($('vectorRoutines'));
 
- const buhardilla=node('details','','tools-details vector-home-section');
+ const buhardilla=node('details','','tools-details vector-home-section hidden');
  buhardilla.id='buhardillaRoutineSection';
- buhardilla.append(vectorHomeSummary('Rutinas Buhardilla','▦',node('small','7 rutinas · 2 subcarpetas')));
- for(const folder of buhardillaFolders){
+ routines.before(buhardilla);
+
+ mountEditorExerciseLibrary('vectorEditorLibrary');
+}
+function renderBuhardillaAssignments(){
+ const target=$('buhardillaRoutineSection');
+ const ids=assignedBuhardillaIds();
+ const folders=buhardillaFolders.map(folder=>({...folder,routines:folder.routines.filter(workout=>ids.has(workout.id))}))
+  .filter(folder=>folder.routines.length);
+ const total=folders.reduce((sum,folder)=>sum+folder.routines.length,0);
+ target.classList.toggle('hidden',total===0);
+ if(!total){target.replaceChildren();return}
+ const opened=new Set(Array.from(target.querySelectorAll('details[open]'),element=>element.dataset.folder));
+ const label=total===1?'1 rutina':total+' rutinas';
+ const count=folders.length===1?label:label+' · '+folders.length+' subcarpetas';
+ target.replaceChildren(vectorHomeSummary('Rutinas Buhardilla','▦',node('small',count)));
+ for(const folder of folders){
    const section=node('details','','tools-details');
+   section.dataset.folder=folder.name;
+   section.open=opened.has(folder.name);
    section.append(node('summary',folder.name));
    for(const workout of folder.routines){
      const row=node('div','','workout-row');
@@ -1898,11 +1925,8 @@ function setupVectorHome(){
      row.append(title,open);
      section.append(row);
    }
-   buhardilla.append(section);
+   target.append(section);
  }
- routines.before(buhardilla);
-
- mountEditorExerciseLibrary('vectorEditorLibrary');
 }
 function mountEditorExerciseLibrary(id){
  const library=$('exerciseLibrary');
@@ -2719,6 +2743,7 @@ function renderLibrary(){
  const personalWorkouts=isHF?workouts:workouts.filter(workout=>!workout.classPrepared);
  if(!isHF){
    renderMyClasses();
+   renderBuhardillaAssignments();
    const count=personalWorkouts.length;
    $('vectorSavedCount').textContent=count===0?'Aún no tienes entrenamientos guardados':
      count===1?'1 entrenamiento guardado':count+' entrenamientos guardados';
@@ -3920,7 +3945,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.44';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.45';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
@@ -4470,7 +4495,7 @@ $('tvExerciseVideo').onerror=unavailableTvTechnique;
 function restoreActiveSessionFromStorage(){
   roundClock={key:null,seconds:0};trainingStartedAt=null;resetSessionHeart();
   session=false;sessionWorkout=null;paused=true;step=0;elapsed=0;stepElapsed=0;seriesLog={};actualResults={};
-  try{const saved=JSON.parse(appStorage.getItem('gg-active-session-v1'));if(saved&&saved.session&&findWorkout(saved.active)){active=saved.active;sessionWorkout=saved.active;prestartRemaining=Number.isFinite(Number(saved.prestartRemaining))?Math.max(0,Math.min(10,Number(saved.prestartRemaining))):0;prestartRunning=false;step=Math.max(0,Math.min(saved.step,findWorkout(active).blocks.reduce((n,b)=>n+b.items.length,0)-1));paused=true;elapsed=saved.elapsed||0;stepElapsed=saved.stepElapsed||0;seriesLog=saved.seriesLog||{};restRemaining=saved.restRemaining||0;restRunning=!!saved.restRunning;transitionTo=Number.isInteger(saved.transitionTo)&&saved.transitionTo===step+1? saved.transitionTo:null;draftSets=saved.draftSets||{};vectorTargets=saved.vectorTargets||{};amrapElapsed=saved.amrapElapsed||0;amrapRounds=saved.amrapRounds||0;amrapResults=saved.amrapResults||[];ftElapsed=saved.ftElapsed||0;ftResults=saved.ftResults||[];actualResults=saved.actualResults||{};
+  try{const saved=JSON.parse(appStorage.getItem('gg-active-session-v1'));if(saved&&saved.session&&(findWorkout(saved.active)||buhardillaRoutines.has(saved.active))){active=saved.active;sessionWorkout=saved.active;prestartRemaining=Number.isFinite(Number(saved.prestartRemaining))?Math.max(0,Math.min(10,Number(saved.prestartRemaining))):0;prestartRunning=false;step=Math.max(0,Math.min(saved.step,findWorkout(active).blocks.reduce((n,b)=>n+b.items.length,0)-1));paused=true;elapsed=saved.elapsed||0;stepElapsed=saved.stepElapsed||0;seriesLog=saved.seriesLog||{};restRemaining=saved.restRemaining||0;restRunning=!!saved.restRunning;transitionTo=Number.isInteger(saved.transitionTo)&&saved.transitionTo===step+1? saved.transitionTo:null;draftSets=saved.draftSets||{};vectorTargets=saved.vectorTargets||{};amrapElapsed=saved.amrapElapsed||0;amrapRounds=saved.amrapRounds||0;amrapResults=saved.amrapResults||[];ftElapsed=saved.ftElapsed||0;ftResults=saved.ftResults||[];actualResults=saved.actualResults||{};
   if(!isHF){
    const savedRound=saved.roundClock;
    if(typeof savedRound?.key==='string'&&Number.isFinite(savedRound.seconds)&&savedRound.seconds>=0)
@@ -4546,7 +4571,10 @@ window.__secureAppV2={
   try{
    appStorage.setItem(KEY,JSON.stringify(payload.workouts||[]));
    appStorage.setItem('gg-strength-history-v1',JSON.stringify(payload.history||[]));
-   if(!isHF)appStorage.setItem(CLASS_RUNS_KEY,JSON.stringify(payload.collective||[]));
+   if(!isHF){
+    appStorage.setItem(CLASS_RUNS_KEY,JSON.stringify(payload.collective||[]));
+    appStorage.setItem(BUHARDILLA_ASSIGNMENT_KEY,JSON.stringify(payload.buhardillaRoutineIds||[]));
+   }
    if(payload.active)appStorage.setItem('gg-active-session-v1',JSON.stringify(payload.active));
    else appStorage.removeItem('gg-active-session-v1');
   }finally{secureApply=false}
@@ -4686,5 +4714,5 @@ if(usesWorkoutCloud&&!SECURE_AUTH_V2){
   document.getElementById('ggCloudPanel')?.remove();
 }
 </script>
-<script type="module" src="src/account-entry-v2.mjs?v=3.0.8" onerror="document.getElementById('accountWall').dataset.phase='load-error';document.getElementById('accountLaunchMessage').textContent='No se pudo abrir la aplicación.'"></script>
+<script type="module" src="src/account-entry-v2.mjs?v=3.0.9" onerror="document.getElementById('accountWall').dataset.phase='load-error';document.getElementById('accountLaunchMessage').textContent='No se pudo abrir la aplicación.'"></script>
 </body></html>
