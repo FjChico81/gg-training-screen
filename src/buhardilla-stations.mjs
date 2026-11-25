@@ -22,7 +22,7 @@ function nextPhase(state, config) {
   }
 }
 
-export function mountBuhardillaStations({root, onExit, onSound, onActivity, formatTime}) {
+export function mountBuhardillaStations({root, onExit, onSound, onActivity, onComplete = () => {}, formatTime}) {
   const find = id => root.querySelector('#' + id);
   const form = find('stationForm');
   const selection = find('stationSelection');
@@ -39,6 +39,8 @@ export function mountBuhardillaStations({root, onExit, onSound, onActivity, form
   let paused = false;
   let clock = 0;
   let interval;
+  let workout;
+  let elapsed = 0;
 
   function stopClock() {
     clearInterval(interval);
@@ -72,6 +74,13 @@ export function mountBuhardillaStations({root, onExit, onSound, onActivity, form
     updateClock();
   }
 
+  function finishRun() {
+    stopClock();
+    if (elapsed > 0) onComplete(workout, elapsed / 1000);
+    onActivity();
+    back.focus();
+  }
+
   function tick(now = performance.now()) {
     if (!state || paused || state.phase === 'finished') return;
     let delta = now - clock;
@@ -79,20 +88,20 @@ export function mountBuhardillaStations({root, onExit, onSound, onActivity, form
     const previous = Math.ceil(state.milliseconds / 1000);
     let changed = false;
     while (state.phase !== 'finished' && delta >= state.milliseconds) {
+      if (state.phase !== 'prepare') elapsed += state.milliseconds;
       delta -= state.milliseconds;
       state = nextPhase(state, config);
       changed = true;
     }
-    if (state.phase !== 'finished') state.milliseconds -= delta;
+    if (state.phase !== 'finished') {
+      state.milliseconds -= delta;
+      if (state.phase !== 'prepare') elapsed += delta;
+    }
     const seconds = Math.ceil(state.milliseconds / 1000);
     if (changed || (seconds < previous && seconds <= 3)) onSound(changed);
     if (changed) render();
     else updateClock();
-    if (state.phase === 'finished') {
-      stopClock();
-      onActivity();
-      back.focus();
-    }
+    if (state.phase === 'finished') finishRun();
   }
 
   function startClock() {
@@ -135,6 +144,7 @@ export function mountBuhardillaStations({root, onExit, onSound, onActivity, form
     const entries = items.map(makeCard);
     cards = entries.map(entry => entry.group);
     find('stationCards').replaceChildren(...entries.map(entry => entry.card));
+    elapsed = 0;
     state = {phase:'prepare', rotation:0, milliseconds:10000};
     paused = false;
     form.classList.add('hidden');
@@ -168,19 +178,15 @@ export function mountBuhardillaStations({root, onExit, onSound, onActivity, form
     clock = performance.now();
     onSound(true);
     render();
-    if (state.phase === 'finished') {
-      stopClock();
-      onActivity();
-      back.focus();
-    }
+    if (state.phase === 'finished') finishRun();
   };
   finish.onclick = () => {
     if (!confirm('¿Finalizar el circuito por estaciones?')) return;
+    tick();
+    if (state.phase === 'finished') return;
     state = {...state, phase:'finished', milliseconds:0};
-    stopClock();
     render();
-    onActivity();
-    back.focus();
+    finishRun();
   };
   back.onclick = find('stationCancel').onclick = onExit;
   selection.onchange = () => {
@@ -190,7 +196,8 @@ export function mountBuhardillaStations({root, onExit, onSound, onActivity, form
   };
 
   return {
-    open(title, exercises) {
+    open(title, exercises, sourceWorkout) {
+      workout = sourceWorkout;
       stopClock();
       state = null;
       candidates = exercises;
