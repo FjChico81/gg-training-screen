@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.42</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.43</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -1458,6 +1458,7 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
 <div id="coachClassChoice" class="buttons hidden">
  <button id="coachStartGuided" type="button">Clase guiada</button>
  <button id="coachSetupStations" type="button" class="alt">Circuito por estaciones</button>
+ <button id="coachCopyClass" type="button" class="alt">Copiar a Mis clases</button>
 </div>
 <p id="coachClassNotice" class="muted hidden" role="status"></p>
 </div></section>
@@ -1574,6 +1575,7 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
 <script src="src/vector-illustrations.js?v=2.9.67"></script>
 <script>
 'use strict';
+const CLASS_RUNS_KEY='gg-class-runs-v1';
 const KEY='gg-training-screen-workouts-v1', $=id=>document.getElementById(id);
 const isHF=document.documentElement.dataset.edition==='hf';
 const SECURE_AUTH_V2=true; // Candidate: DO NOT MERGE before verified dedicated GG/HF projects.
@@ -1788,7 +1790,7 @@ const appStorage={
   if(SECURE_AUTH_V2&&!secureNamespace)throw Error('Inicia sesión para guardar datos.');
   localStorage.setItem((SECURE_AUTH_V2?secureNamespace:storagePrefix)+key,value);
   if(SECURE_AUTH_V2&&!secureApply&&secureSyncController){
-   const kind=key===KEY?'workout':key==='gg-strength-history-v1'?'history':key==='gg-active-session-v1'?'active':null;
+   const kind=key===KEY?'workout':key==='gg-strength-history-v1'?'history':key==='gg-active-session-v1'?'active':key===CLASS_RUNS_KEY?'collective':null;
    if(kind){
     secureSyncController.changed(kind,kind==='active'?JSON.parse(value):value,options);
     window.__secureAccount?.schedule();
@@ -1851,6 +1853,26 @@ function setupVectorHome(){
  saved.append(vectorHomeSummary('MIS ENTRENAMIENTOS','▤',savedCount));
  $('libraryFilters').before(saved);
  saved.append($('libraryFilters'),$('saved'));
+
+ const classes=node('details','','tools-details vector-home-section');
+ classes.id='vectorMyClasses';
+ const classCount=node('small','');
+ classCount.id='vectorClassCount';
+ classes.append(vectorHomeSummary('MIS CLASES','▤',classCount));
+ const createClass=node('button','＋ Crear clase');
+ createClass.type='button';
+ createClass.onclick=()=>edit(null,true);
+ const prepared=node('details','','tools-details');
+ prepared.open=true;
+ const preparedList=node('div');
+ preparedList.id='preparedClasses';
+ prepared.append(node('summary','Preparadas'),preparedList);
+ const delivered=node('details','','tools-details');
+ const deliveredList=node('div');
+ deliveredList.id='deliveredClasses';
+ delivered.append(node('summary','Impartidas'),deliveredList);
+ classes.append(createClass,prepared,delivered);
+ saved.after(classes);
 
  const routines=node('details','','tools-details vector-home-section');
  routines.id='vectorRoutineSection';
@@ -2099,7 +2121,7 @@ const ggLibrary = {
     return true;
   }
 };
-let coachGuided=false, coachStations=null, coachPreviousTv=false;
+let coachGuided=false, coachStations=null, coachPreviousTv=false, editingClass=false;
 function show(v){if(v!=='history'&&$('historyDayDialog').open)$('historyDayDialog').close();if(v!=='library')$('hrShortcut').open=false;if(view==='guided'&&v!=='guided'){clearTvExerciseGif();if(prestartRemaining>0)prestartRunning=false}if(typeof closeSettings==='function')closeSettings();view=v;updateHFTheme();document.body.classList.toggle('guided-active',v==='guided');if(v==='guided'){$('sessionExtras').classList.add('hidden');$('moreSession').textContent='⚙ Más opciones';$('moreSession').setAttribute('aria-expanded','false')}if(typeof syncWakeLock==='function')void syncWakeLock();['library','editor','board','guided','history','sessionSummary','completedSummary','coachStations'].forEach(id=>$(id).classList.toggle('hidden',id!==v));if(v==='library'){
   if(usesWorkoutCloud&&!session&&appStorage.getItem(KEY)!==ggLibraryRaw)load();
   renderLibrary();
@@ -2630,18 +2652,81 @@ async function presentSavedHFWorkout(id,mode='guided'){
  return presentHFPreparedWorkout(workout,mode);
 }
 function workoutCategory(w){const names=w.blocks.map(b=>b.name.toLowerCase()).join(' '),lines=w.blocks.flatMap(b=>b.items).join(' ').toLowerCase(),title=w.name.toLowerCase();if(/amrap/.test(names))return 'AMRAP';if(/emom/.test(names))return 'EMOM';if(/intervalos/.test(names))return 'Intervalos';if(/ronda|circuito|h[ií]brid/.test(names+' '+title))return 'Híbrido';if(/fuerza|torso|pierna|full body/.test(names+' '+title)||w.blocks.some(b=>b.items.some(line=>!!decode(line).strength)))return 'Fuerza';return 'Otros'}
+function classRuns(){
+ const data=JSON.parse(appStorage.getItem(CLASS_RUNS_KEY)||'[]');
+ if(!Array.isArray(data))throw Error('El registro de clases no es válido.');
+ return data;
+}
+function renderMyClasses(){
+ const prepared=workouts.filter(workout=>workout.classPrepared);
+ const runs=classRuns().slice().sort((a,b)=>Date.parse(b.date)-Date.parse(a.date));
+ $('vectorClassCount').textContent=prepared.length+' preparadas · '+runs.length+' impartidas';
+ const preparedList=$('preparedClasses'),deliveredList=$('deliveredClasses');
+ preparedList.replaceChildren();
+ deliveredList.replaceChildren();
+ if(!prepared.length)preparedList.append(node('p','Todavía no tienes clases preparadas.','muted small'));
+ if(!runs.length)deliveredList.append(node('p','Todavía no has impartido clases.','muted small'));
+ for(const workout of prepared.slice().reverse()){
+  const line=node('div','','workout-row');
+  const actions=node('div','','routine-actions');
+  const open=node('button','Abrir');
+  const remove=node('button','Eliminar','alt');
+  open.type=remove.type='button';
+  open.setAttribute('aria-label','Abrir '+workout.name);
+  remove.setAttribute('aria-label','Eliminar '+workout.name);
+  open.onclick=()=>openWorkout(workout.id);
+  remove.onclick=()=>void deleteWorkout(workout.id);
+  actions.append(open,remove);
+  line.append(node('strong',workout.name),actions);
+  preparedList.append(line);
+ }
+ for(const run of runs){
+  const line=node('div','','workout-row');
+  const info=node('div');
+  info.append(node('strong',run.name));
+  const mode=run.mode==='stations'?'Circuito por estaciones':'Clase guiada';
+  info.append(node('div',new Date(run.date).toLocaleString('es-ES')+' · '+mode+' · '+formatSeconds(run.elapsed),'muted small'));
+  line.append(info);
+  deliveredList.append(line);
+ }
+}
+function saveClassRun(workout,mode,duration){
+ if(!workout||duration<=0)return true;
+ try{
+  const run={runId:crypto.randomUUID(),workoutId:workout.id,name:workout.name,mode,
+   elapsed:Math.floor(duration),date:new Date().toISOString()};
+  appStorage.setItem(CLASS_RUNS_KEY,JSON.stringify([...classRuns(),run]),{insertOnly:true});
+  return true;
+ }catch(error){
+  alert('No se ha podido registrar la clase. '+error.message);
+  return false;
+ }
+}
+function copyToMyClasses(workout){
+ const existing=workouts.find(item=>item.classPrepared&&item.classSourceId===workout.id);
+ if(existing){openWorkout(existing.id);return}
+ const copy={id:'class-'+crypto.randomUUID(),name:workout.name,blocks:structuredClone(workout.blocks),
+  classPrepared:true,classSourceId:workout.id};
+ const previous=workouts;
+ workouts=[...previous,copy];
+ if(!persist()){workouts=previous;return}
+ $('vectorMyClasses').open=true;
+ openWorkout(copy.id);
+}
 function renderLibrary(){
  renderVectorRoutines();
+ const personalWorkouts=isHF?workouts:workouts.filter(workout=>!workout.classPrepared);
  if(!isHF){
-   const count=workouts.length;
+   renderMyClasses();
+   const count=personalWorkouts.length;
    $('vectorSavedCount').textContent=count===0?'Aún no tienes entrenamientos guardados':
      count===1?'1 entrenamiento guardado':count+' entrenamientos guardados';
  }
  const target=$('saved'),search=$('librarySearch'),category=$('libraryCategory');
  target.replaceChildren();
  if(isHF){hfRefreshClub();refreshHFHome();}
- $('libraryFilters').classList.toggle('hidden',workouts.length===0);
- if(!workouts.length){
+ $('libraryFilters').classList.toggle('hidden',personalWorkouts.length===0);
+ if(!personalWorkouts.length){
    search.value='';
    category.value='Todos';
    const empty=node('div','','library-empty-card');
@@ -2667,7 +2752,7 @@ function renderLibrary(){
   try{favoriteIds=hfClubTools.listHFFavorites(appStorage);}
   catch(error){/* Non-destructive error is displayed in the HF organizer. */}
  }
- const visible=workouts.filter(w=>(type==='Todos'||workoutCategory(w)===type)&&w.name.toLocaleLowerCase('es-ES').includes(filter)&&(!isHF||!hfFavoritesOnly||favoriteIds.includes(w.id))).slice().reverse();
+ const visible=personalWorkouts.filter(w=>(type==='Todos'||workoutCategory(w)===type)&&w.name.toLocaleLowerCase('es-ES').includes(filter)&&(!isHF||!hfFavoritesOnly||favoriteIds.includes(w.id))).slice().reverse();
  if(!visible.length)target.append(node('p','No hay entrenamientos que coincidan.','muted library-empty'));
  visible.forEach(w=>{const line=node('div','','workout-row'),info=node('div');info.style.flex='1';info.style.minWidth='0';info.append(node('strong',w.name),node('div',workoutCategory(w)+' · '+w.blocks.length+' bloques · '+w.blocks.reduce((n,b)=>n+b.items.length,0)+' ejercicios','muted small'));const actions=node('div','','routine-actions');const open=node('button','Abrir');open.onclick=()=>{if(vectorDays.has(sessionWorkout)&&session){openWorkout(w.id);return}active=w.id;show('board')};if(isHF){
  const present=node('button','Presentar','alt');
@@ -2784,7 +2869,7 @@ function renderBoard(){
  const classUnavailable=isHF||session;
  $('coachClassToggle').classList.toggle('hidden',classUnavailable);
  if(classUnavailable)setCoachClassChoice(false);
- $('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':(isHF?'▶ Entrenar en este dispositivo':'▶ Iniciar entrenamiento');const w=findWorkout(active);if(!w){show('library');return}$('edit').classList.toggle('hidden',vectorDays.has(active)||buhardillaRoutines.has(active));$('boardName').textContent=w.name;const exerciseCount=w.blocks.reduce((total,block)=>total+block.items.length,0);
+ $('resume').classList.toggle('hidden',!(session&&sessionWorkout===active));$('start').textContent=session?'↻ Reiniciar entrenamiento':(isHF?'▶ Entrenar en este dispositivo':'▶ Iniciar entrenamiento');const w=findWorkout(active);if(!w){show('library');return}$('start').classList.toggle('hidden',!isHF&&Boolean(w.classPrepared));$('coachCopyClass').classList.toggle('hidden',Boolean(w.classPrepared));$('edit').classList.toggle('hidden',vectorDays.has(active)||buhardillaRoutines.has(active));$('boardName').textContent=w.name;const exerciseCount=w.blocks.reduce((total,block)=>total+block.items.length,0);
 $('count').textContent=buhardillaRoutines.has(active)?'Duración programada · '+formatSeconds(buhardillaWorkoutDuration(w)):w.blocks.length+' '+(w.blocks.length===1?'bloque':'bloques')+' · '+exerciseCount+' '+(isHF?(exerciseCount===1?'paso':'pasos'):(exerciseCount===1?'ejercicio':'ejercicios'));$('blocks').replaceChildren();if(w.exercises){
  w.exercises.forEach((exercise,index)=>{
    const tile=node('div','','tile');
@@ -3080,10 +3165,10 @@ function validHeartLimit(value){
 function workoutHeartLimit(id){
  return validHeartLimit(workouts.find(w=>w.id===id)?.hrLimit);
 }
-function edit(w){$('editorTitle').textContent=w?'Editar entrenamiento':'Crear entrenamiento';$('editorHeartOptions').open=Boolean(w?.hrLimit);$(isHF?'hfEditorLibrary':'vectorEditorLibrary').open=false;visualEditing=null;$('addExercise').textContent='＋ Añadir ejercicio';$('cancelVisualEdit').classList.add('hidden');editing=w?.id||null;$('workoutName').value=w?.name||'';$('workoutHrLimit').value=validHeartLimit(w?.hrLimit)??'';$('workoutBlocks').value=w?serialize(w):'';$('editorMessage').textContent='';show('editor');renderVisual();closeV2Wizard()}
+function edit(w,asClass=false){editingClass=!isHF&&(asClass||Boolean(w?.classPrepared));$('editorTitle').textContent=editingClass?(w?'Editar clase':'Crear clase'):(w?'Editar entrenamiento':'Crear entrenamiento');$('editorHeartOptions').open=Boolean(w?.hrLimit);$(isHF?'hfEditorLibrary':'vectorEditorLibrary').open=false;visualEditing=null;$('addExercise').textContent='＋ Añadir ejercicio';$('cancelVisualEdit').classList.add('hidden');editing=w?.id||null;$('workoutName').value=w?.name||'';$('workoutHrLimit').value=validHeartLimit(w?.hrLimit)??'';$('workoutBlocks').value=w?serialize(w):'';$('editorMessage').textContent='';show('editor');renderVisual();closeV2Wizard()}
 function parse(text){let blocks=[],current=null;for(const raw of text.split(/\r?\n/)){const line=raw.trim();if(!line)continue;if(line.endsWith(':')){current={name:line.slice(0,-1).trim(),items:[]};if(!current.name)throw Error('Hay un bloque sin nombre');blocks.push(current)}else{if(!current)throw Error('Escribe primero el nombre de un bloque terminado en :');current.items.push(line)}}if(!blocks.length||blocks.some(b=>!b.items.length))throw Error('Cada bloque debe tener al menos un ejercicio');if(blocks.reduce((n,b)=>n+b.items.length,0)>200)throw Error('Máximo 200 ejercicios');for(const b of blocks)for(const item of b.items){const m=item.match(/@(\d+)$/);if(m&&(Number(m[1])<1||Number(m[1])>7200))throw Error('Duración permitida: entre 1 y 7200 segundos');}return blocks}
 $('new').onclick=()=>edit(null);$('cancel').onclick=()=>show(editing?'board':'library');
-$('save').onclick=()=>{try{const name=$('workoutName').value.trim();if(!name)throw Error('Escribe el nombre del entrenamiento');const blocks=parse($('workoutBlocks').value);const id=editing||'w'+Date.now();if(editing&&isActiveRoutine(id))throw Error('Finaliza la sesión activa antes de modificar esta rutina');const field=$('workoutHrLimit'),rawLimit=field.value;const hrLimit=validHeartLimit(Number(rawLimit));if(field.validity.badInput||(rawLimit!==''&&hrLimit===null)){$('editorHeartOptions').open=true;field.focus();throw Error('Introduce un límite entero entre 25 y 240 ppm o deja el campo vacío');}const w={id,name,blocks};if(hrLimit!==null)w.hrLimit=hrLimit;const before=workouts;const previous=before.find(x=>x.id===id);const marked=markGGWorkout(w,previous);workouts=editing?before.map(x=>x.id===id?marked:x):[...before,marked];if(!persist()){workouts=before;return}if(!isHF)$('vectorMyWorkouts').open=true;active=id;show('board')}catch(e){$('editorMessage').textContent=e.message}};
+$('save').onclick=()=>{try{const name=$('workoutName').value.trim();if(!name)throw Error('Escribe el nombre del entrenamiento');const blocks=parse($('workoutBlocks').value);const id=editing||(editingClass?'class-'+crypto.randomUUID():'w'+Date.now());if(editing&&isActiveRoutine(id))throw Error('Finaliza la sesión activa antes de modificar esta rutina');const field=$('workoutHrLimit'),rawLimit=field.value;const hrLimit=validHeartLimit(Number(rawLimit));if(field.validity.badInput||(rawLimit!==''&&hrLimit===null)){$('editorHeartOptions').open=true;field.focus();throw Error('Introduce un límite entero entre 25 y 240 ppm o deja el campo vacío');}const w={id,name,blocks};if(hrLimit!==null)w.hrLimit=hrLimit;const before=workouts;const previous=before.find(x=>x.id===id);if(editingClass){w.classPrepared=true;if(previous?.classSourceId)w.classSourceId=previous.classSourceId;}const marked=markGGWorkout(w,previous);workouts=editing?before.map(x=>x.id===id?marked:x):[...before,marked];if(!persist()){workouts=before;return}if(!isHF)$(editingClass?'vectorMyClasses':'vectorMyWorkouts').open=true;active=id;show('board')}catch(e){$('editorMessage').textContent=e.message}};
 $('edit').onclick=()=>edit(workouts.find(w=>w.id===active));$('back').onclick=()=>show('library');
 
 let prestartRemaining=0,prestartRunning=false;
@@ -3312,7 +3397,7 @@ $('cancelEdit').onclick=()=>{editingSet=-1;renderSeries();$('status').textConten
 $('saveSet').onclick=()=>{if(prestartRemaining>0)return;try{const values=getDraft();if(editingSet>=0){const entries=seriesLog[step]||[];if(!entries[editingSet])throw Error('La serie ya no existe');entries[editingSet]={...entries[editingSet],...values,correctedAt:new Date().toISOString()};editingSet=-1;saveSession();renderSeries();$('status').textContent='Serie corregida. El descanso no se reinicia.'}else{draftSets[step]=values;saveSession();$('status').textContent='Datos guardados sin iniciar descanso'}}catch(e){alert(e.message)}};
 $('logSet').onclick=()=>{if(prestartRemaining>0)return;try{const a=currentStrength();if(!session||!a)throw Error('Selecciona un ejercicio de fuerza');if(restRunning||transitionTo!==null)return;const entries=seriesLog[step]??=[];if(entries.length>=a.sets)return;const entry={...getDraft(),at:new Date().toISOString()};entries.push(entry);delete draftSets[step];const last=entries.length>=a.sets;if(last&&vectorDays.has(active))entry.rest=0;const exercises=steps();const next=exercises[step+1];const transitionSeconds=last?plannedTransition(exercises[step],next):null;const transition=transitionSeconds!==null;if(transition){transitionTo=step+1;restRemaining=transitionSeconds;restRunning=restRemaining>0}else{transitionTo=null;restRemaining=last?0:entry.rest;restRunning=restRemaining>0}void initAudio();saveSession();if(transition&&restRemaining===0){finishExerciseTransition();return}renderSeries();$('status').textContent=transition?'Descanso entre ejercicios iniciado.':last?'Ejercicio completo. Pulsa Siguiente.':'Serie completada'+(restRunning?'. Descanso iniciado.':'.')}catch(e){alert(e.message)}};
 $('undoSet').onclick=()=>{if(prestartRemaining>0)return;if((seriesLog[step]||[]).length){seriesLog[step].pop();restRemaining=0;restRunning=false;transitionTo=null;saveSession();renderSeries()}};
-let pendingSummaryId=null;function archiveSession(){if(coachGuided)return true;try{const k='gg-strength-history-v1',h=JSON.parse(appStorage.getItem(k)||'[]');if(!Array.isArray(h))throw Error('Historial inválido');const w=findWorkout(sessionWorkout)||findWorkout(active);const recordId='session-'+Date.now();h.push({id:recordId,workoutId:sessionWorkout,name:w?.name||'Entrenamiento',date:new Date().toISOString(),elapsed,lastReachedStep:step+1,seriesLog:JSON.parse(JSON.stringify(seriesLog)),exerciseNames:w?.blocks.flatMap(b=>b.items.map(x=>decode(x).label))||[],exerciseSnapshot:w?.blocks.flatMap(b=>b.items.map(line=>({block:b.name,label:decode(line).label,raw:line})))||[],vectorDose:w?.exercises?.map(vectorDose),amrapResults:JSON.parse(JSON.stringify(amrapResults)),ftResults:JSON.parse(JSON.stringify(ftResults)),actualResults:JSON.parse(JSON.stringify(actualResults)),...(isHF?{}:{heartRate:sessionHeartSummary(),startedAt:trainingStartedAt})});appStorage.setItem(k,JSON.stringify(h));pendingSummaryId=recordId;return true}catch(e){alert('No se ha podido guardar el historial. No cierres la sesión: revisa el almacenamiento del navegador.');return false}}
+let pendingSummaryId=null;function archiveSession(){if(coachGuided)return saveClassRun(findWorkout(sessionWorkout),'guided',elapsed);try{const k='gg-strength-history-v1',h=JSON.parse(appStorage.getItem(k)||'[]');if(!Array.isArray(h))throw Error('Historial inválido');const w=findWorkout(sessionWorkout)||findWorkout(active);const recordId='session-'+Date.now();h.push({id:recordId,workoutId:sessionWorkout,name:w?.name||'Entrenamiento',date:new Date().toISOString(),elapsed,lastReachedStep:step+1,seriesLog:JSON.parse(JSON.stringify(seriesLog)),exerciseNames:w?.blocks.flatMap(b=>b.items.map(x=>decode(x).label))||[],exerciseSnapshot:w?.blocks.flatMap(b=>b.items.map(line=>({block:b.name,label:decode(line).label,raw:line})))||[],vectorDose:w?.exercises?.map(vectorDose),amrapResults:JSON.parse(JSON.stringify(amrapResults)),ftResults:JSON.parse(JSON.stringify(ftResults)),actualResults:JSON.parse(JSON.stringify(actualResults)),...(isHF?{}:{heartRate:sessionHeartSummary(),startedAt:trainingStartedAt})});appStorage.setItem(k,JSON.stringify(h));pendingSummaryId=recordId;return true}catch(e){alert('No se ha podido guardar el historial. No cierres la sesión: revisa el almacenamiento del navegador.');return false}}
 function effortLabel(value){
  return value===10?'Máximo':['Muy suave','Suave','Moderado','Duro','Muy duro'][Math.floor((value-1)/2)];
 }
@@ -3839,7 +3924,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.42';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.43';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
@@ -4455,6 +4540,7 @@ window.__secureAppV2={
   return {
    workouts:Array.isArray(JSON.parse(appStorage.getItem(KEY)||'[]'))?JSON.parse(appStorage.getItem(KEY)||'[]'):[],
    history:Array.isArray(JSON.parse(appStorage.getItem('gg-strength-history-v1')||'[]'))?JSON.parse(appStorage.getItem('gg-strength-history-v1')||'[]'):[],
+   ...(!isHF?{collective:classRuns()}:{}),
    active:JSON.parse(appStorage.getItem('gg-active-session-v1')||'null')
   };
  },
@@ -4464,6 +4550,7 @@ window.__secureAppV2={
   try{
    appStorage.setItem(KEY,JSON.stringify(payload.workouts||[]));
    appStorage.setItem('gg-strength-history-v1',JSON.stringify(payload.history||[]));
+   if(!isHF)appStorage.setItem(CLASS_RUNS_KEY,JSON.stringify(payload.collective||[]));
    if(payload.active)appStorage.setItem('gg-active-session-v1',JSON.stringify(payload.active));
    else appStorage.removeItem('gg-active-session-v1');
   }finally{secureApply=false}
@@ -4488,12 +4575,14 @@ function setCoachGuided(active){
  $('coachDockToggle').setAttribute('aria-expanded','true');
 }
 function exitCoachGuided(message){
+ prestartRemaining=0;prestartRunning=false;
  session=false;paused=true;sessionWorkout=null;
  show('board');
  setCoachGuided(false);
  if(coachPreviousTv!==document.body.classList.contains('tv-mode'))document.querySelector('#board [data-tv-toggle]').click();
  $('coachClassNotice').textContent=message;
  $('coachClassNotice').classList.remove('hidden');
+ window.__secureAccount?.schedule();
  $('coachClassToggle').focus();
 }
 function setCoachClassChoice(open){
@@ -4508,6 +4597,7 @@ function setupBuhardillaCoach(){
   if(open)notice.classList.add('hidden');
   setCoachClassChoice(open);
  };
+ $('coachCopyClass').onclick=()=>{const workout=findWorkout(active);if(!session&&workout)copyToMyClasses(workout)};
  $('coachStartGuided').onclick=()=>{
   if(session)return;
   notice.classList.add('hidden');
@@ -4523,7 +4613,7 @@ function setupBuhardillaCoach(){
   else nextStep(true);
  };
  $('coachGuidedFinish').onclick=()=>{
-  if(coachGuided&&confirm('¿Finalizar la clase guiada?'))exitCoachGuided('Clase finalizada.');
+  if(coachGuided&&confirm('¿Finalizar la clase guiada?')&&archiveSession())exitCoachGuided('Clase finalizada.');
  };
  $('coachDockToggle').onclick=()=>{
   const hidden=document.body.classList.toggle('coach-controls-hidden');
@@ -4537,11 +4627,12 @@ function setupBuhardillaCoach(){
   trigger.disabled=true;
   notice.classList.add('hidden');
   try{
-   const {mountBuhardillaStations}=await import('./src/buhardilla-stations.mjs?v=1');
+   const {mountBuhardillaStations}=await import('./src/buhardilla-stations.mjs?v=2');
    if(view!=='board'||session||findWorkout(active)!==workout)return;
    coachStations??=mountBuhardillaStations({
     root:$('coachStations'),
-    onExit:()=>{show('board');trigger.focus()},
+    onExit:()=>{show('board');window.__secureAccount?.schedule();trigger.focus()},
+    onComplete:(workout,duration)=>saveClassRun(workout,'stations',duration),
     onSound:beep,
     onActivity:()=>void syncWakeLock(),
     formatTime:formatSeconds
@@ -4553,7 +4644,7 @@ function setupBuhardillaCoach(){
      gif:techniqueCatalogPath(exercise.techniqueId)||sharedTechniquePath(techniqueKey(exercise.label))
     };
    });
-   coachStations.open(workout.name,exercises);
+   coachStations.open(workout.name,exercises,workout);
    show('coachStations');
    $('stationTitle').focus();
   }catch(error){
