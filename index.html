@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.46</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.47</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -1590,11 +1590,8 @@ const vectorDays=new Map(vectorRoutines.flatMap(routine=>routine.days.map(day=>{
    : exercise.name+' | '+exercise.sets+'x'+(exercise.reps??0)+' | descanso '+exercise.setRest+'s');
  return [day.id,{...day,name,routine,blocks:[{name:day.focus||name,items}]}];
 })));
-const buhardillaFolders=isHF?[]:[
- {name:'Tonificación',routines:makeTonificationRoutines()},
- {name:'Acondicionamiento Físico',routines:makeConditioningRoutines()}
-];
-const buhardillaRoutines=new Map(buhardillaFolders.flatMap(folder=>folder.routines.map(workout=>[workout.id,workout])));
+const buhardillaCatalog=isHF?[]:[...makeTonificationRoutines(),...makeConditioningRoutines()];
+const buhardillaRoutines=new Map(buhardillaCatalog.map(workout=>[workout.id,workout]));
 function timedBuhardillaBlock(name,exercises,restAfter=''){
  const items=exercises.flatMap(([label,gif,instructions,seconds=30],position)=>{
    const work=addExerciseInstructions(addTechniqueLink(label+' @'+seconds,gif),instructions);
@@ -1898,31 +1895,21 @@ function setupVectorHome(){
 function renderBuhardillaAssignments(){
  const target=$('buhardillaRoutineSection');
  const ids=assignedBuhardillaIds();
- const folders=buhardillaFolders.map(folder=>({...folder,routines:folder.routines.filter(workout=>ids.has(workout.id))}))
-  .filter(folder=>folder.routines.length);
- const total=folders.reduce((sum,folder)=>sum+folder.routines.length,0);
- target.classList.toggle('hidden',total===0);
- const opened=new Set(Array.from(target.querySelectorAll('details[open]'),element=>element.dataset.folder));
+ const assigned=buhardillaCatalog.filter(workout=>ids.has(workout.id));
+ target.classList.toggle('hidden',assigned.length===0);
  target.replaceChildren();
- for(const folder of folders){
-   const section=node('details','','tools-details');
-   section.dataset.folder=folder.name;
-   section.open=opened.has(folder.name);
-   section.append(node('summary',folder.name));
-   for(const workout of folder.routines){
-     const row=node('div','','workout-row');
-     const title=node('div');
-     title.append(node('strong',workout.name),node('div',formatSeconds(buhardillaWorkoutDuration(workout)),'muted small'));
-     const open=node('button','Abrir');
-     open.type='button';
-     open.setAttribute('aria-label','Abrir '+workout.name);
-     open.onclick=()=>openWorkout(workout.id);
-     row.append(title,open);
-     section.append(row);
-   }
-   target.append(section);
+ for(const workout of assigned){
+  const row=node('div','','workout-row');
+  const title=node('div');
+  title.append(node('strong',workout.name),node('div',formatSeconds(buhardillaWorkoutDuration(workout)),'muted small'));
+  const open=node('button','Abrir');
+  open.type='button';
+  open.setAttribute('aria-label','Abrir '+workout.name);
+  open.onclick=()=>openWorkout(workout.id);
+  row.append(title,open);
+  target.append(row);
  }
- return total;
+ return assigned.length;
 }
 function mountEditorExerciseLibrary(id){
  const library=$('exerciseLibrary');
@@ -3944,7 +3931,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.46';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.20', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.47';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
