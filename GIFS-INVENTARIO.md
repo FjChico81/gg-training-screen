@@ -1,6 +1,6 @@
 # Inventario de GIFs de GG y HF
 
-Versión 2.9.61 · 885 fichas, 880 con GIF y 5 pendientes.
+Versión 2.9.62 · 885 fichas, 882 con GIF y 3 pendientes.
 
 ## Catálogo
 
@@ -865,31 +865,35 @@ Los nombres son los que aparecen en el selector de la aplicación. Puedes abrir 
 | 855 | Superman tumbado boca abajo con elevación simultánea de brazos y piernas | [superman-tumbado-boca-abajo-con-elevacion-simultanea-de-brazos-y-piernas.gif](assets/technique/superman-tumbado-boca-abajo-con-elevacion-simultanea-de-brazos-y-piernas.gif) |
 | 856 | Tijeras horizontales de brazos | [tijeras-horizontales-de-brazos.gif](assets/technique/tijeras-horizontales-de-brazos.gif) |
 | 857 | Tijeras sentado | [tijeras-sentado.gif](assets/technique/tijeras-sentado.gif) |
-| 858 | Toques laterales de talón | [toques-laterales-talon.gif](assets/technique/toques-laterales-talon.gif) |
-| 859 | V-up con fitball | [v-up-con-fitball.gif](assets/technique/v-up-con-fitball.gif) |
-| 860 | Zancada alterna con salto | [zancada-alterna-salto.gif](assets/technique/zancada-alterna-salto.gif) |
-| 861 | Zancada alterna con salto y mancuernas | [zancada-alterna-con-salto-y-mancuernas.gif](assets/technique/zancada-alterna-con-salto-y-mancuernas.gif) |
-| 862 | Zancada caminando con elevación de rodilla | [zancada-caminando-con-elevacion-de-rodilla.gif](assets/technique/zancada-caminando-con-elevacion-de-rodilla.gif) |
-| 863 | Zancada cruzada con barra | [zancada-cruzada-con-barra.gif](assets/technique/zancada-cruzada-con-barra.gif) |
-| 864 | Zancada cruzada con peso corporal | [zancada-cruzada-peso-corporal.gif](assets/technique/zancada-cruzada-peso-corporal.gif) |
-| 865 | Zancada estática con bandas elásticas en posición frontal | [zancada-estatica-con-bandas-elasticas-en-posicion-frontal.gif](assets/technique/zancada-estatica-con-bandas-elasticas-en-posicion-frontal.gif) |
-| 866 | Zancada estática con Gymstick tras nuca | [zancada-estatica-con-gymstick-tras-nuca.gif](assets/technique/zancada-estatica-con-gymstick-tras-nuca.gif) |
-| 867 | Zancada estática con peso corporal | [zancada-estatica-peso-corporal.gif](assets/technique/zancada-estatica-peso-corporal.gif) |
-| 868 | Zancada estática en máquina Smith | [zancada-estatica-en-maquina-smith.gif](assets/technique/zancada-estatica-en-maquina-smith.gif) |
-| 869 | Zancada hacia atrás con barra | [zancada-atras-barra.gif](assets/technique/zancada-atras-barra.gif) |
-| 870 | Zancada hacia atrás con peso corporal | [zancada-atras-peso-corporal.gif](assets/technique/zancada-atras-peso-corporal.gif) |
-| 871 | Zancada hacia delante con peso corporal | [zancada-adelante-peso-corporal.gif](assets/technique/zancada-adelante-peso-corporal.gif) |
-| 872 | Zancada hacia delante con peso corporal y apoyo de rodilla | [zancada-hacia-delante-con-peso-corporal-y-apoyo-de-rodilla.gif](assets/technique/zancada-hacia-delante-con-peso-corporal-y-apoyo-de-rodilla.gif) |
-| 873 | Zancada inversa con elevación de rodilla | [zancada-inversa-rodilla.gif](assets/technique/zancada-inversa-rodilla.gif) |
-| 874 | Zancada inversa sobre BOSU con elevación de rodilla | [zancada-inversa-sobre-bosu-con-elevacion-de-rodilla.gif](assets/technique/zancada-inversa-sobre-bosu-con-elevacion-de-rodilla.gif) |
-| 875 | Zancada lateral con barra | [zancada-lateral-barra.gif](assets/technique/zancada-lateral-barra.gif) |
-| 876 | Zancada lateral con peso corporal | [zancada-lateral-peso-corporal.gif](assets/technique/zancada-lateral-peso-corporal.gif) |
-| 877 | Zancadas caminando con barra | [zancada-caminando-barra.gif](assets/technique/zancada-caminando-barra.gif) |
-| 878 | Zancadas caminando con mancuernas | [zancada-caminando-mancuernas.gif](assets/technique/zancada-caminando-mancuernas.gif) |
-| 879 | Zancadas hacia atrás con mancuernas | [zancada-atras-mancuernas.gif](assets/technique/zancada-atras-mancuernas.gif) |
-| 880 | Zancadas hacia delante con mancuernas | [zancada-adelante-mancuernas.gif](assets/technique/zancada-adelante-mancuernas.gif) |
+| 858 | Tirón de trineo con cuerda | [sled-pull.gif](assets/technique/sled-pull.gif) |
+| 859 | Toques laterales de talón | [toques-laterales-talon.gif](assets/technique/toques-laterales-talon.gif) |
+| 860 | V-up con fitball | [v-up-con-fitball.gif](assets/technique/v-up-con-fitball.gif) |
+| 861 | Wall ball | [wall-ball.gif](assets/technique/wall-ball.gif) |
+| 862 | Zancada alterna con salto | [zancada-alterna-salto.gif](assets/technique/zancada-alterna-salto.gif) |
+| 863 | Zancada alterna con salto y mancuernas | [zancada-alterna-con-salto-y-mancuernas.gif](assets/technique/zancada-alterna-con-salto-y-mancuernas.gif) |
+| 864 | Zancada caminando con elevación de rodilla | [zancada-caminando-con-elevacion-de-rodilla.gif](assets/technique/zancada-caminando-con-elevacion-de-rodilla.gif) |
+| 865 | Zancada cruzada con barra | [zancada-cruzada-con-barra.gif](assets/technique/zancada-cruzada-con-barra.gif) |
+| 866 | Zancada cruzada con peso corporal | [zancada-cruzada-peso-corporal.gif](assets/technique/zancada-cruzada-peso-corporal.gif) |
+| 867 | Zancada estática con bandas elásticas en posición frontal | [zancada-estatica-con-bandas-elasticas-en-posicion-frontal.gif](assets/technique/zancada-estatica-con-bandas-elasticas-en-posicion-frontal.gif) |
+| 868 | Zancada estática con Gymstick tras nuca | [zancada-estatica-con-gymstick-tras-nuca.gif](assets/technique/zancada-estatica-con-gymstick-tras-nuca.gif) |
+| 869 | Zancada estática con peso corporal | [zancada-estatica-peso-corporal.gif](assets/technique/zancada-estatica-peso-corporal.gif) |
+| 870 | Zancada estática en máquina Smith | [zancada-estatica-en-maquina-smith.gif](assets/technique/zancada-estatica-en-maquina-smith.gif) |
+| 871 | Zancada hacia atrás con barra | [zancada-atras-barra.gif](assets/technique/zancada-atras-barra.gif) |
+| 872 | Zancada hacia atrás con peso corporal | [zancada-atras-peso-corporal.gif](assets/technique/zancada-atras-peso-corporal.gif) |
+| 873 | Zancada hacia delante con peso corporal | [zancada-adelante-peso-corporal.gif](assets/technique/zancada-adelante-peso-corporal.gif) |
+| 874 | Zancada hacia delante con peso corporal y apoyo de rodilla | [zancada-hacia-delante-con-peso-corporal-y-apoyo-de-rodilla.gif](assets/technique/zancada-hacia-delante-con-peso-corporal-y-apoyo-de-rodilla.gif) |
+| 875 | Zancada inversa con elevación de rodilla | [zancada-inversa-rodilla.gif](assets/technique/zancada-inversa-rodilla.gif) |
+| 876 | Zancada inversa sobre BOSU con elevación de rodilla | [zancada-inversa-sobre-bosu-con-elevacion-de-rodilla.gif](assets/technique/zancada-inversa-sobre-bosu-con-elevacion-de-rodilla.gif) |
+| 877 | Zancada lateral con barra | [zancada-lateral-barra.gif](assets/technique/zancada-lateral-barra.gif) |
+| 878 | Zancada lateral con peso corporal | [zancada-lateral-peso-corporal.gif](assets/technique/zancada-lateral-peso-corporal.gif) |
+| 879 | Zancadas caminando con barra | [zancada-caminando-barra.gif](assets/technique/zancada-caminando-barra.gif) |
+| 880 | Zancadas caminando con mancuernas | [zancada-caminando-mancuernas.gif](assets/technique/zancada-caminando-mancuernas.gif) |
+| 881 | Zancadas hacia atrás con mancuernas | [zancada-atras-mancuernas.gif](assets/technique/zancada-atras-mancuernas.gif) |
+| 882 | Zancadas hacia delante con mancuernas | [zancada-adelante-mancuernas.gif](assets/technique/zancada-adelante-mancuernas.gif) |
 
-## Créditos de los GIFs de trineo
+## Créditos históricos de los GIFs de trineo sustituidos
+
+Los cuatro GIFs nuevos de Wall ball, Sled pull, Sled push y Sled drag proceden de los archivos facilitados por el responsable de GG/HF. Las fuentes siguientes corresponden a las versiones anteriores, conservadas en el historial de Git.
 
 - Empuje de trineo. Clip recortado y convertido a GIF a partir de [Couple Working Out at the Gym, de Anastasia Shuraeva](https://www.pexels.com/video/couple-working-out-at-the-gym-4944811/). [Licencia de Pexels](https://www.pexels.com/license/).
 - Arrastre de trineo hacia atrás. Clip recortado y convertido a GIF a partir de [Sprint-Drag-Carry, del U.S. Army](https://commons.wikimedia.org/wiki/File:Army_Combat_Fitness_Test-_Sprint-Drag-Carry_(SDC)_(Event_4).webm). Fuente de dominio público.
@@ -908,7 +912,5 @@ The appearance of U.S. Department of War (DoW) visual information does not imply
 - Arrancada con mancuerna
 - Devil press con dos mancuernas
 - SkiErg
-- Tirón de trineo con cuerda
-- Wall ball
 
 [Registro de pendientes y variantes revisadas](GIFS-PENDIENTES.md).
