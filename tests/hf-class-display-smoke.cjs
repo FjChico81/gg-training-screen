@@ -32,14 +32,15 @@ function makeNode(tagName,id=''){
 }
 
 function boot(query=''){
-  const nodes=new Map();
+  const nodes=new Map(),listeners=new Map();
   const document={
+    visibilityState:'visible',
     getElementById(id){
       if(!nodes.has(id))nodes.set(id,makeNode('div',id));
       return nodes.get(id);
     },
     createElement(tag){return makeNode(tag);},
-    addEventListener(){},
+    addEventListener(event,listener){listeners.set(event,listener);},
     body:{classList:{toggle(){},contains(){return false},remove(){}}},
     fullscreenElement:null
   };
@@ -60,7 +61,9 @@ function boot(query=''){
     Date:VirtualDate,setInterval:()=>0,console};
   vm.runInNewContext(instrumented,sandbox,{timeout:1000,filename:'hf-class-prototype'});
   return {t:sandbox.__test,el:id=>document.getElementById(id),
-    advance(ms){now+=ms; sandbox.__test.tick();},now:()=>now};
+    advance(ms){now+=ms; sandbox.__test.tick();},
+    changeVisibility(state,after=0){now+=after;document.visibilityState=state;listeners.get('visibilitychange')();},
+    now:()=>now};
 }
 
 test('opens class mode from the two HF entry URLs',()=>{
@@ -81,6 +84,15 @@ test('a class starts after exactly ten seconds and preparation does not count as
   assert.equal(a.t.getState().phase,'work');
   assert.equal(a.t.getState().sessionElapsedMs,0);
   assert.equal(a.t.getState().deadline,a.now()+90_000);
+});
+test('returning after suspension preserves the time spent after preparation and advances the class',()=>{
+  const a=boot();
+  a.el('start').onclick();
+  a.changeVisibility('hidden',2_000);
+  a.changeVisibility('visible',103_000);
+  assert.equal(a.t.getState().step,1);
+  assert.equal(a.el('totalClock').textContent,'01:35');
+  assert.equal(a.el('mainClock').textContent,'00:05');
 });
 test('Cancelar during the initial 10 s returns to zero without starting a class',()=>{
   const a=boot();
