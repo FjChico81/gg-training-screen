@@ -845,7 +845,7 @@ const GG_EXERCISE_LIBRARY = [
   {"id":"sit-up-en-banco-declinado","nombre":"Sit-up en banco declinado","alias":[],"grupo":"Abdomen y core","movimiento":"Flexión del tronco y cadera","gif":"assets/technique/sit-up-en-banco-declinado.gif"},
   {"id":"sit-up-en-v","nombre":"Sit-up en V","alias":[],"grupo":"Abdomen y core","movimiento":"Flexión del tronco y cadera","gif":"assets/technique/sit-up-en-v.gif"},
   {"id":"sit-up-mariposa","nombre":"Sit-up mariposa","alias":[],"grupo":"Abdomen y core","movimiento":"Flexión del tronco y cadera","gif":"assets/technique/sit-up-mariposa.gif"},
-  {"id":"cardio-ski","nombre":"SkiErg","alias":["ski","ski erg","ergómetro de esquí"],"grupo":"Cardio","movimiento":"Resistencia","gif":null},
+  {"id":"cardio-ski","nombre":"SkiErg","alias":["ski","ski erg","ergómetro de esquí"],"grupo":"Cardio","movimiento":"Resistencia","gif":"assets/technique/cardio-skierg.gif"},
   {"id":"sprint-resistido-banda","nombre":"Sprint resistido con banda y compañero","alias":["carrera resistida con banda","partner resisted sprint"],"grupo":"Cardio","movimiento":"Resistencia","gif":"assets/technique/sprint-resistido-banda.gif"},
   {"id":"step-up-con-poleas-bajas","nombre":"Step-up con poleas bajas","alias":[],"grupo":"Piernas y glúteos","movimiento":"Zancada y escalón","gif":"assets/technique/step-up-con-poleas-bajas.gif"},
   {"id":"step-up-en-maquina-asistida","nombre":"Step-up en máquina asistida","alias":[],"grupo":"Piernas y glúteos","movimiento":"Zancada y escalón","gif":"assets/technique/step-up-en-maquina-asistida.gif"},

@@ -1,6 +1,6 @@
 # Inventario de GIFs de GG y HF
 
-Versión 2.9.63 · 885 fichas, 884 con GIF y 1 pendiente.
+Versión 2.9.64 · 885 fichas, todas con GIF.
 
 ## Catálogo
 
@@ -853,45 +853,46 @@ Los nombres son los que aparecen en el selector de la aplicación. Puedes abrir 
 | 843 | Sit-up en banco declinado | [sit-up-en-banco-declinado.gif](assets/technique/sit-up-en-banco-declinado.gif) |
 | 844 | Sit-up en V | [sit-up-en-v.gif](assets/technique/sit-up-en-v.gif) |
 | 845 | Sit-up mariposa | [sit-up-mariposa.gif](assets/technique/sit-up-mariposa.gif) |
-| 846 | Sprint resistido con banda y compañero | [sprint-resistido-banda.gif](assets/technique/sprint-resistido-banda.gif) |
-| 847 | Step-up con poleas bajas | [step-up-con-poleas-bajas.gif](assets/technique/step-up-con-poleas-bajas.gif) |
-| 848 | Step-up en máquina asistida | [step-up-en-maquina-asistida.gif](assets/technique/step-up-en-maquina-asistida.gif) |
-| 849 | Subida al banco con barra | [step-up-barra.gif](assets/technique/step-up-barra.gif) |
-| 850 | Subida al banco con elevación de rodilla y curl de bíceps | [subida-al-banco-con-elevacion-de-rodilla-y-curl-de-biceps.gif](assets/technique/subida-al-banco-con-elevacion-de-rodilla-y-curl-de-biceps.gif) |
-| 851 | Subida al banco con giro de codo hacia rodilla contraria | [subida-al-banco-con-giro-de-codo-hacia-rodilla-contraria.gif](assets/technique/subida-al-banco-con-giro-de-codo-hacia-rodilla-contraria.gif) |
-| 852 | Subida al banco con peso corporal (step-up) | [step-up.gif](assets/technique/step-up.gif) |
-| 853 | Subida al cajón con banda elástica | [subida-al-cajon-con-banda-elastica.gif](assets/technique/subida-al-cajon-con-banda-elastica.gif) |
-| 854 | Subida al cajón con poleas bajas | [subida-al-cajon-con-poleas-bajas.gif](assets/technique/subida-al-cajon-con-poleas-bajas.gif) |
-| 855 | Subida al step con elevación de rodilla | [subida-al-step-con-elevacion-de-rodilla.gif](assets/technique/subida-al-step-con-elevacion-de-rodilla.gif) |
-| 856 | Superman en el suelo | [superman-suelo.gif](assets/technique/superman-suelo.gif) |
-| 857 | Superman tumbado boca abajo con elevación simultánea de brazos y piernas | [superman-tumbado-boca-abajo-con-elevacion-simultanea-de-brazos-y-piernas.gif](assets/technique/superman-tumbado-boca-abajo-con-elevacion-simultanea-de-brazos-y-piernas.gif) |
-| 858 | Tijeras horizontales de brazos | [tijeras-horizontales-de-brazos.gif](assets/technique/tijeras-horizontales-de-brazos.gif) |
-| 859 | Tijeras sentado | [tijeras-sentado.gif](assets/technique/tijeras-sentado.gif) |
-| 860 | Tirón de trineo con cuerda | [sled-pull.gif](assets/technique/sled-pull.gif) |
-| 861 | Toques laterales de talón | [toques-laterales-talon.gif](assets/technique/toques-laterales-talon.gif) |
-| 862 | V-up con fitball | [v-up-con-fitball.gif](assets/technique/v-up-con-fitball.gif) |
-| 863 | Wall ball | [wall-ball.gif](assets/technique/wall-ball.gif) |
-| 864 | Zancada alterna con salto | [zancada-alterna-salto.gif](assets/technique/zancada-alterna-salto.gif) |
-| 865 | Zancada alterna con salto y mancuernas | [zancada-alterna-con-salto-y-mancuernas.gif](assets/technique/zancada-alterna-con-salto-y-mancuernas.gif) |
-| 866 | Zancada caminando con elevación de rodilla | [zancada-caminando-con-elevacion-de-rodilla.gif](assets/technique/zancada-caminando-con-elevacion-de-rodilla.gif) |
-| 867 | Zancada cruzada con barra | [zancada-cruzada-con-barra.gif](assets/technique/zancada-cruzada-con-barra.gif) |
-| 868 | Zancada cruzada con peso corporal | [zancada-cruzada-peso-corporal.gif](assets/technique/zancada-cruzada-peso-corporal.gif) |
-| 869 | Zancada estática con bandas elásticas en posición frontal | [zancada-estatica-con-bandas-elasticas-en-posicion-frontal.gif](assets/technique/zancada-estatica-con-bandas-elasticas-en-posicion-frontal.gif) |
-| 870 | Zancada estática con Gymstick tras nuca | [zancada-estatica-con-gymstick-tras-nuca.gif](assets/technique/zancada-estatica-con-gymstick-tras-nuca.gif) |
-| 871 | Zancada estática con peso corporal | [zancada-estatica-peso-corporal.gif](assets/technique/zancada-estatica-peso-corporal.gif) |
-| 872 | Zancada estática en máquina Smith | [zancada-estatica-en-maquina-smith.gif](assets/technique/zancada-estatica-en-maquina-smith.gif) |
-| 873 | Zancada hacia atrás con barra | [zancada-atras-barra.gif](assets/technique/zancada-atras-barra.gif) |
-| 874 | Zancada hacia atrás con peso corporal | [zancada-atras-peso-corporal.gif](assets/technique/zancada-atras-peso-corporal.gif) |
-| 875 | Zancada hacia delante con peso corporal | [zancada-adelante-peso-corporal.gif](assets/technique/zancada-adelante-peso-corporal.gif) |
-| 876 | Zancada hacia delante con peso corporal y apoyo de rodilla | [zancada-hacia-delante-con-peso-corporal-y-apoyo-de-rodilla.gif](assets/technique/zancada-hacia-delante-con-peso-corporal-y-apoyo-de-rodilla.gif) |
-| 877 | Zancada inversa con elevación de rodilla | [zancada-inversa-rodilla.gif](assets/technique/zancada-inversa-rodilla.gif) |
-| 878 | Zancada inversa sobre BOSU con elevación de rodilla | [zancada-inversa-sobre-bosu-con-elevacion-de-rodilla.gif](assets/technique/zancada-inversa-sobre-bosu-con-elevacion-de-rodilla.gif) |
-| 879 | Zancada lateral con barra | [zancada-lateral-barra.gif](assets/technique/zancada-lateral-barra.gif) |
-| 880 | Zancada lateral con peso corporal | [zancada-lateral-peso-corporal.gif](assets/technique/zancada-lateral-peso-corporal.gif) |
-| 881 | Zancadas caminando con barra | [zancada-caminando-barra.gif](assets/technique/zancada-caminando-barra.gif) |
-| 882 | Zancadas caminando con mancuernas | [zancada-caminando-mancuernas.gif](assets/technique/zancada-caminando-mancuernas.gif) |
-| 883 | Zancadas hacia atrás con mancuernas | [zancada-atras-mancuernas.gif](assets/technique/zancada-atras-mancuernas.gif) |
-| 884 | Zancadas hacia delante con mancuernas | [zancada-adelante-mancuernas.gif](assets/technique/zancada-adelante-mancuernas.gif) |
+| 846 | SkiErg | [cardio-skierg.gif](assets/technique/cardio-skierg.gif) |
+| 847 | Sprint resistido con banda y compañero | [sprint-resistido-banda.gif](assets/technique/sprint-resistido-banda.gif) |
+| 848 | Step-up con poleas bajas | [step-up-con-poleas-bajas.gif](assets/technique/step-up-con-poleas-bajas.gif) |
+| 849 | Step-up en máquina asistida | [step-up-en-maquina-asistida.gif](assets/technique/step-up-en-maquina-asistida.gif) |
+| 850 | Subida al banco con barra | [step-up-barra.gif](assets/technique/step-up-barra.gif) |
+| 851 | Subida al banco con elevación de rodilla y curl de bíceps | [subida-al-banco-con-elevacion-de-rodilla-y-curl-de-biceps.gif](assets/technique/subida-al-banco-con-elevacion-de-rodilla-y-curl-de-biceps.gif) |
+| 852 | Subida al banco con giro de codo hacia rodilla contraria | [subida-al-banco-con-giro-de-codo-hacia-rodilla-contraria.gif](assets/technique/subida-al-banco-con-giro-de-codo-hacia-rodilla-contraria.gif) |
+| 853 | Subida al banco con peso corporal (step-up) | [step-up.gif](assets/technique/step-up.gif) |
+| 854 | Subida al cajón con banda elástica | [subida-al-cajon-con-banda-elastica.gif](assets/technique/subida-al-cajon-con-banda-elastica.gif) |
+| 855 | Subida al cajón con poleas bajas | [subida-al-cajon-con-poleas-bajas.gif](assets/technique/subida-al-cajon-con-poleas-bajas.gif) |
+| 856 | Subida al step con elevación de rodilla | [subida-al-step-con-elevacion-de-rodilla.gif](assets/technique/subida-al-step-con-elevacion-de-rodilla.gif) |
+| 857 | Superman en el suelo | [superman-suelo.gif](assets/technique/superman-suelo.gif) |
+| 858 | Superman tumbado boca abajo con elevación simultánea de brazos y piernas | [superman-tumbado-boca-abajo-con-elevacion-simultanea-de-brazos-y-piernas.gif](assets/technique/superman-tumbado-boca-abajo-con-elevacion-simultanea-de-brazos-y-piernas.gif) |
+| 859 | Tijeras horizontales de brazos | [tijeras-horizontales-de-brazos.gif](assets/technique/tijeras-horizontales-de-brazos.gif) |
+| 860 | Tijeras sentado | [tijeras-sentado.gif](assets/technique/tijeras-sentado.gif) |
+| 861 | Tirón de trineo con cuerda | [sled-pull.gif](assets/technique/sled-pull.gif) |
+| 862 | Toques laterales de talón | [toques-laterales-talon.gif](assets/technique/toques-laterales-talon.gif) |
+| 863 | V-up con fitball | [v-up-con-fitball.gif](assets/technique/v-up-con-fitball.gif) |
+| 864 | Wall ball | [wall-ball.gif](assets/technique/wall-ball.gif) |
+| 865 | Zancada alterna con salto | [zancada-alterna-salto.gif](assets/technique/zancada-alterna-salto.gif) |
+| 866 | Zancada alterna con salto y mancuernas | [zancada-alterna-con-salto-y-mancuernas.gif](assets/technique/zancada-alterna-con-salto-y-mancuernas.gif) |
+| 867 | Zancada caminando con elevación de rodilla | [zancada-caminando-con-elevacion-de-rodilla.gif](assets/technique/zancada-caminando-con-elevacion-de-rodilla.gif) |
+| 868 | Zancada cruzada con barra | [zancada-cruzada-con-barra.gif](assets/technique/zancada-cruzada-con-barra.gif) |
+| 869 | Zancada cruzada con peso corporal | [zancada-cruzada-peso-corporal.gif](assets/technique/zancada-cruzada-peso-corporal.gif) |
+| 870 | Zancada estática con bandas elásticas en posición frontal | [zancada-estatica-con-bandas-elasticas-en-posicion-frontal.gif](assets/technique/zancada-estatica-con-bandas-elasticas-en-posicion-frontal.gif) |
+| 871 | Zancada estática con Gymstick tras nuca | [zancada-estatica-con-gymstick-tras-nuca.gif](assets/technique/zancada-estatica-con-gymstick-tras-nuca.gif) |
+| 872 | Zancada estática con peso corporal | [zancada-estatica-peso-corporal.gif](assets/technique/zancada-estatica-peso-corporal.gif) |
+| 873 | Zancada estática en máquina Smith | [zancada-estatica-en-maquina-smith.gif](assets/technique/zancada-estatica-en-maquina-smith.gif) |
+| 874 | Zancada hacia atrás con barra | [zancada-atras-barra.gif](assets/technique/zancada-atras-barra.gif) |
+| 875 | Zancada hacia atrás con peso corporal | [zancada-atras-peso-corporal.gif](assets/technique/zancada-atras-peso-corporal.gif) |
+| 876 | Zancada hacia delante con peso corporal | [zancada-adelante-peso-corporal.gif](assets/technique/zancada-adelante-peso-corporal.gif) |
+| 877 | Zancada hacia delante con peso corporal y apoyo de rodilla | [zancada-hacia-delante-con-peso-corporal-y-apoyo-de-rodilla.gif](assets/technique/zancada-hacia-delante-con-peso-corporal-y-apoyo-de-rodilla.gif) |
+| 878 | Zancada inversa con elevación de rodilla | [zancada-inversa-rodilla.gif](assets/technique/zancada-inversa-rodilla.gif) |
+| 879 | Zancada inversa sobre BOSU con elevación de rodilla | [zancada-inversa-sobre-bosu-con-elevacion-de-rodilla.gif](assets/technique/zancada-inversa-sobre-bosu-con-elevacion-de-rodilla.gif) |
+| 880 | Zancada lateral con barra | [zancada-lateral-barra.gif](assets/technique/zancada-lateral-barra.gif) |
+| 881 | Zancada lateral con peso corporal | [zancada-lateral-peso-corporal.gif](assets/technique/zancada-lateral-peso-corporal.gif) |
+| 882 | Zancadas caminando con barra | [zancada-caminando-barra.gif](assets/technique/zancada-caminando-barra.gif) |
+| 883 | Zancadas caminando con mancuernas | [zancada-caminando-mancuernas.gif](assets/technique/zancada-caminando-mancuernas.gif) |
+| 884 | Zancadas hacia atrás con mancuernas | [zancada-atras-mancuernas.gif](assets/technique/zancada-atras-mancuernas.gif) |
+| 885 | Zancadas hacia delante con mancuernas | [zancada-adelante-mancuernas.gif](assets/technique/zancada-adelante-mancuernas.gif) |
 
 ## Créditos históricos de los GIFs de trineo sustituidos
 
@@ -909,8 +910,6 @@ The appearance of U.S. Department of War (DoW) visual information does not imply
 - Remo. [Vídeo de Antoni Shkraba](https://www.pexels.com/video/man-working-out-4921656/), recortado y convertido a GIF. [Licencia o condiciones de Pexels](https://www.pexels.com/license/).
 - Sentadilla goblet. [Vídeo de Taco Fleur](https://commons.wikimedia.org/wiki/File:Kettlebell_Goblet_Squat.webm), recortado y convertido a GIF. [Licencia o condiciones de CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
 
-## Fichas con GIF pendiente
-
-- SkiErg
+- SkiErg. Demostración de @LizMayFit, recortada y convertida a GIF a partir de la grabación facilitada.
 
 [Registro de pendientes y variantes revisadas](GIFS-PENDIENTES.md).
