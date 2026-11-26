@@ -81,9 +81,10 @@ export function mountBuhardillaStations({root, onExit, onSound, onActivity, onCo
     back.focus();
   }
 
-  function tick(now = performance.now()) {
+  function tick(now = Date.now()) {
     if (!state || paused || state.phase === 'finished') return;
-    let delta = now - clock;
+    let delta = Math.max(0, now - clock);
+    const timely = delta <= 1250;
     clock = now;
     const previous = Math.ceil(state.milliseconds / 1000);
     let changed = false;
@@ -98,14 +99,14 @@ export function mountBuhardillaStations({root, onExit, onSound, onActivity, onCo
       if (state.phase !== 'prepare') elapsed += delta;
     }
     const seconds = Math.ceil(state.milliseconds / 1000);
-    if (changed || (seconds < previous && seconds <= 3)) onSound(changed);
+    if (timely && (changed || (seconds < previous && seconds <= 3))) onSound(changed);
     if (changed) render();
     else updateClock();
     if (state.phase === 'finished') finishRun();
   }
 
   function startClock() {
-    clock = performance.now();
+    clock = Date.now();
     stopClock();
     interval = setInterval(tick, 100);
   }
@@ -175,7 +176,7 @@ export function mountBuhardillaStations({root, onExit, onSound, onActivity, onCo
     tick();
     if (phase !== state.phase || rotation !== state.rotation) return;
     state = nextPhase(state, config);
-    clock = performance.now();
+    clock = Date.now();
     onSound(true);
     render();
     if (state.phase === 'finished') finishRun();

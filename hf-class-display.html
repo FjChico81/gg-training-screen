@@ -7,6 +7,7 @@
 <title>HF · Abrir la app principal</title>
 <meta http-equiv="Content-Security-Policy" content="script-src 'none'">
 <meta http-equiv="refresh" content="0; url=./">
+<script src="src/countdown-audio.js?v=1"></script>
 <script id="hfAccountBoot">window.__HF_V2_ENTRY_GATE=true;</script>
 <style>
 :root{--bg:#fff;--panel:#f6f6f6;--panel2:#fff;--ink:#111;--muted:#525252;--hot:#ff4d20;--hot2:#9b3d00;--line:#d4d4d4;--work:#ff4d20;--rest:#ffb000}
@@ -535,7 +536,7 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
     state.step=seg.end+1;
     if(state.step>=config.guided.length){finish(over);}
     else{state.phase='work';phaseStart(over);syncSpecialForStep(over);}
-    notify();render();
+    if(state.phase!=='finished')notify(over<=1250);render();
   }
   function phaseStart(over=0){
     const now=Date.now();
@@ -545,11 +546,12 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
     state.remainingMs=seconds>0?seconds*1000:null;
     state.deadline=seconds>0?now+seconds*1000-over:null;
   }
-  function notify(){
-    if(!sound)return;
+  function notify(timely=true){
+    if(!sound||!timely)return;
     try{
       const Audio=window.AudioContext||window.webkitAudioContext;
       if(!Audio)return;
+      if(!window.__hfAudioCtx)globalThis.countdownAudio?.prepare();
       const ctx=window.__hfAudioCtx||(window.__hfAudioCtx=new Audio());
       if(ctx.state==='suspended')ctx.resume().catch(()=>{});
       const osc=ctx.createOscillator(),gain=ctx.createGain();
@@ -559,6 +561,7 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
       gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.18);
       osc.connect(gain);gain.connect(ctx.destination);
       osc.start();osc.stop(ctx.currentTime+.19);
+      globalThis.countdownAudio?.prioritize(osc);
     }catch(e){}
   }
   function saveCollectiveOutcome(){
@@ -612,7 +615,7 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
     historyOutcome=outcome;
     classFinishedRunId=checkpointRunId;
     classFeedbackDone=false;classFeedbackValue=null;
-    notify();
+    notify(over<=1250);
     saveCollectiveOutcome();
   }
   function nextPhase(over=0){
@@ -643,7 +646,7 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
     }else if(state.phase==='change'){
       state.turn++;state.phase='work';phaseStart(over);
     }
-    notify();render();
+    if(state.phase!=='finished')notify(over<=1250);render();
   }
   function makeCheckpoint(now=Date.now()){
     const remaining=state.deadline===null?state.remainingMs:
@@ -695,7 +698,7 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
     }
     checkpointRunId=null;
   }
-  function startSession(afterPreparation=false){
+  function startSession(afterPreparation=false,over=0){
     if(state.phase==='finished'||importBlocked||importReviewPending||recoveryPending)return;
     if(state.phase==='ready'&&!afterPreparation){
       if(classPrestartMs<=0)classPrestartMs=10000;
@@ -706,10 +709,10 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
       classPrestartMs=0;classPrestartRunning=false;classPrestartDeadline=null;syncClassPrestart();
       state.phase='work';
       state.sessionElapsedMs=0;
-      state.sessionAnchor=Date.now();
+      state.sessionAnchor=Date.now()-over;
       state.paused=false;
-      phaseStart();
-      syncSpecialForStep();
+      phaseStart(over);
+      syncSpecialForStep(over);
     }else if(state.paused){
       const now=Date.now();
       state.sessionAnchor=now;
@@ -720,7 +723,7 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
     }
     if(!checkpointRunId&&typeof crypto!=='undefined'&&crypto.randomUUID)
       checkpointRunId=crypto.randomUUID();
-    notify();render();
+    notify(over<=1250);render();
     persistCheckpoint(true);
   }
   function pauseSession(){
@@ -751,16 +754,16 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
     el('retryCollectiveArchive').hidden=true;
     render();return true;
   }
+  let classCueDeadline=null,classCueSeconds=null;
   function tick(){
     if(state.phase==='ready'&&classPrestartMs>0){
-      if(classPrestartRunning&&document.visibilityState!=='hidden'){
-        const previous=Math.ceil(classPrestartMs/1000);
-        classPrestartMs=Math.max(0,classPrestartDeadline-Date.now());
-        const current=Math.ceil(classPrestartMs/1000);
-        if(current!==previous&&current<=3&&current>0)notify();
-        if(classPrestartMs===0){classPrestartRunning=false;classPrestartDeadline=null;startSession(true);}
-      }
-      syncClassPrestart();return;
+      if(!classPrestartRunning)return;
+      const previous=Math.ceil(classPrestartMs/1000),now=Date.now();
+      classPrestartMs=Math.max(0,classPrestartDeadline-now);
+      const current=Math.ceil(classPrestartMs/1000);
+      if(current!==previous&&current<=3&&current>0)notify();
+      if(classPrestartMs>0){syncClassPrestart();return;}
+      startSession(true,Math.max(0,now-classPrestartDeadline));
     }
     let count=0,now=Date.now();
     while(!state.paused&&state.phase!=='ready'&&state.phase!=='finished'&&count++<200){
@@ -777,6 +780,15 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
       now=Date.now();
     }
     if(count>=200){pauseSession();}
+    const cueSegment=activeSpecial();
+    const segmentDeadline=cueSegment&&cueSegment.type!=='emom'&&cueSegment.limitSeconds>0
+      ?state.specialAnchor+cueSegment.limitSeconds*1000-state.specialElapsedMs:Infinity;
+    const cueDeadline=Math.min(state.deadline??Infinity,segmentDeadline);
+    const cueSeconds=Math.ceil((cueDeadline-now)/1000);
+    if(!state.paused&&state.phase!=='ready'&&state.phase!=='finished'&&cueSeconds>0&&cueSeconds<=3&&
+       (cueDeadline!==classCueDeadline||cueSeconds!==classCueSeconds))notify();
+    classCueDeadline=cueDeadline;classCueSeconds=cueSeconds;
+
     const main=el('mainClock');
     if(main){
       const timed=durationSeconds()>0;
@@ -1363,17 +1375,13 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
     }
   };
   if(document.addEventListener)document.addEventListener('visibilitychange',()=>{
-    if(document.visibilityState==='hidden'){
-      if(classPrestartMs>0&&classPrestartRunning){
-        classPrestartMs=Math.max(0,classPrestartDeadline-Date.now());
-        classPrestartRunning=false;classPrestartDeadline=null;syncClassPrestart();
-      }
-      persistCheckpoint(true);
-    }
+    tick();
+    if(document.visibilityState==='hidden')persistCheckpoint(true);
   });
-  if(window.addEventListener)window.addEventListener('pagehide',()=>{
-    classPrestartRunning=false;classPrestartDeadline=null;persistCheckpoint(true);
-  });
+  if(window.addEventListener){
+    window.addEventListener('pageshow',tick);
+    window.addEventListener('pagehide',()=>{tick();persistCheckpoint(true);});
+  }
   updateDeviceUI();
   loadForms();render();setInterval(tick,160);
   void bootstrapRecovery();

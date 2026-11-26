@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.50</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.51</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -343,6 +343,13 @@ html[data-edition="hf"]{--menu:#fff;--panel:#f6f6f6;--history:#f4f4f4;--editor:#
 .history-nav #garminImport{min-width:0;background:#56a9f4;color:#24282d}
 .history-nav #historyBack{margin-inline-start:auto}
 #brandTitle{font-size:clamp(42px,8vw,68px);line-height:1}
+.tv-brand-name{display:none}
+body.tv-mode.guided-active #brandTitle .hf-brand-symbol,
+body.tv-mode.guided-active :is(#brandSubtitle,#updateBanner){display:none}
+body.tv-mode.guided-active #brandTitle .tv-brand-name{
+ display:block;color:#111;font-size:clamp(16px,4.8vmin,34px);font-weight:900;line-height:1;white-space:nowrap;
+}
+
 body:not(.tv-mode.guided-active)>header{
  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;
 }
@@ -1255,6 +1262,126 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
 #accountWall #accountMessage{padding:8px 0;color:#444;min-height:25px}
 #accountWall #accountMessage[data-error="true"]{color:#b81e1e;font-weight:700}
 #accountWall .account-foot{font-size:12px;color:#555}
+/* Keep the workout and controls inside the visible viewport on phones. */
+@media (max-width:600px) and (orientation:portrait), (orientation:landscape) and (max-height:540px){
+ :root:has(body.tv-mode.guided-active){overflow:hidden}
+ body.tv-mode.guided-active{
+  --tv-edge:6px;
+  --tv-header:42px;
+  overflow:hidden;
+ }
+ body.tv-mode.guided-active>header{
+  position:fixed;top:env(safe-area-inset-top,0px);z-index:21;
+  left:max(var(--tv-edge),env(safe-area-inset-left,0px));
+  right:max(var(--tv-edge),env(safe-area-inset-right,0px));
+  height:var(--tv-header);margin:0!important;flex-wrap:nowrap;
+ }
+ body.tv-mode.guided-active>header .header-settings{align-self:center}
+ body.tv-mode.guided-active>header :is(#settingsToggle,.fullscreen-toggle){
+  width:36px;height:36px;min-height:36px;
+ }
+ body.tv-mode.guided-active #settingsPanel{
+  max-height:calc(100dvh - var(--tv-header) - 12px);overflow:auto;
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided){
+  position:fixed;z-index:10;inset:
+   calc(var(--tv-header) + env(safe-area-inset-top,0px))
+   max(var(--tv-edge),env(safe-area-inset-right,0px))
+   max(var(--tv-edge),env(safe-area-inset-bottom,0px))
+   max(var(--tv-edge),env(safe-area-inset-left,0px));
+  height:auto;margin:0 auto;overflow:hidden;
+  grid-template-columns:minmax(0,3fr) minmax(0,2fr);
+  grid-template-rows:auto minmax(0,1fr) auto;
+  gap:6px;
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) :is(.tv-timing,#restCard){grid-area:1/1}
+ html:root body.tv-mode.guided-active #guided:is(#guided) .heart-rate-display{grid-area:1/2}
+ html:root body.tv-mode.guided-active #guided:is(#guided) .tv-current{grid-area:2/1}
+ html:root body.tv-mode.guided-active #guided:is(#guided) .tv-upcoming{grid-area:2/2}
+ html:root body.tv-mode.guided-active #guided:is(#guided) .guided-controls{
+  grid-area:3/1/4/-1;position:static;gap:4px;
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) .guided-controls button{
+  min-height:36px;padding:4px 6px;font-size:clamp(11px,2.8vh,15px);
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) :is(.tv-card,#restCard){
+  min-height:0;padding:6px 8px;border-radius:10px;
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) :is(.tv-current,.tv-upcoming,.tv-current-copy){
+  min-height:0;max-height:none;overflow:visible;
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) .tv-current{
+  align-content:start;
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) .tv-current:is(.has-gif,.has-vector-illustration){
+  grid-template-rows:minmax(0,1fr) auto;
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) :is(#tvExerciseGif,#tvExerciseVideo,#vectorCurrentIllustration){
+  max-width:100%;max-height:100%;min-height:0;object-fit:contain;
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) :is(#restCountdown,#stepTimer,.tv-timing:not(.is-timed) #clock){
+  font-size:clamp(24px,9.2vh,52px);line-height:1;margin:0;
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) .heart-rate-value{
+  font-size:clamp(30px,10.5vh,56px);line-height:1;
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) :is(.tv-timing,#restCard,.heart-rate-display){gap:3px}
+ html:root body.tv-mode.guided-active #guided:is(#guided) #guidedElapsed{
+  margin:0;display:flex;flex-flow:row wrap;gap:3px 8px;justify-content:center;
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) :is(#restCard,.tv-timing.is-timed) :is(#clock,#roundClock){
+  font-size:clamp(14px,4vh,25px);
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) :is(.tv-caption,.step-timer-label,#position,#restLabel,#hrLabel,#hrZone,#hrLimitStatus,.guided-metric-label){
+  font-size:clamp(10px,2.8vh,14px);line-height:1.15;
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) .hr-zone-bar{margin:2px auto 0}
+ html:root body.tv-mode.guided-active #guided:is(#guided) .hr-zone-segment{min-height:17px}
+ html:root body.tv-mode.guided-active #guided:is(#guided) :is(#current.focus,#tvNextName){
+  font-size:clamp(15px,4.1vh,27px);line-height:1.12;margin:3px 0;
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) :is(#targetSummary,#tvNextPosition,#tvNextTarget,#tvNextTiming,.guided-instructions){
+  font-size:clamp(11px,3.05vh,16px);line-height:1.18;margin:3px 0;
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) .guided-instructions{padding:4px 6px}
+ html:root body.tv-mode.guided-active #guided:is(#guided) :is(#skipRest,.technique-button){
+  min-height:30px;padding:3px 7px;margin:0;font-size:11px;
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) #sessionExtras{
+  position:absolute;z-index:5;grid-area:1/1/3/-1;inset:0;overflow:auto;
+  padding:8px;background:var(--bg);border:1px solid var(--line);border-radius:10px;
+ }
+}
+
+@media (max-width:600px) and (orientation:portrait), (orientation:landscape) and (max-height:540px){
+ html[data-edition="hf"] body.tv-mode.guided-active #guided:is(#guided) #hfTvProgress{
+  grid-area:1/2;align-items:center;gap:3px;padding-block:4px;
+ }
+ html[data-edition="hf"] body.tv-mode.guided-active #guided:is(#guided) #hfTvProgress :is(#hfTvProgressValue,#hfTvProgressDetail,.amrap-status){
+  font-size:11px;line-height:1.1;margin:0;
+ }
+ html[data-edition="hf"] body.tv-mode.guided-active #guided:is(#guided) #hfTvProgressBar{
+  width:100%;height:5px;margin:0;
+ }
+}
+@media (orientation:landscape) and (max-height:355px){
+ body.tv-mode.guided-active{--tv-header:36px}
+ html:root body.tv-mode.guided-active #guided:is(#guided){gap:4px}
+ html:root body.tv-mode.guided-active #guided:is(#guided) :is(.tv-card,#restCard){padding-block:4px}
+ html:root body.tv-mode.guided-active #guided:is(#guided) :is(#restCountdown,#stepTimer,.tv-timing:not(.is-timed) #clock){font-size:24px}
+ html:root body.tv-mode.guided-active #guided:is(#guided) .heart-rate-value{font-size:27px}
+ html:root body.tv-mode.guided-active #guided:is(#guided) :is(#skipRest,.technique-button){min-height:24px}
+ html:root body.tv-mode.guided-active #guided:is(#guided) .guided-controls button{min-height:32px}
+}
+@media (max-width:600px) and (orientation:portrait){
+ html:root body.tv-mode.guided-active #guided:is(#guided){grid-template-columns:repeat(2,minmax(0,1fr))}
+ html:root body.tv-mode.guided-active #guided:is(#guided) .tv-current:is(.has-gif,.has-vector-illustration){
+  display:flex;flex-direction:column;align-items:flex-start;
+ }
+ html:root body.tv-mode.guided-active #guided:is(#guided) :is(#tvExerciseGif,#tvExerciseVideo,#vectorCurrentIllustration){
+  height:auto;max-height:20dvh;
+ }
+}
 </style></head><body>
 <div id="hrConnectedNotice" role="status" aria-atomic="true"></div>
 <div id="accountWall" data-phase="loading" role="region" aria-label="Acceso a la aplicación">
@@ -1285,7 +1412,7 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
   <p class="account-foot">GG FAMILY y HF TRAINING utilizan cuentas y bases de datos independientes. No se importan tus rutinas antiguas.</p>
  </div>
 </div>
-<header class="row" style="margin-bottom:18px"><div class="brand-heading"><h1 id="brandTitle" class="gold"><span class="hf-brand-symbol" role="img" aria-label="HF"></span></h1><span id="brandSubtitle" class="muted small">HYBRID Funcional Club<span class="brand-motto"> “GO ALL OUT”</span></span></div><div class="header-settings">
+<header class="row" style="margin-bottom:18px"><div class="brand-heading"><h1 id="brandTitle" class="gold"><span class="hf-brand-symbol" role="img" aria-label="HF"></span><span class="tv-brand-name">HYBRID FUNCIONAL CLUB</span></h1><span id="brandSubtitle" class="muted small">HYBRID Funcional Club<span class="brand-motto"> “GO ALL OUT”</span></span></div><div class="header-settings">
 <button id="fullscreenToggle" class="settings-gear fullscreen-toggle" type="button" aria-label="Activar pantalla completa" title="Activar pantalla completa" aria-pressed="false">
  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
   <path class="fullscreen-enter" d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/>
@@ -1571,6 +1698,7 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
  </div>
 </div>
 <script src="src/exercise-library.js?v=2.9.64"></script>
+<script src="src/countdown-audio.js?v=1"></script>
 <script src="src/vector-routines.js"></script>
 <script src="src/vector-illustrations.js?v=2.9.67"></script>
 <script>
@@ -1935,10 +2063,6 @@ function setupHF(){
  style.rel='stylesheet';
  style.href='assets/hf-association.css?v='+HF_APP_VERSION;
  document.head.append(style);
- const brandSymbol=node('span','','hf-brand-symbol');
- brandSymbol.setAttribute('role','img');
- brandSymbol.setAttribute('aria-label','HF');
- $('brandTitle').replaceChildren(brandSymbol);
  $('library').querySelector('.library-title').textContent='Clases y entrenamientos';
  const intro=node('p','Prepara la sesión y preséntala desde un móvil conectado a TV o directamente en un iPad o tablet. No hace falta emparejar dispositivos.','hf-class-intro');
  const heading=$('library').querySelector('.library-title');
@@ -2083,7 +2207,7 @@ function setupLocalProfiles(){
  };
 }
 const example={id:'demo',name:'HYBRID POWER · Ejemplo',blocks:[{name:'Calentamiento',items:['5 min bicicleta','Movilidad dinámica']},{name:'Fuerza',items:['3 × 10 sentadillas','3 × 12 press']},{name:'Híbrido',items:['15 burpees','20 wall balls']},{name:'Cardio',items:['400 m carrera','20 zancadas']},{name:'Vuelta a la calma',items:['3 min bicicleta','Movilidad suave']}]};
-let actualResults={};let ftElapsed=0,ftResults=[];let amrapElapsed=0,amrapRounds=0,amrapResults=[],amrapLastBlock=null,amrapCurrent=null;let workouts=[],active=null,editing=null,step=0,paused=false,elapsed=0,last=0,view='library',session=false,stepElapsed=0,sessionWorkout=null,clockAnchor=0,seriesLog={},restRemaining=0,restRunning=false,transitionTo=null,draftSets={},editingSet=-1,soundEnabled=true,audioCtx=null,lastCountdownSecond=null;
+let actualResults={};let ftElapsed=0,ftResults=[];let amrapElapsed=0,amrapRounds=0,amrapResults=[],amrapLastBlock=null,amrapCurrent=null;let workouts=[],active=null,editing=null,step=0,paused=false,elapsed=0,last=0,view='library',session=false,stepElapsed=0,sessionWorkout=null,clockAnchor=0,seriesLog={},restRemaining=0,restRunning=false,transitionTo=null,draftSets={},editingSet=-1,soundEnabled=true,audioCtx=null;
 let exerciseRestSeconds=90;try{const value=appStorage.getItem('gg-between-exercise-rest-v1');if(value!==null){const n=Number(value);if(Number.isInteger(n)&&n>=0&&n<=1800)exerciseRestSeconds=n}}catch(e){}
 let ggCloud, ggLibraryRaw;
 function load(){
@@ -3359,7 +3483,7 @@ function renderTvExercises(exercises=steps(),amrap=getAmrapAt(step),ft=getForTim
 }
 function placeGuidedElapsed(tv,resting){
  const elapsedDisplay=$('guidedElapsed');
- const parent=$(tv?(!isHF&&resting?'restCard':'tvTiming'):'guidedHeartPanel');
+ const parent=$(tv?(resting?'restCard':'tvTiming'):'guidedHeartPanel');
  if(elapsedDisplay.parentElement!==parent)parent.append(elapsedDisplay);
 }
 function renderRestUI(exercise){
@@ -3573,6 +3697,8 @@ $('prev').onclick=()=>{
  saveSession();renderGuided();
 };
 $('pause').onclick=()=>{
+ tick();
+ if(!session)return;
  if(prestartRemaining>0){
   prestartRunning=!prestartRunning;clockAnchor=Date.now();saveSession();syncPrestartOverlay();return;
  }
@@ -3593,11 +3719,11 @@ let wakeLock=null,wakeWanted=true,wakePending=false;
 try{wakeWanted=appStorage.getItem('gg-wake-enabled')!=='false'}catch(e){}
 function updateWakeButton(){$('wakeToggle').textContent='☀ Mantener pantalla activa: '+(wakeWanted?'activado':'desactivado')}
 async function releaseWakeLock(){const old=wakeLock;wakeLock=null;if(old){try{await old.release()}catch(e){}}}
-async function syncWakeLock(){if(!wakeWanted||(!(session&&!paused)&&!coachStations?.running)||document.visibilityState!=='visible'){await releaseWakeLock();$('wakeStatus').textContent=wakeWanted?'Se activa durante la sesión en marcha':'Función desactivada';return}if(wakeLock||wakePending)return;if(!('wakeLock' in navigator)){ $('wakeStatus').textContent='Este navegador no admite mantener la pantalla activa';return}wakePending=true;try{const lock=await navigator.wakeLock.request('screen');wakeLock=lock;lock.addEventListener('release',()=>{if(wakeLock===lock){wakeLock=null;$('wakeStatus').textContent='Bloqueo de pantalla liberado'}});$('wakeStatus').textContent='Pantalla activa durante la sesión'}catch(e){$('wakeStatus').textContent='No disponible en este navegador: usa Safari o revisa Bloqueo automático'}finally{wakePending=false}}
+async function syncWakeLock(){if(!wakeWanted||(!(session&&(!paused||prestartRunning))&&!coachStations?.running)||document.visibilityState!=='visible'){await releaseWakeLock();$('wakeStatus').textContent=wakeWanted?'Se activa durante la sesión en marcha':'Función desactivada';return}if(wakeLock||wakePending)return;if(!('wakeLock' in navigator)){ $('wakeStatus').textContent='Este navegador no admite mantener la pantalla activa';return}wakePending=true;try{const lock=await navigator.wakeLock.request('screen');wakeLock=lock;lock.addEventListener('release',()=>{if(wakeLock===lock){wakeLock=null;$('wakeStatus').textContent='Bloqueo de pantalla liberado'}});$('wakeStatus').textContent='Pantalla activa durante la sesión'}catch(e){$('wakeStatus').textContent='No disponible en este navegador: usa Safari o revisa Bloqueo automático'}finally{wakePending=false}}
 $('wakeToggle').onclick=()=>{wakeWanted=!wakeWanted;try{appStorage.setItem('gg-wake-enabled',String(wakeWanted))}catch(e){}updateWakeButton();void syncWakeLock()};updateWakeButton();
 function audioStatus(message){$('audioStatus').textContent=message}
-async function initAudio(){try{const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(!AudioContextClass){audioStatus('Este navegador no admite Web Audio');return false}if(!audioCtx)audioCtx=new AudioContextClass();if(audioCtx.state!=='running')await audioCtx.resume();const ok=audioCtx.state==='running';audioStatus(ok?'Audio activado':'Audio bloqueado por el navegador');return ok}catch(e){audioStatus('Error al activar audio: '+e.message);return false}}
-function playTone(final=false){
+async function initAudio(){try{const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(!AudioContextClass){audioStatus('Este navegador no admite Web Audio');return false}if(!audioCtx){globalThis.countdownAudio?.prepare();audioCtx=new AudioContextClass();}if(audioCtx.state!=='running')await audioCtx.resume();const ok=audioCtx.state==='running';audioStatus(ok?'Audio activado':'Audio bloqueado por el navegador');return ok}catch(e){audioStatus('Error al activar audio: '+e.message);return false}}
+function playTone(final=false,prioritize=false){
  if(!audioCtx||audioCtx.state!=='running')return false;
  try{
   const oscillator=audioCtx.createOscillator(),gain=audioCtx.createGain(),now=audioCtx.currentTime;
@@ -3612,12 +3738,16 @@ function playTone(final=false){
   gain.connect(audioCtx.destination);
   oscillator.start(now);
   oscillator.stop(now+duration);
+  if(prioritize)globalThis.countdownAudio?.prioritize(oscillator);
   return true;
  }catch(e){audioStatus('Error de reproducción: '+e.message);return false}
 }
-function beep(final=false){if(!soundEnabled)return;if(audioCtx?.state==='running'){playTone(final)}else{audioStatus('Audio no activo: pulsa Probar sonido')}}
-function resetCountdownSignal(){lastCountdownSecond=null}
-function updateCountdownSignal(duration,before,after){if(!soundEnabled||document.visibilityState!=='visible')return;const old=Math.ceil(Math.max(0,duration-before)),current=Math.ceil(Math.max(0,duration-after));if(old===current)return;for(const sec of [3,2,1,0])if(old>sec&&current<=sec){beep(sec===0)}}
+function beep(final=false,prioritize=false){if(!soundEnabled)return;if(audioCtx?.state==='running'){playTone(final,prioritize)}else{audioStatus('Audio no activo: pulsa Probar sonido')}}
+function updateCountdownSignal(duration,before,after){
+ const previous=Math.ceil(Math.max(0,duration-before));
+ const current=Math.ceil(Math.max(0,duration-after));
+ if(current<previous&&current<=3)beep(current===0,true);
+}
 try{soundEnabled=appStorage.getItem('gg-sound-enabled')!=='false'}catch(e){}
 function updateSoundButton(){$('soundToggle').textContent=soundEnabled?'🔊 Avisos activados':'🔇 Avisos silenciados'}
 $('soundToggle').onclick=()=>{soundEnabled=!soundEnabled;try{appStorage.setItem('gg-sound-enabled',String(soundEnabled))}catch(e){}if(soundEnabled)initAudio();updateSoundButton()};
@@ -3686,34 +3816,97 @@ function renderStepCountdown(exercise){
  counter.textContent=duration?formatSeconds(remaining):'';
  counter.classList.toggle('countdown-ending',remaining>=1&&remaining<=3&&prestartRemaining<=0&&!isProgrammedRest(exercise));
 }
-function formatSeconds(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}function tick(){const now=Date.now(),delta=clockAnchor?Math.max(0,(now-clockAnchor)/1000):0;clockAnchor=now;if(session&&prestartRemaining>0){
-  if(prestartRunning&&document.visibilityState==='visible'){
-    const before=prestartRemaining;
-    prestartRemaining=Math.max(0,Math.round((prestartRemaining-delta)*1000)/1000);
-    updateCountdownSignal(10,10-before,10-prestartRemaining);
-    if(prestartRemaining===0&&!isHF)trainingStartedAt=new Date(now).toISOString();
-    if(Math.ceil(before)!==Math.ceil(prestartRemaining)||prestartRemaining===0){
-      syncPrestartOverlay();saveSession();
-    }
-    if(prestartRemaining===0){
-      prestartRunning=false;paused=false;clockAnchor=now;
-      syncPrestartOverlay();renderGuided();void syncWakeLock();
-    }
+function formatSeconds(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+
+function tick(){
+ const now=Date.now();
+ let remaining=clockAnchor?Math.max(0,(now-clockAnchor)/1000):0;
+ clockAnchor=now;
+ const liveCue=remaining<=1.25;
+ if(session&&prestartRemaining>0){
+  if(!prestartRunning)return;
+  const before=prestartRemaining;
+  prestartRemaining=Math.max(0,Math.round((before-remaining)*1000)/1000);
+  if(liveCue)updateCountdownSignal(10,10-before,10-prestartRemaining);
+  if(prestartRemaining>0){
+   if(Math.ceil(before)!==Math.ceil(prestartRemaining)){syncPrestartOverlay();saveSession()}
+   return;
   }
-  $('clock').textContent='00:00';
-  return;
+  remaining=Math.max(0,remaining-before);
+  if(!isHF)trainingStartedAt=new Date(now-remaining*1000).toISOString();
+  prestartRunning=false;paused=false;
+  syncPrestartOverlay();renderGuided();saveSession();void syncWakeLock();
  }
- if(session&&!paused){elapsed+=delta;
- const exercises=steps(),amrapInfo=getAmrapAt(step);
- if(!isHF){renderRoundClock(exercises,amrapInfo,delta);if(!coachGuided)creditHeartCoverage(now)}
- const ft=getForTimeAt(step);if(ft){const before=ftElapsed;ftElapsed+=delta;if(ft.limit){updateCountdownSignal(ft.limit,before,ftElapsed);if(ftElapsed>=ft.limit){ftElapsed=ft.limit;finishForTime(ft,false);$('clock').textContent=formatSeconds(Math.floor(elapsed));return}}if(view==='guided')$('ftStatus').textContent='FOR TIME · '+formatSeconds(Math.floor(ftElapsed))+(ft.limit?' / '+formatSeconds(ft.limit):'')}if(amrapInfo){const beforeAmrap=amrapElapsed;amrapElapsed+=delta;updateCountdownSignal(amrapInfo.limit,beforeAmrap,amrapElapsed);if(amrapElapsed>=amrapInfo.limit){finishAmrapBlock(amrapInfo);$('clock').textContent=formatSeconds(Math.floor(elapsed));return}if(view==='guided')updateAmrapDisplay()}const beforeStep=stepElapsed;stepElapsed+=delta;const timed=exercises[step];if(timed?.duration)updateCountdownSignal(timed.duration,beforeStep,stepElapsed);if(restRunning){const beforeRest=restRemaining;restRemaining=Math.max(0,restRemaining-delta);updateCountdownSignal(beforeRest,0,Math.min(delta,beforeRest));if(restRemaining===0){restRunning=false;if(transitionTo!==null){finishExerciseTransition();$('clock').textContent=formatSeconds(Math.floor(elapsed));return}saveSession();$('logSet').disabled=false;$('logSet').textContent='✓ Completar serie';$('status').textContent='Descanso terminado. Siguiente serie lista.'}}if(view==='guided'&&(currentStrength()||transitionTo!==null||isTvTimedRest(timed)))renderRestUI(timed);if(timed?.duration&&stepElapsed>=timed.duration)nextStep();else if(view==='guided'&&timed?.duration)renderStepCountdown(timed)}$('clock').textContent=formatSeconds(Math.floor(elapsed));}setInterval(tick,200);document.addEventListener('visibilitychange',()=>{
- refreshHeart();clockAnchor=Date.now();
- if(document.visibilityState!=='visible'&&prestartRemaining>0){prestartRunning=false;syncPrestartOverlay()}
- if(isHF||session)saveSession();
- void syncWakeLock()
-});window.addEventListener('pagehide',()=>{
- if(prestartRemaining>0)prestartRunning=false;
- if(isHF||session)saveSession();
+ // A suspended page can wake after several deadlines. Consume each phase
+ // only up to its deadline so the same elapsed time is counted exactly once.
+ if(session&&!paused&&!isHF&&!coachGuided)creditHeartCoverage(now);
+ let phases=0;
+ while(session&&!paused&&remaining>0&&phases<100){
+  phases++;
+  const exercises=steps(),timed=exercises[step];
+  if(!timed)break;
+  const amrap=getAmrapAt(step),ft=getForTimeAt(step);
+  const ftLeft=ft?.limit?Math.max(0,ft.limit-ftElapsed):Infinity;
+  const amrapLeft=amrap?Math.max(0,amrap.limit-amrapElapsed):Infinity;
+  const restLeft=restRunning?restRemaining:Infinity;
+  const stepLeft=!restRunning&&timed.duration?Math.max(0,timed.duration-stepElapsed):Infinity;
+  const nextDeadline=Math.min(ftLeft,amrapLeft,restLeft,stepLeft);
+  const delta=Math.min(remaining,nextDeadline);
+  remaining-=delta;elapsed+=delta;
+  if(!isHF)renderRoundClock(exercises,amrap,delta);
+  if(ft)ftElapsed+=delta;
+  if(amrap)amrapElapsed+=delta;
+  stepElapsed+=delta;
+  if(restRunning)restRemaining=Math.max(0,restRemaining-delta);
+  if(liveCue&&Number.isFinite(nextDeadline))updateCountdownSignal(nextDeadline,0,delta);
+
+  if(delta===ftLeft){
+   ftElapsed=ft.limit;finishForTime(ft,false);
+  }else if(delta===amrapLeft){
+   amrapElapsed=amrap.limit;finishAmrapBlock(amrap);
+  }else if(delta===restLeft){
+   restRunning=false;
+   if(transitionTo!==null)finishExerciseTransition();
+   else{
+    saveSession();$('logSet').disabled=false;$('logSet').textContent='✓ Completar serie';
+    $('status').textContent='Descanso terminado. Siguiente serie lista.';
+   }
+  }else if(delta===stepLeft){
+   const previousStep=step;
+   nextStep();
+   if(session&&step===previousStep&&stepElapsed>=timed.duration)break;
+  }else break;
+ }
+ if(phases===100&&session&&!paused&&remaining>0)clockAnchor=now-remaining*1000;
+
+ if(session&&!paused){
+  const timed=steps()[step],ft=getForTimeAt(step);
+  if(view==='guided'){
+   if(ft)$('ftStatus').textContent='FOR TIME · '+formatSeconds(Math.floor(ftElapsed))+(ft.limit?' / '+formatSeconds(ft.limit):'');
+   if(getAmrapAt(step))updateAmrapDisplay();
+   if(currentStrength()||transitionTo!==null||isTvTimedRest(timed))renderRestUI(timed);
+   if(timed?.duration)renderStepCountdown(timed);
+  }
+ }
+ $('clock').textContent=formatSeconds(Math.floor(elapsed));
+}
+setInterval(tick,200);
+function syncTrainingClock(){
+ tick();
+ refreshHeart();
+ if(session)saveSession();
+}
+document.addEventListener('visibilitychange',()=>{
+ syncTrainingClock();
+ if(document.visibilityState==='visible'&&soundEnabled&&session&&(!paused||prestartRunning)&&audioCtx&&audioCtx.state!=='running')void initAudio();
+ void syncWakeLock();
+});
+window.addEventListener('pageshow',()=>{
+ syncTrainingClock();
+ void syncWakeLock();
+});
+window.addEventListener('pagehide',()=>{
+ syncTrainingClock();
  void releaseWakeLock();
 });
 let hrDevice=null,hrCharacteristic=null,hrLastReading=0,hrValue=null;
@@ -3931,7 +4124,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.23', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.50';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.24', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.51';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
@@ -4637,13 +4830,13 @@ function setupBuhardillaCoach(){
   trigger.disabled=true;
   notice.classList.add('hidden');
   try{
-   const {mountBuhardillaStations}=await import('./src/buhardilla-stations.mjs?v=2');
+   const {mountBuhardillaStations}=await import('./src/buhardilla-stations.mjs?v=3');
    if(view!=='board'||session||findWorkout(active)!==workout)return;
    coachStations??=mountBuhardillaStations({
     root:$('coachStations'),
     onExit:()=>{show('board');window.__secureAccount?.schedule();trigger.focus()},
     onComplete:(workout,duration)=>saveClassRun(workout,'stations',duration),
-    onSound:beep,
+    onSound:final=>beep(final,true),
     onActivity:()=>void syncWakeLock(),
     formatTime:formatSeconds
    });
