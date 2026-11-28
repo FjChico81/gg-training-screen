@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.60</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.61</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -324,7 +324,22 @@ html[data-edition="hf"]{--menu:#fff;--panel:#f6f6f6;--history:#f4f4f4;--editor:#
 .history-day-markers small{font-size:10px}
 .history-calendar-key{display:flex;flex-wrap:wrap;gap:4px 12px;margin:8px 0 0;color:var(--muted);font-size:12px}
 .history-calendar-key span::before{content:"●";margin-right:4px;color:#b44722}
-.history-calendar-key span:last-child::before{color:#1766a5}
+.history-calendar-key .calendar-garmin::before{color:#1766a5}
+.history-calendar-key .calendar-planned::before,.history-day-markers i.planned{color:#946000;background-color:transparent}
+.history-day-markers i.planned{background:#ffb000;border:1px solid #946000}
+#planWorkoutDialog{
+ width:min(450px,calc(100% - 24px));max-height:85dvh;padding:16px;overflow:auto;
+ border:1px solid var(--line);border-radius:16px;background:#fff;color:var(--ink)
+}
+#planWorkoutDialog::backdrop{background:#16110d99}
+#planWorkoutDialog h2{font-size:20px;margin:0}
+#planWorkoutDialog .buttons{margin-top:8px}
+#planWorkoutError{margin:8px 0 0;color:#902a1a}
+#planWorkoutError:empty,#boardPlanStatus:empty{display:none}
+#boardPlanStatus{margin:6px 0 10px}
+#historyEntries .scheduled-workout{border-inline-start:4px solid var(--yellow);margin:8px 0}
+#historyEntries .scheduled-workout .buttons{margin-top:8px}
+#historyEntries .scheduled-workout button{font-size:14px}
 #historyDayDialog,#historyActivitySearchDialog{
  width:min(640px,calc(100% - 24px));max-height:85dvh;padding:0;overflow:auto;
  border:1px solid #d9d0c9;border-radius:16px;background:#fff;color:#211c19
@@ -633,7 +648,7 @@ html:not([data-edition="hf"]) #boardName{margin-block:4px;overflow-wrap:anywhere
 #boardTopActions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
 #boardTopActions button{margin:0;min-height:44px}
 #boardTopActions #resume{background:var(--accent);color:var(--ink)}
-#boardTopActions #start.alt{background:#fff;color:var(--ink);border:1px solid var(--line)}
+#boardTopActions :is(#start.alt,#scheduleWorkout){background:#fff;color:var(--ink);border:1px solid var(--line)}
 html:not([data-edition="hf"]) #boardActions button{
  min-width:0;padding-inline:clamp(6px,1.5vw,15px);overflow-wrap:anywhere
 }
@@ -1578,7 +1593,7 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
    <span class="history-weekday">J</span><span class="history-weekday">V</span><span class="history-weekday">S</span><span class="history-weekday">D</span>
   </div>
   <div id="historyCalendarDays" class="history-calendar-grid"></div>
-  <p class="history-calendar-key"><span>HF</span><span>Garmin</span></p>
+  <p class="history-calendar-key"><span class="calendar-planned hidden">Programado</span><span>Realizado en HF</span><span class="calendar-garmin">Garmin</span></p>
  </section>
  <dialog id="historyDayDialog" aria-labelledby="historySelectedDay">
   <div class="history-dialog-header">
@@ -1703,7 +1718,25 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
  <p id="workoutHrLimitHelp" class="muted small">Avisa tras 8 segundos por encima del límite.</p>
 </details>
 <div id="legacyEditor" class="panel" style="background:var(--editor,#304451)"><h3>Editor visual anterior</h3><label for="visualBlock">Bloque</label><select id="visualBlock"></select><div class="buttons"><button id="addBlock" class="alt" type="button">＋ Añadir bloque</button></div><label for="visualType">Tipo de ejercicio</label><select id="visualType"><option value="strength">Fuerza</option><option value="timed">Por tiempo</option><option value="manual">Manual / distancia</option></select><label for="visualName">Ejercicio</label><input id="visualName" placeholder="Ej.: Press banca"><div id="strengthFields" class="setgrid"><label>Series<input id="visualSets" type="number" min="1" max="30" value="3"></label><label>Reps<input id="visualReps" type="number" min="1" max="500" value="8"></label><label>Kg<input id="visualKg" type="number" min="0" max="1000" step="0.25" value="0"></label><label>RIR<input id="visualRir" type="number" min="0" max="15" value="2"></label><label>Descanso (s)<input id="visualRest" type="number" min="0" max="1800" value="90"></label></div><div id="timedFields" class="hidden"><label for="visualDuration">Duración en segundos</label><input id="visualDuration" type="number" min="1" max="7200" value="60"></div><div class="buttons"><button id="addExercise" type="button">＋ Añadir ejercicio</button><button id="cancelVisualEdit" type="button" class="alt hidden">Cancelar edición</button></div><div class="timer-builder"><h3>Bloque de intervalos / EMOM</h3><label for="timerMode">Modalidad</label><select id="timerMode"><option value="intervals">Intervalos</option><option value="emom">EMOM de tiempo fijo</option></select><label for="timerName">Nombre del ejercicio</label><input id="timerName" placeholder="Ej.: SkiErg"><div class="setgrid"><label>Rondas<input id="timerRounds" type="number" min="1" max="50" value="5"></label><label>Trabajo (s)<input id="timerWork" type="number" min="1" max="3600" value="40"></label><label id="timerRestLabel">Recuperación (s)<input id="timerRest" type="number" min="0" max="3600" value="20"></label></div><p id="timerHint" class="muted small">Los intervalos alternan trabajo y recuperación. El descanso final se omite.</p><div class="buttons"><button id="addTimerBlock" type="button">＋ Añadir bloque temporizado</button></div></div></div><details><summary class="gold" style="cursor:pointer;margin:14px 0">Editor de texto avanzado (compatible con rutinas anteriores)</summary><label for="workoutBlocks">Bloques y ejercicios</label><textarea id="workoutBlocks" spellcheck="false" placeholder="Calentamiento:\n5 min bicicleta\nMovilidad dinámica\n\nFuerza:\n3 × 10 sentadillas\n3 × 12 press"></textarea><p class="muted small">Bloque terminado en dos puntos (:), después un ejercicio por línea. Para fuerza escribe, por ejemplo: <strong>Press banca | 3x8 | 90kg | RIR 2 | descanso 90s</strong>. También reconoce «3 × 10 sentadillas». Para ejercicios cronometrados añade <strong>@60</strong> al final (60 segundos). Ejemplo: Bicicleta @120 o Descanso @30. Los ejercicios sin @ avanzan manualmente.</p></details><div class="v2-save"><button id="save">✓ Guardar entrenamiento</button><button id="cancel" class="alt">Cancelar</button></div><p id="editorMessage" class="gold" aria-live="polite"></p></div></section>
-<section id="board" class="hidden"><div class="panel"><div id="boardHeading" class="row"><div><div class="gold">PIZARRA COMPLETA</div><h2 id="boardName"></h2></div><span id="count" class="muted"></span></div><div id="workoutSaveFeedback" class="notice hidden" role="status"><strong id="workoutSaveDestination"></strong><span id="workoutSaveSync"></span></div><div id="blocks" class="grid"></div><div id="boardActions" class="buttons"><button id="start">▶ Iniciar entrenamiento</button><button id="resume" class="alt hidden">▶ Continuar sesión</button><button id="edit" class="alt">Editar</button><button type="button" class="alt tv-toggle" data-tv-toggle aria-pressed="false">Modo TV</button><div id="boardEndActions">
+<dialog id="planWorkoutDialog" aria-labelledby="planWorkoutTitle">
+ <div class="history-dialog-header">
+  <h2 id="planWorkoutTitle">Programar</h2>
+  <form method="dialog"><button type="submit" class="alt" aria-label="Cerrar programación" autofocus>×</button></form>
+ </div>
+ <p id="planWorkoutName"></p>
+ <div class="buttons">
+  <button id="planWorkoutToday" type="button">Hoy</button>
+  <button id="planWorkoutTomorrow" type="button" class="alt">Mañana</button>
+  <button id="planWorkoutChooseDate" type="button" class="alt" aria-expanded="false" aria-controls="planWorkoutDateForm">Elegir fecha</button>
+ </div>
+ <form id="planWorkoutDateForm" class="hidden">
+  <label for="planWorkoutDate">Fecha</label>
+  <input id="planWorkoutDate" type="date" required>
+  <div class="buttons"><button type="submit">Guardar fecha</button></div>
+ </form>
+ <p id="planWorkoutError" role="alert"></p>
+</dialog>
+<section id="board" class="hidden"><div class="panel"><div id="boardHeading" class="row"><div><div class="gold">PIZARRA COMPLETA</div><h2 id="boardName"></h2></div><span id="count" class="muted"></span></div><p id="boardPlanStatus" class="muted small" role="status"></p><div id="workoutSaveFeedback" class="notice hidden" role="status"><strong id="workoutSaveDestination"></strong><span id="workoutSaveSync"></span></div><div id="blocks" class="grid"></div><div id="boardActions" class="buttons"><button id="start">▶ Iniciar entrenamiento</button><button id="resume" class="alt hidden">▶ Continuar sesión</button><button id="edit" class="alt">Editar</button><button type="button" class="alt tv-toggle" data-tv-toggle aria-pressed="false">Modo TV</button><div id="boardEndActions">
  <button id="back" class="alt">Inicio</button>
  <button id="coachClassToggle" class="alt hidden" type="button" aria-controls="coachClassChoice" aria-expanded="false">Dirigir clase</button>
 </div></div>
@@ -2141,7 +2174,16 @@ function setupVectorHome(){
  continueWorkout.id='athleteHomeResume';
  continueWorkout.type='button';
  continueWorkout.onclick=()=>resumeAthleteWorkout(sessionWorkout);
- athleteCard.append(athleteInfo,chooseWorkout,continueWorkout);
+ const trainToday=node('button','Entrenar hoy','hidden');
+ trainToday.id='athleteHomeToday';
+ trainToday.type='button';
+ trainToday.onclick=()=>{
+   const date=calendarDateKey(),plans=todayTrainingPlans(date);
+   if(session||!plans.length)return;
+   if(plans.length===1)startPlannedWorkout(plans[0].workout);
+   else openPlannedCalendar(date);
+ };
+ athleteCard.append(athleteInfo,chooseWorkout,continueWorkout,trainToday);
 
  const actions=node('div','','athlete-home-actions');
  const directCoach=node('button','Dirigir clase','alt');
@@ -2153,6 +2195,8 @@ function setupVectorHome(){
  resumeClass.id='coachHomeResume';
  resumeClass.type='button';
  resumeClass.onclick=()=>void resumeCoachClass();
+ $('historyButton').textContent='Calendario';
+ document.querySelector('.calendar-planned').classList.remove('hidden');
  actions.append(resumeClass,directCoach,$('historyButton'));
  const syncState=node('p','','muted small hidden');
  syncState.id='homeSyncState';syncState.setAttribute('role','status');
@@ -2190,7 +2234,12 @@ function setupVectorHome(){
  const boardTopActions=node('div');
  boardTopActions.id='boardTopActions';
  boardHeading.firstElementChild.append($('count'));
- boardTopActions.append($('resume'),$('start'));
+ const scheduleWorkout=node('button','Programar','alt');
+ scheduleWorkout.id='scheduleWorkout';
+ scheduleWorkout.type='button';
+ scheduleWorkout.setAttribute('aria-haspopup','dialog');
+ scheduleWorkout.onclick=()=>openTrainingPlanner(active);
+ boardTopActions.append($('resume'),$('start'),scheduleWorkout);
  boardHeading.append(boardTopActions);
 
  const classes=node('details','','tools-details vector-home-section');
@@ -2463,7 +2512,7 @@ function show(v){if(v!=='history'&&$('historyDayDialog').open)$('historyDayDialo
 }
 if(usesWorkoutCloud&&v!=='editor'&&v!=='guided')ggCloud?.schedule();if(v==='board')renderBoard();if(v==='guided')renderGuided();syncPrestartOverlay();if(v==='history')renderHistory();refreshHeart()}
 function node(tag,text,cls){const e=document.createElement(tag);e.textContent=text;if(cls)e.className=cls;return e}
-$('historyButton').onclick=()=>show('history');$('historyBack').onclick=()=>show('library');function groupHistoricalItems(items,workout){const enriched=items.map((item,i)=>({...item}));const noBlocks=enriched.every(item=>!item.block||item.block==='Ejercicios');if(!noBlocks)return enriched;
+$('historyButton').onclick=()=>{if(isHF)show('history');else openPlannedCalendar()};$('historyBack').onclick=()=>show('library');function groupHistoricalItems(items,workout){const enriched=items.map((item,i)=>({...item}));const noBlocks=enriched.every(item=>!item.block||item.block==='Ejercicios');if(!noBlocks)return enriched;
 const current=workout?.blocks?.flatMap(b=>b.items.map(raw=>({raw,block:b.name})))||[];
 if(current.length===enriched.length&&current.every((v,i)=>decode(v.raw).label===enriched[i].label)){enriched.forEach((item,i)=>{item.block=current[i].block;item.raw=current[i].raw});return enriched}
 const rests=enriched.map((item,i)=>/recuperaci[oó]n.*antes de ronda\s*\d+/i.test(item.label||item.raw||'')?i:-1).filter(i=>i>=0);
@@ -2788,7 +2837,7 @@ function renderActivityFilter(options){
 function selectHistoryView(stats){
  historyStatsOpen=!isHF&&stats;
  $('history').classList.toggle('showing-stats',historyStatsOpen);
- $('historyTitle').textContent=historyStatsOpen?'Estadísticas':'Historial de sesiones';
+ $('historyTitle').textContent=historyStatsOpen?'Estadísticas':isHF?'Historial de sesiones':'Calendario de sesiones';
  const statsToggle=$('historyStatsTab');
  statsToggle.setAttribute('aria-expanded',String(historyStatsOpen));
  statsToggle.textContent=historyStatsOpen?'‹ Calendario':'Estadísticas';
@@ -2842,11 +2891,152 @@ function moveHistoryMonth(step){
 }
 $('historyPrevMonth').onclick=()=>moveHistoryMonth(-1);
 $('historyNextMonth').onclick=()=>moveHistoryMonth(1);
-function renderHistoryCalendar(entries){
+const TRAINING_PLAN_KEY='gg-training-plan-v1';
+const scheduledWorkoutDialog=$('planWorkoutDialog');
+let trainingPlanner=null;
+function calendarDateKey(offset=0){
+ const date=new Date();
+ date.setDate(date.getDate()+offset);
+ return historyDateKey(date);
+}
+function validPlanDate(date){
+ return typeof date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(date)&&historyDateKey(historyDate(date))===date;
+}
+function readTrainingPlans(){
+ const raw=appStorage.getItem(TRAINING_PLAN_KEY);
+ if(raw===null)return [];
+ const entries=JSON.parse(raw);
+ if(!Array.isArray(entries)||entries.some(entry=>!entry||typeof entry.id!=='string'
+   ||typeof entry.workoutId!=='string'||!validPlanDate(entry.date)||!Number.isFinite(entry.updatedAt)))
+  throw Error('No se pudo leer la programación guardada.');
+ return entries;
+}
+function pendingTrainingPlans(records,date=null){
+ let plans;
+ try{plans=readTrainingPlans();}catch{return []}
+ if(date)plans=plans.filter(plan=>plan.date===date);
+ if(!plans.length)return [];
+ const latest=new Map();
+ for(const record of records??getHistory()){
+  if(!record?.workoutId||record.source==='garmin')continue;
+  const finished=Date.parse(record.date);
+  if(!Number.isFinite(finished))continue;
+  const start=Date.parse(record.startedAt);
+  const day=historyDateKey(new Date(Number.isFinite(start)?start:finished));
+  const key=JSON.stringify([record.workoutId,day]);
+  if(finished>(latest.get(key)??-Infinity))latest.set(key,finished);
+ }
+ return plans.filter(plan=>(latest.get(JSON.stringify([plan.workoutId,plan.date]))??-Infinity)<plan.updatedAt);
+}
+function todayTrainingPlans(date=calendarDateKey()){
+ return pendingTrainingPlans(null,date).map(plan=>({...plan,workout:findWorkout(plan.workoutId)}))
+  .filter(({workout})=>workout&&!workout.classPrepared);
+}
+function startPlannedWorkout(workout){
+ if(vectorDays.has(workout.id))openWorkout(workout.id);
+ else startAthleteWorkout(workout.id);
+}
+function openPlannedCalendar(date=null){
+ historyStatsOpen=false;
+ historyDay=date;
+ const month=date?historyDate(date):new Date();
+ historyMonth=new Date(month.getFullYear(),month.getMonth(),1);
+ selectHistoryView(false);
+ show('history');
+ window.scrollTo(0,0);
+ if(date)historyDayDialog.showModal();
+}
+function openTrainingPlanner(workoutId,plan=null){
+ const workout=findWorkout(workoutId);
+ if(!workout||workout.classPrepared)return;
+ trainingPlanner={workoutId,plan};
+ $('planWorkoutTitle').textContent=plan?'Mover sesión':'Programar';
+ $('planWorkoutName').textContent=workout.name;
+ $('planWorkoutError').textContent='';
+ const date=$('planWorkoutDate');
+ date.min=calendarDateKey();
+ date.value=plan?.date>=date.min?plan.date:date.min;
+ $('planWorkoutDateForm').classList.add('hidden');
+ $('planWorkoutChooseDate').setAttribute('aria-expanded','false');
+ scheduledWorkoutDialog.showModal();
+}
+function saveTrainingPlan(date){
+ try{
+  if(!trainingPlanner)return;
+  if(!validPlanDate(date)||date<calendarDateKey())throw Error('Elige una fecha a partir de hoy.');
+  const {workoutId,plan}=trainingPlanner;
+  const workout=findWorkout(workoutId);
+  if(!workout||workout.classPrepared)throw Error('La rutina ya no está disponible.');
+  const plans=readTrainingPlans();
+  if(plan&&!plans.some(entry=>entry.id===plan.id&&entry.date===plan.date&&entry.updatedAt===plan.updatedAt))
+   throw Error('La programación ha cambiado. Abre el calendario de nuevo.');
+  const duplicate=plans.some(entry=>entry.id!==plan?.id&&entry.workoutId===workoutId&&entry.date===date);
+  if(duplicate)throw Error('Esta rutina ya está programada para ese día.');
+  if(!plan||date!==plan.date){
+   const updated={id:plan?.id??crypto.randomUUID(),workoutId,date,updatedAt:Date.now()};
+   appStorage.setItem(TRAINING_PLAN_KEY,JSON.stringify(plan?plans.map(entry=>entry.id===plan.id?updated:entry):[...plans,updated]));
+  }
+  scheduledWorkoutDialog.close();
+  if(view==='board'){
+   $('boardPlanStatus').textContent='Programado para '+historyDayLabel.format(historyDate(date));
+  }else if(view==='history'){
+   historyDay=date;
+   const month=historyDate(date);
+   historyMonth=new Date(month.getFullYear(),month.getMonth(),1);
+   renderHistory();
+   $('historyDayClose').focus();
+  }
+ }catch(error){$('planWorkoutError').textContent=error.message}
+}
+function removeTrainingPlan(plan){
+ if(!confirm('¿Quitar esta sesión del calendario?'))return;
+ try{
+  const plans=readTrainingPlans();
+  if(!plans.some(entry=>entry.id===plan.id&&entry.updatedAt===plan.updatedAt&&entry.date===plan.date))
+   throw Error('La programación ha cambiado. Abre el calendario de nuevo.');
+  appStorage.setItem(TRAINING_PLAN_KEY,JSON.stringify(plans.filter(entry=>entry.id!==plan.id)));
+  renderHistory();
+  $('historyDayClose').focus();
+ }catch(error){alert(error.message)}
+}
+function renderBoardPlanStatus(){
+ const today=calendarDateKey();
+ const next=pendingTrainingPlans(null).filter(plan=>plan.workoutId===active&&plan.date>=today)
+  .sort((a,b)=>a.date.localeCompare(b.date))[0];
+ $('boardPlanStatus').textContent=next?'Programado para '+historyDayLabel.format(historyDate(next.date)):'';
+}
+$('planWorkoutToday').onclick=()=>saveTrainingPlan(calendarDateKey());
+$('planWorkoutTomorrow').onclick=()=>saveTrainingPlan(calendarDateKey(1));
+$('planWorkoutChooseDate').onclick=()=>{
+ $('planWorkoutDateForm').classList.remove('hidden');
+ $('planWorkoutChooseDate').setAttribute('aria-expanded','true');
+ $('planWorkoutDate').focus();
+};
+$('planWorkoutDateForm').onsubmit=event=>{
+ event.preventDefault();
+ saveTrainingPlan($('planWorkoutDate').value);
+};
+scheduledWorkoutDialog.addEventListener('close',()=>{if(!scheduledWorkoutDialog.open)trainingPlanner=null});
+window.addEventListener('storage',event=>{
+ if(isHF||event.key!==(SECURE_AUTH_V2?secureNamespace:storagePrefix)+TRAINING_PLAN_KEY)return;
+ if(view==='library')renderAthleteHome();
+ if(view==='history')renderHistory();
+ if(view==='board')renderBoardPlanStatus();
+});
+let renderedTrainingDay=calendarDateKey();
+function refreshTrainingDay(){
+ const day=calendarDateKey();
+ if(isHF||day===renderedTrainingDay)return;
+ if(view==='library')renderAthleteHome();
+ else if(view==='history'){renderedTrainingDay=day;renderHistory()}
+}
+setInterval(refreshTrainingDay,60000);
+document.addEventListener('visibilitychange',refreshTrainingDay);
+function renderHistoryCalendar(entries,plans){
  const today=new Date(),todayKey=historyDateKey(today);
  historyMonth??=new Date(today.getFullYear(),today.getMonth(),1);
  const year=historyMonth.getFullYear(),month=historyMonth.getMonth();
- const byDay=new Map();
+ const byDay=new Map(),plannedDays=new Set(plans.map(plan=>plan.date));
  for(const entry of entries){
   const date=historyDate(entry.record.date);
   if(date.getFullYear()!==year||date.getMonth()!==month)continue;
@@ -2864,12 +3054,15 @@ function renderHistoryCalendar(entries){
   button.type='button';
   button.setAttribute('aria-pressed',String(key===historyDay));
   button.setAttribute('aria-haspopup','dialog');
-  button.setAttribute('aria-label',historyDayLabel.format(date)+', '+items.length+(items.length===1?' sesión':' sesiones'));
+  const planned=plannedDays.has(key);
+  button.setAttribute('aria-label',historyDayLabel.format(date)+', '+items.length+(items.length===1?' sesión':' sesiones')
+   +(planned?', hay sesiones programadas':''));
   if(key===todayKey)button.setAttribute('aria-current','date');
   const markers=node('span','','history-day-markers');
   markers.setAttribute('aria-hidden','true');
   if(items.some(({record})=>record.source!=='garmin'))markers.append(node('i',''));
   if(items.some(({record})=>record.source==='garmin'))markers.append(node('i','','garmin'));
+  if(planned)markers.append(node('i','','planned'));
   if(items.length>1)markers.append(node('small',String(items.length)));
   button.append(node('span',String(day),'history-day-number'),markers);
   button.onclick=()=>{
@@ -2893,12 +3086,40 @@ function renderHistory(){
  const sorted=indices.map(index=>({record:records[index],index}))
   .sort((a,b)=>(Date.parse(b.record.date)||0)-(Date.parse(a.record.date)||0)||b.index-a.index);
  $('historyUndoDelete').classList.toggle('hidden',isHF||!appStorage.getItem(HISTORY_RECOVERY_KEY));
- const displayed=renderHistoryCalendar(sorted);
+ const plans=isHF?[]:pendingTrainingPlans(records);
+ const displayed=renderHistoryCalendar(sorted,plans);
  if(!historyDay)return;
  $('historySelectedDay').textContent=historyDayLabel.format(historyDate(historyDay));
  const box=$('historyEntries');
  box.replaceChildren();
- if(!displayed.length)box.append(node('p','No hay sesiones en este día.','muted'));
+ const planned=plans.filter(plan=>plan.date===historyDay);
+ if(planned.length)box.append(node('h4','Programado'));
+ for(const plan of planned){
+  const workout=findWorkout(plan.workoutId);
+  const card=node('div','','tile scheduled-workout'),actions=node('div','','buttons');
+  card.append(node('strong',workout?.name||'Rutina no disponible'));
+  if(workout&&!workout.classPrepared){
+   const today=plan.date===calendarDateKey();
+   const open=node('button',today?'Entrenar hoy':'Ver rutina');
+   open.type='button';
+   open.disabled=session&&sessionWorkout!==plan.workoutId;
+   open.onclick=()=>today?startPlannedWorkout(workout):openWorkout(workout.id);
+   const move=node('button','Mover','alt');
+   move.type='button';
+   move.setAttribute('aria-label','Mover '+workout.name);
+   move.onclick=()=>openTrainingPlanner(workout.id,plan);
+   actions.append(open,move);
+  }
+  const remove=node('button','Quitar del calendario','alt');
+  remove.type='button';
+  if(workout)remove.setAttribute('aria-label','Quitar '+workout.name+' del calendario');
+  remove.onclick=()=>removeTrainingPlan(plan);
+  actions.append(remove);
+  card.append(actions);
+  box.append(card);
+ }
+ if(displayed.length&&!isHF)box.append(node('h4','Realizado'));
+ if(!displayed.length&&!planned.length)box.append(node('p','No hay sesiones en este día.','muted'));
  displayed.forEach(({record:r,index})=>{const card=node('div','','tile');card.style.margin='12px 0';const heading=node('div','','row history-entry-heading');heading.append(node('h3',r.name||'Entrenamiento'));if(!isHF){const del=node('button','Eliminar sesión','danger');del.type='button';del.setAttribute('aria-label','Eliminar sesión '+(r.name||'Entrenamiento'));del.onclick=()=>deleteHistoryEntry(r,index);heading.append(del)}card.append(heading);if(!isHF&&r.source==='garmin')card.append(node('p','Garmin Connect'+(r.garmin?.distanceMeters?' · '+workoutStatsMetrics.distance.format(r.garmin.distanceMeters):''),'muted small'));const date=new Date(r.date);card.append(node('p',(isNaN(date.getTime())?'Fecha no disponible':date.toLocaleString('es-ES'))+' · '+formatSeconds(Math.floor(r.elapsed||0)),'muted'));if(!isHF){const heart=r.heartRate;card.append(node('p',heart?'FC media '+heartRateText(heart.average)+' · FC máxima '+heartRateText(heart.peak)+(heart.partial?' · Lectura parcial':''):'FC media y máxima · Sin datos','muted small'))}const details=node('div','','history-detail hidden');const toggle=node('button','▸ Ver ejercicios y series','history-toggle');toggle.type='button';toggle.onclick=()=>{const opening=details.classList.contains('hidden');details.classList.toggle('hidden',!opening);toggle.textContent=(opening?'▾':'▸')+' Ver ejercicios y series'};if(r.source!=='garmin')card.append(toggle);const w=workouts.find(x=>x.id===r.workoutId);let items=Array.isArray(r.exerciseSnapshot)?r.exerciseSnapshot:null;if(!items||!items.length){if(Array.isArray(r.exerciseNames)&&r.exerciseNames.length){items=r.exerciseNames.map((label,i)=>({label,raw:label,block:'',index:i}))}else if(w){items=w.blocks.flatMap(b=>b.items.map(line=>({label:decode(line).label,raw:line,block:b.name})))}}if(items&&items.length){items=groupHistoricalItems(items,w);details.append(node('p',items.length+' pasos programados · agrupados por bloque','gold small'));let currentBlock=null,blockBody=null,blockNumber=0;items.forEach((item,i)=>{const blockName=item.block||'Ejercicios';if(blockName!==currentBlock){currentBlock=blockName;blockNumber++;const section=node('section','','history-block');const head=node('button','','history-block-head');head.type='button';const label=node('span',blockName);const indicator=node('span','▸');head.append(label,indicator);blockBody=node('div','','history-block-body hidden');const ownBody=blockBody;head.onclick=()=>{const opening=ownBody.classList.contains('hidden');ownBody.classList.toggle('hidden',!opening);indicator.textContent=opening?'▾':'▸'};section.append(head,blockBody);details.append(section)}const raw=item.raw||item.label||'',d=decode(raw),group=node('div','','history-exercise');const title=node('div','','history-exercise-title');let kind='REP';if(d.duration)kind='TIEMPO';else if(/\b\d+(?:[.,]\d+)?\s*(?:m|km)\b/i.test(raw))kind='DIST';else if(d.strength)kind='FUERZA';const chip=node('span',kind,'history-kind');title.append(chip,node('strong',(i+1)+'. '+(item.label||d.label||raw)));group.append(title);if(r.vectorDose?.[i])group.append(node('div',r.vectorDose[i],'muted small'));else if(d.duration)group.append(node('div','Duración programada: '+formatSeconds(d.duration),'muted small'));else if(d.strength)group.append(node('div','Programado: '+d.strength.sets+' × '+d.strength.reps+' · '+(d.strength.weight??0)+' kg','muted small'));else if(readTechniqueLink(raw).text!==item.label)group.append(node('div',readTechniqueLink(raw).text,'muted small'));if(d.instructions)group.append(node('p','Indicaciones: '+d.instructions,'muted small exercise-instruction-preview'));const actual=r.actualResults?.[i];if(actual)group.append(node('div','Realizado: '+actual.value+' '+actual.unit,'gold small'));const sets=r.seriesLog?.[i]||[];if(Array.isArray(sets))sets.forEach((e,n)=>group.append(node('div','Serie '+(n+1)+': '+(e.reps??'—')+' rep · '+e.weight+' kg · RIR '+e.rir+' · descanso '+e.rest+'s','small')));blockBody.append(group)})}else{details.append(node('p','Esta sesión antigua no conserva el detalle de ejercicios.','muted small'))}card.append(details);if(Array.isArray(r.ftResults))for(const result of r.ftResults)card.append(node('p','FOR TIME '+result.name+' · '+(result.complete?'Completado':'Límite alcanzado')+' · '+formatSeconds(Math.floor(result.seconds))+' · '+result.steps+'/'+result.total+' pasos','gold'));if(Array.isArray(r.amrapResults)&&r.amrapResults.length){for(const result of r.amrapResults){const p=node('p','AMRAP '+result.name+': '+result.rounds+' rondas completas + '+result.partial+' ejercicios · '+formatSeconds(result.elapsed),'gold');card.append(p)}}if(r.rpe!==undefined||r.pain||r.notes){const report=node('div','','notice');report.style.marginTop='10px';report.textContent='RPE: '+(r.rpe??'—')+' · Molestias: '+(r.pain||'—')+(r.notes?' · '+r.notes:'');card.append(report)}const prior=r.workoutId?records.filter(x=>x.workoutId===r.workoutId&&x.id!==r.id&&new Date(x.date)<new Date(r.date)).at(-1):null;if(prior){const diff=Math.round((r.elapsed||0)-(prior.elapsed||0));card.append(node('p','Respecto a la sesión anterior: '+(diff===0?'mismo tiempo':diff<0?Math.abs(diff)+' s menos':diff+' s más')+' · comparación orientativa','muted small'))}box.append(card)})}
 function getHistory(){try{const data=JSON.parse(appStorage.getItem('gg-strength-history-v1')||'[]');return Array.isArray(data)?data:[]}catch(e){return[]}}
 function normalizedName(v){return String(v||'').trim().toLocaleLowerCase('es-ES').replace(/\s+/g,' ')}
@@ -3057,12 +3278,18 @@ function copyToMyClasses(workout){
 function renderAthleteHome(){
  const resumable=session&&!coachGuided&&findWorkout(sessionWorkout);
  const title=$('athleteHomeTitle'),status=$('athleteHomeStatus');
- const choose=$('athleteHomeChoose'),resume=$('athleteHomeResume');
- title.textContent=resumable?resumable.name:'Entrenamiento individual';
- status.textContent=resumable?(prestartRemaining>0?'Preparación':paused?'Sesión pausada':'Sesión en curso'):'';
- status.classList.toggle('hidden',!resumable);
- choose.classList.toggle('hidden',Boolean(resumable));
+ const choose=$('athleteHomeChoose'),resume=$('athleteHomeResume'),train=$('athleteHomeToday');
+ renderedTrainingDay=calendarDateKey();
+ const plans=session?[]:todayTrainingPlans(renderedTrainingDay);
+ const scheduled=plans.length>0;
+ title.textContent=resumable?resumable.name:plans.length===1?plans[0].workout.name:scheduled?'Entrenamientos de hoy':'Entrenamiento individual';
+ status.textContent=resumable?(prestartRemaining>0?'Preparación':paused?'Sesión pausada':'Sesión en curso')
+  :scheduled?(plans.length===1?'Programado para hoy':plans.length+' sesiones programadas'):'';
+ status.classList.toggle('hidden',!resumable&&!scheduled);
+ choose.classList.toggle('hidden',Boolean(resumable)||scheduled);
  resume.classList.toggle('hidden',!resumable);
+ train.classList.toggle('hidden',!scheduled);
+ train.textContent=plans.length===1?'Entrenar hoy':'Elegir sesión de hoy';
  if(resumable){
    resume.setAttribute('aria-label','Continuar entrenamiento '+resumable.name);
  }else{
@@ -3309,6 +3536,10 @@ function renderBoard(){
  if(classUnavailable)setCoachClassChoice(false);
  const w=findWorkout(active);
  if(!w){show('library');return}
+ if(!isHF){
+  $('scheduleWorkout').classList.toggle('hidden',Boolean(w.classPrepared));
+  renderBoardPlanStatus();
+ }
  const resumable=session&&sessionWorkout===active;
  const start=$('start');
  $('resume').classList.toggle('hidden',!resumable||(!isHF&&Boolean(w.classPrepared)));
@@ -4633,7 +4864,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.25', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.60';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.25', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.61';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
@@ -5530,6 +5761,7 @@ async function startCoachStations(workout,fromHome){
   }finally{trigger.disabled=false}
 }
 setupExerciseLibrary();setupVectorHome();setupCompactGuided();setupBuhardillaCoach();
+if(!isHF)$('historyTitle').textContent='Calendario de sesiones';
 load();
 if(!SECURE_AUTH_V2)restoreActiveSessionFromStorage();
 show('library');
