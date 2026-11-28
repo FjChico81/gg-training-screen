@@ -22,7 +22,10 @@ function nextPhase(state, config) {
   }
 }
 
-export function mountBuhardillaStations({root, onExit, onSound, onActivity, onComplete = () => {}, formatTime}) {
+export function mountBuhardillaStations({
+  root, onExit, onSound, onActivity, onStart = () => true,
+  onCheckpoint = () => {}, onComplete = () => {}, formatTime
+}) {
   const find = id => root.querySelector('#' + id);
   const form = find('stationForm');
   const selection = find('stationSelection');
@@ -33,6 +36,8 @@ export function mountBuhardillaStations({root, onExit, onSound, onActivity, onCo
   const back = find('stationBack');
   const timer = find('stationTime');
   let candidates = [];
+  let items = [];
+  let lastSave = 0;
   let cards = [];
   let config;
   let state;
@@ -74,9 +79,21 @@ export function mountBuhardillaStations({root, onExit, onSound, onActivity, onCo
     updateClock();
   }
 
+  function saveProgress() {
+    if (!state || state.phase === 'finished') return;
+    onCheckpoint({items, config, state, paused, elapsed});
+    lastSave = Date.now();
+  }
+
   function finishRun() {
     stopClock();
-    if (elapsed > 0) onComplete(workout, elapsed / 1000);
+    if (onComplete(workout, elapsed / 1000) === false) {
+      finish.hidden = false;
+      finish.focus();
+      onActivity();
+      return;
+    }
+    finish.hidden = true;
     onActivity();
     back.focus();
   }
@@ -103,6 +120,7 @@ export function mountBuhardillaStations({root, onExit, onSound, onActivity, onCo
     if (changed) render();
     else updateClock();
     if (state.phase === 'finished') finishRun();
+    else if (changed || now - lastSave >= 1000) saveProgress();
   }
 
   function startClock() {
@@ -134,26 +152,34 @@ export function mountBuhardillaStations({root, onExit, onSound, onActivity, onCo
     return {card, group};
   }
 
-  form.onsubmit = event => {
-    event.preventDefault();
-    const items = [...selection.querySelectorAll('input:checked')].map(input => candidates[Number(input.value)]);
-    if (items.length < 2 || items.length > 8) {
-      find('stationError').textContent = 'Selecciona entre 2 y 8 estaciones.';
-      return;
-    }
-    config = {count:items.length, ...Object.fromEntries(['laps','work','change'].map(key => [key, form.elements[key].valueAsNumber]))};
+  function openClock(title) {
     const entries = items.map(makeCard);
     cards = entries.map(entry => entry.group);
     find('stationCards').replaceChildren(...entries.map(entry => entry.card));
-    elapsed = 0;
-    state = {phase:'prepare', rotation:0, milliseconds:10000};
-    paused = false;
+    find('stationTitle').textContent = title;
     form.classList.add('hidden');
     screen.classList.remove('hidden');
     find('stationControls').open = true;
     render();
-    startClock();
+    if (!paused) startClock();
     onActivity();
+  }
+
+  form.onsubmit = event => {
+    event.preventDefault();
+    const selected = [...selection.querySelectorAll('input:checked')].map(input => candidates[Number(input.value)]);
+    if (selected.length < 2 || selected.length > 8) {
+      find('stationError').textContent = 'Selecciona entre 2 y 8 estaciones.';
+      return;
+    }
+    if (!onStart(workout)) return;
+    items = selected;
+    config = {count:items.length, ...Object.fromEntries(['laps','work','change'].map(key => [key, form.elements[key].valueAsNumber]))};
+    elapsed = 0;
+    state = {phase:'prepare', rotation:0, milliseconds:10000};
+    paused = false;
+    openClock(workout.name);
+    saveProgress();
     pause.focus();
   };
 
@@ -169,6 +195,7 @@ export function mountBuhardillaStations({root, onExit, onSound, onActivity, onCo
     }
     onActivity();
     render();
+    saveProgress();
   };
   next.onclick = () => {
     const phase = state.phase;
@@ -180,9 +207,14 @@ export function mountBuhardillaStations({root, onExit, onSound, onActivity, onCo
     onSound(true);
     render();
     if (state.phase === 'finished') finishRun();
+    else saveProgress();
   };
   finish.onclick = () => {
     if (!confirm('¿Finalizar el circuito por estaciones?')) return;
+    if (state.phase === 'finished') {
+      finishRun();
+      return;
+    }
     tick();
     if (state.phase === 'finished') return;
     state = {...state, phase:'finished', milliseconds:0};
@@ -221,6 +253,33 @@ export function mountBuhardillaStations({root, onExit, onSound, onActivity, onCo
       find('stationCards').replaceChildren();
       form.classList.remove('hidden');
       screen.classList.add('hidden');
+    },
+    restore(sourceWorkout, saved) {
+      const {items: savedItems, config: savedConfig, state: savedState} = saved;
+      const bounded = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
+      if (!Array.isArray(savedItems) || !savedItems.every(item => typeof item?.label === 'string')
+          || !bounded(savedItems.length, 2, 8) || savedConfig?.count !== savedItems.length
+          || !bounded(savedConfig.laps, 1, 12) || !bounded(savedConfig.work, 10, 1800)
+          || !bounded(savedConfig.change, 0, 300)
+          || !['prepare', 'work', 'change'].includes(savedState?.phase)
+          || !bounded(savedState.rotation, 0, savedConfig.count * savedConfig.laps - 1)
+          || !bounded(savedState.milliseconds, 0, 1800000)
+          || !Number.isFinite(saved.elapsed) || saved.elapsed < 0) {
+        throw Error('Estado del circuito inválido.');
+      }
+      stopClock();
+      workout = sourceWorkout;
+      items = savedItems;
+      config = savedConfig;
+      state = savedState;
+      elapsed = saved.elapsed;
+      paused = Boolean(saved.paused);
+      lastSave = Date.now();
+      openClock(workout.name);
+    },
+    checkpoint() {
+      tick();
+      saveProgress();
     },
     get running() {
       return Boolean(state && state.phase !== 'finished' && !paused);
