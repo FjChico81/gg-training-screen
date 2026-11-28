@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.61</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.62</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -1495,15 +1495,24 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
  html:root body.tv-mode.guided-active #guided:is(#guided) :is(#skipRest,.technique-button){min-height:25px}
 }
 #coachLaunch{
- width:min(calc(100% - 24px),480px);max-height:90dvh;padding:16px;
+ width:min(calc(100% - 24px),560px);max-height:90dvh;max-height:90svh;padding:16px;
  border:1px solid var(--line,#ccc);border-radius:14px;
  background:var(--bg,#fff);color:var(--text,#111);
 }
 #coachLaunch::backdrop{background:#0008}
 #coachLaunch h2{margin:0}
-/* The heading receives initial focus so iOS leaves the native picker closed. */
 #coachLaunchTitle:focus{outline:none;box-shadow:none}
-#coachLaunch .coach-launch-modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#coachLaunch h3,#coachLaunch h4{margin:12px 0 8px;color:var(--ink)}
+#coachLaunchMessage:empty{display:none}
+#coachLaunch .coach-launch-card{
+ padding:12px;margin-top:8px;border:1px solid var(--line);border-radius:12px;background:var(--panel)
+}
+#coachLaunch .coach-launch-card strong{display:block;overflow-wrap:anywhere}
+#coachLaunch .coach-launch-modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+#coachLaunch .coach-launch-modes button{min-width:0;padding:8px;font-size:14px}
+#coachLaunchSaved{margin-top:14px;padding-top:7px;border-top:1px solid var(--line)}
+#coachLaunchSaved>summary{min-height:44px;padding:11px 0;color:var(--accent-soft);font-weight:750;cursor:pointer}
+#coachLaunchSavedEmpty{margin:8px 0 0}
 </style></head><body>
 <div id="hrConnectedNotice" role="status" aria-atomic="true"></div>
 <div id="accountWall" data-phase="loading" role="region" aria-label="Acceso a la aplicación">
@@ -1748,16 +1757,21 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
 <p id="coachClassNotice" class="muted hidden" role="status"></p>
 </div></section>
 <dialog id="coachLaunch" aria-labelledby="coachLaunchTitle">
- <form method="dialog">
-  <div class="row"><h2 id="coachLaunchTitle" tabindex="-1" autofocus>Dirigir clase</h2><button type="submit" class="alt">Cerrar</button></div>
-  <label for="coachLaunchWorkout">Clase o rutina</label>
-  <select id="coachLaunchWorkout"></select>
-  <p id="coachLaunchMessage" class="muted small" role="status"></p>
-  <div class="buttons coach-launch-modes">
-   <button id="coachLaunchGuided" type="button">Clase guiada</button>
-   <button id="coachLaunchStations" type="button" class="alt">Circuito por estaciones</button>
-  </div>
- </form>
+ <div class="row">
+  <h2 id="coachLaunchTitle" tabindex="-1" autofocus>Dirigir clase</h2>
+  <form method="dialog"><button type="submit" class="alt">Cerrar</button></form>
+ </div>
+ <p id="coachLaunchMessage" class="muted small" role="status"></p>
+ <section id="coachLaunchPrepared" aria-label="Clases preparadas">
+  <h3 id="coachLaunchPreparedTitle">Clases preparadas</h3>
+  <div id="coachLaunchPreparedList"></div>
+ </section>
+ <details id="coachLaunchSaved">
+  <summary>Usar un entrenamiento guardado</summary>
+  <input id="coachLaunchSearch" type="search" aria-label="Buscar entrenamiento guardado" placeholder="Buscar por nombre…" autocomplete="off">
+  <div id="coachLaunchSavedList"></div>
+  <p id="coachLaunchSavedEmpty" class="muted small" role="status"></p>
+ </details>
 </dialog>
 <section id="coachStations" class="hidden">
  <div class="panel">
@@ -4864,7 +4878,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.25', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.61';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.25', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.62';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
@@ -5467,7 +5481,10 @@ window.__secureAppV2={
   savedWorkoutFeedback=null;
   const previousNamespace=secureNamespace;
   secureNamespace=(isHF?'hf-v2:':'gg-v2:')+ownerId+':'+profileId+':';
-  if(secureNamespace!==previousNamespace)hfFavoritesOnly=false;
+  if(secureNamespace!==previousNamespace){
+   hfFavoritesOnly=false;
+   if($('coachLaunch').open)$('coachLaunch').close();
+  }
   load();restoreActiveSessionFromStorage();
   return true;
  },
@@ -5601,32 +5618,57 @@ function setCoachClassChoice(open){
  $('coachClassChoice').classList.toggle('hidden',!open);
  $('coachClassToggle').setAttribute('aria-expanded',String(open));
 }
+function coachLaunchCard(workout){
+ const card=node('article','','coach-launch-card');
+ const modes=node('div','','coach-launch-modes');
+ for(const [mode,label] of [['guided','Clase guiada'],['stations','Circuito por estaciones']]){
+  const button=node('button',label,mode==='stations'?'alt':'');
+  button.type='button';
+  button.setAttribute('aria-label',label+': '+workout.name);
+  button.onclick=()=>{
+   const current=findWorkout(workout.id),notice=$('coachLaunchMessage');
+   if(!current){notice.textContent='Esta rutina ya no está disponible.';return}
+   notice.textContent='';
+   if(mode==='guided')startCoachGuided(current);
+   else void startCoachStations(current,button,true);
+  };
+  modes.append(button);
+ }
+ card.append(node('strong',workout.name),modes);
+ return card;
+}
+function renderCoachSavedWorkouts(){
+ const query=searchableName($('coachLaunchSearch').value);
+ const assigned=assignedBuhardillaIds();
+ const personal=workouts.filter(workout=>!workout.classPrepared).reverse();
+ const routines=buhardillaCatalog.filter(workout=>assigned.has(workout.id));
+ const list=$('coachLaunchSavedList');
+ list.replaceChildren();
+ for(const [label,group] of [['Mis entrenamientos',personal],['Rutinas asignadas',routines]]){
+  const matching=group.filter(workout=>searchableName(workout.name).includes(query));
+  if(!matching.length)continue;
+  list.append(node('h4',label),...matching.map(coachLaunchCard));
+ }
+ $('coachLaunchSavedEmpty').textContent=list.childElementCount?'':query?'No hay entrenamientos que coincidan.':'Aún no tienes entrenamientos guardados.';
+}
 function openCoachLaunch(workoutId){
  if(session){alert('Finaliza el entrenamiento en curso antes de dirigir una clase.');return}
- const select=$('coachLaunchWorkout');
- const assigned=assignedBuhardillaIds();
- const groups=[
-  ['Clases preparadas',workouts.filter(workout=>workout.classPrepared)],
-  ['Mis entrenamientos',workouts.filter(workout=>!workout.classPrepared)],
-  ['Rutinas asignadas',buhardillaCatalog.filter(workout=>assigned.has(workout.id))]
- ];
- select.replaceChildren();
- for(const [label,items] of groups){
-  if(!items.length)continue;
-  const group=document.createElement('optgroup');group.label=label;
-  for(const workout of items.slice().reverse()){
-   const option=node('option',workout.name);option.value=workout.id;group.append(option);
-  }
-  select.append(group);
- }
- if(workoutId)select.value=workoutId;
- const empty=!select.options.length;
- select.disabled=empty;
- $('coachLaunchGuided').disabled=empty;
- $('coachLaunchStations').disabled=empty;
- $('coachLaunchMessage').textContent=empty?'Crea una clase o guarda un entrenamiento para poder dirigirlo.':'';
- $('coachLaunch').showModal();
- $('coachLaunchTitle').focus();
+ const requested=workoutId?workouts.find(workout=>workout.id===workoutId&&workout.classPrepared):null;
+ const prepared=requested?[requested]:workouts.filter(workout=>workout.classPrepared).reverse();
+ $('coachLaunchMessage').textContent='';
+ $('coachLaunchPreparedTitle').classList.toggle('hidden',Boolean(requested));
+ $('coachLaunchPrepared').setAttribute('aria-label',requested?'Clase seleccionada':'Clases preparadas');
+ const cards=prepared.map(coachLaunchCard);
+ $('coachLaunchPreparedList').replaceChildren(...(cards.length?cards:[node('p','Aún no tienes clases preparadas.','muted small')]));
+ const saved=$('coachLaunchSaved');
+ saved.classList.toggle('hidden',Boolean(requested));
+ saved.open=!requested&&!prepared.length;
+ $('coachLaunchSearch').value='';
+ renderCoachSavedWorkouts();
+ const dialog=$('coachLaunch');
+ dialog.showModal();
+ dialog.scrollTop=0;
+ $('coachLaunchTitle').focus({preventScroll:true});
 }
 function selectCoachWorkout(workout){
  if(active!==workout.id)vectorTargets={};
@@ -5654,9 +5696,7 @@ function setupBuhardillaCoach(){
  };
  $('coachCopyClass').onclick=()=>{const workout=findWorkout(active);if(!session&&workout)copyToMyClasses(workout)};
  $('coachStartGuided').onclick=()=>startCoachGuided(findWorkout(active));
- $('coachLaunchGuided').onclick=()=>startCoachGuided(findWorkout($('coachLaunchWorkout').value));
- $('coachLaunchStations').onclick=()=>void startCoachStations(findWorkout($('coachLaunchWorkout').value),true);
- $('coachLaunchWorkout').onchange=()=>{$('coachLaunchMessage').textContent=''};
+ $('coachLaunchSearch').oninput=renderCoachSavedWorkouts;
  $('coachGuidedNext').onclick=()=>{
   if(!coachGuided||prestartRemaining>0)return;
   if(transitionTo!==null)finishExerciseTransition();
@@ -5670,7 +5710,8 @@ function setupBuhardillaCoach(){
   $('coachDockToggle').textContent=hidden?'Mostrar mandos':'Ocultar mandos';
   $('coachDockToggle').setAttribute('aria-expanded',String(!hidden));
  };
- $('coachSetupStations').onclick=()=>void startCoachStations(findWorkout(active),false);
+ const stations=$('coachSetupStations');
+ stations.onclick=()=>void startCoachStations(findWorkout(active),stations);
  $('stationStart').addEventListener('click',()=>void initAudio());
 }
 async function resumeCoachClass(){
@@ -5729,20 +5770,21 @@ async function loadCoachStations(){
   formatTime:formatSeconds
  });
 }
-async function startCoachStations(workout,fromHome){
+async function startCoachStations(workout,trigger,fromDialog=false){
  if(session||!workout)return;
- const trigger=$(fromHome?'coachLaunchStations':'coachSetupStations');
- const notice=$(fromHome?'coachLaunchMessage':'coachClassNotice');
- const profileId=localProfile.id;
+ const notice=$(fromDialog?'coachLaunchMessage':'coachClassNotice');
+ const profileId=localProfile.id,namespace=secureNamespace;
+ const stillOpen=()=>fromDialog
+  ?view==='library'&&$('coachLaunch').open&&trigger.isConnected
+  :view==='board'&&active===workout.id;
  if(trigger.disabled)return;
  trigger.disabled=true;
  notice.textContent='';
- if(!fromHome)notice.classList.add('hidden');
+ if(!fromDialog)notice.classList.add('hidden');
  try{
    const stations=await loadCoachStations();
-   const stillOpen=fromHome?view==='library'&&$('coachLaunch').open&&$('coachLaunchWorkout').value===workout.id
-    :view==='board'&&active===workout.id;
-   if(!stillOpen||session||profileId!==localProfile.id||findWorkout(workout.id)!==workout)return;
+   if(!stillOpen()||session||profileId!==localProfile.id||namespace!==secureNamespace
+      ||findWorkout(workout.id)!==workout)return;
    selectCoachWorkout(workout);
    const exercises=steps().filter(exercise=>!isProgrammedRest(exercise)).map(exercise=>{
     const dose=exercise.strength;
@@ -5752,12 +5794,14 @@ async function startCoachStations(workout,fromHome){
     };
    });
    stations.open(workout.name,exercises,workout);
-   if(fromHome)$('coachLaunch').close();
+   if(fromDialog)$('coachLaunch').close();
    show('coachStations');
    $('stationTitle').focus();
   }catch(error){
-   notice.textContent='No se pudo abrir el circuito. '+error.message;
-   notice.classList.remove('hidden');
+   if(stillOpen()){
+    notice.textContent='No se pudo abrir el circuito. '+error.message;
+    notice.classList.remove('hidden');
+   }
   }finally{trigger.disabled=false}
 }
 setupExerciseLibrary();setupVectorHome();setupCompactGuided();setupBuhardillaCoach();
