@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.54</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.55</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -535,6 +535,11 @@ html:not([data-edition="hf"]) :is(button,select,input,summary):focus-visible{
 .athlete-home-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0 14px}
 .athlete-home-actions button{margin:0;min-width:0;min-height:46px;font-size:14px}
 #athleteHomeResume{grid-column:1/-1}
+#homeSyncState{margin:6px 0 0;font-size:12px}
+#workoutSaveFeedback{margin:8px 0 12px;padding:8px 10px}
+#workoutSaveFeedback span{display:block;margin-top:2px}
+:is(#homeSyncState,#workoutSaveFeedback)[data-state="review"]{color:#a3281e}
+
 .athlete-home-actions #historyButton,#saved .saved-workout-board{
  background:#fff;color:var(--ink);border:1px solid #d4d4d4;
 }
@@ -1635,7 +1640,7 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
  <p id="workoutHrLimitHelp" class="muted small">Avisa tras 8 segundos por encima del límite.</p>
 </details>
 <div id="legacyEditor" class="panel" style="background:var(--editor,#304451)"><h3>Editor visual anterior</h3><label for="visualBlock">Bloque</label><select id="visualBlock"></select><div class="buttons"><button id="addBlock" class="alt" type="button">＋ Añadir bloque</button></div><label for="visualType">Tipo de ejercicio</label><select id="visualType"><option value="strength">Fuerza</option><option value="timed">Por tiempo</option><option value="manual">Manual / distancia</option></select><label for="visualName">Ejercicio</label><input id="visualName" placeholder="Ej.: Press banca"><div id="strengthFields" class="setgrid"><label>Series<input id="visualSets" type="number" min="1" max="30" value="3"></label><label>Reps<input id="visualReps" type="number" min="1" max="500" value="8"></label><label>Kg<input id="visualKg" type="number" min="0" max="1000" step="0.25" value="0"></label><label>RIR<input id="visualRir" type="number" min="0" max="15" value="2"></label><label>Descanso (s)<input id="visualRest" type="number" min="0" max="1800" value="90"></label></div><div id="timedFields" class="hidden"><label for="visualDuration">Duración en segundos</label><input id="visualDuration" type="number" min="1" max="7200" value="60"></div><div class="buttons"><button id="addExercise" type="button">＋ Añadir ejercicio</button><button id="cancelVisualEdit" type="button" class="alt hidden">Cancelar edición</button></div><div class="timer-builder"><h3>Bloque de intervalos / EMOM</h3><label for="timerMode">Modalidad</label><select id="timerMode"><option value="intervals">Intervalos</option><option value="emom">EMOM de tiempo fijo</option></select><label for="timerName">Nombre del ejercicio</label><input id="timerName" placeholder="Ej.: SkiErg"><div class="setgrid"><label>Rondas<input id="timerRounds" type="number" min="1" max="50" value="5"></label><label>Trabajo (s)<input id="timerWork" type="number" min="1" max="3600" value="40"></label><label id="timerRestLabel">Recuperación (s)<input id="timerRest" type="number" min="0" max="3600" value="20"></label></div><p id="timerHint" class="muted small">Los intervalos alternan trabajo y recuperación. El descanso final se omite.</p><div class="buttons"><button id="addTimerBlock" type="button">＋ Añadir bloque temporizado</button></div></div></div><details><summary class="gold" style="cursor:pointer;margin:14px 0">Editor de texto avanzado (compatible con rutinas anteriores)</summary><label for="workoutBlocks">Bloques y ejercicios</label><textarea id="workoutBlocks" spellcheck="false" placeholder="Calentamiento:\n5 min bicicleta\nMovilidad dinámica\n\nFuerza:\n3 × 10 sentadillas\n3 × 12 press"></textarea><p class="muted small">Bloque terminado en dos puntos (:), después un ejercicio por línea. Para fuerza escribe, por ejemplo: <strong>Press banca | 3x8 | 90kg | RIR 2 | descanso 90s</strong>. También reconoce «3 × 10 sentadillas». Para ejercicios cronometrados añade <strong>@60</strong> al final (60 segundos). Ejemplo: Bicicleta @120 o Descanso @30. Los ejercicios sin @ avanzan manualmente.</p></details><div class="v2-save"><button id="save">✓ Guardar entrenamiento</button><button id="cancel" class="alt">Cancelar</button></div><p id="editorMessage" class="gold" aria-live="polite"></p></div></section>
-<section id="board" class="hidden"><div class="panel"><div class="row"><div><div class="gold">PIZARRA COMPLETA</div><h2 id="boardName"></h2></div><span id="count" class="muted"></span></div><div id="blocks" class="grid"></div><div id="boardActions" class="buttons"><button id="start">▶ Iniciar entrenamiento</button><button id="resume" class="alt hidden">▶ Continuar sesión</button><button id="edit" class="alt">Editar</button><button type="button" class="alt tv-toggle" data-tv-toggle aria-pressed="false">Modo TV</button><div id="boardEndActions">
+<section id="board" class="hidden"><div class="panel"><div class="row"><div><div class="gold">PIZARRA COMPLETA</div><h2 id="boardName"></h2></div><span id="count" class="muted"></span></div><div id="workoutSaveFeedback" class="notice hidden" role="status"><strong id="workoutSaveDestination"></strong><span id="workoutSaveSync"></span></div><div id="blocks" class="grid"></div><div id="boardActions" class="buttons"><button id="start">▶ Iniciar entrenamiento</button><button id="resume" class="alt hidden">▶ Continuar sesión</button><button id="edit" class="alt">Editar</button><button type="button" class="alt tv-toggle" data-tv-toggle aria-pressed="false">Modo TV</button><div id="boardEndActions">
  <button id="back" class="alt">Inicio</button>
  <button id="coachClassToggle" class="alt hidden" type="button" aria-controls="coachClassChoice" aria-expanded="false">Dirigir clase</button>
 </div></div>
@@ -1648,7 +1653,7 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
 </div></section>
 <dialog id="coachLaunch" aria-labelledby="coachLaunchTitle">
  <form method="dialog">
-  <div class="row"><h2 id="coachLaunchTitle">Dirigir clase</h2><button type="submit" class="alt">Cerrar</button></div>
+  <div class="row"><h2 id="coachLaunchTitle" tabindex="-1" autofocus>Dirigir clase</h2><button type="submit" class="alt">Cerrar</button></div>
   <label for="coachLaunchWorkout">Clase o rutina</label>
   <select id="coachLaunchWorkout"></select>
   <p id="coachLaunchMessage" class="muted small" role="status"></p>
@@ -2061,7 +2066,9 @@ function setupVectorHome(){
  directCoach.setAttribute('aria-haspopup','dialog');
  directCoach.onclick=()=>openCoachLaunch();
  actions.append(continueWorkout,directCoach,$('historyButton'));
- profileRow.after(actions);
+ const syncState=node('p','','muted small hidden');
+ syncState.id='homeSyncState';syncState.setAttribute('role','status');
+ profileRow.after(syncState,actions);
 
  const saved=node('details','','tools-details vector-home-section');
  saved.id='vectorMyWorkouts';
@@ -2929,6 +2936,7 @@ function copyToMyClasses(workout){
  const previous=workouts;
  workouts=[...previous,copy];
  if(!persist()){workouts=previous;return}
+ confirmWorkoutSave(copy);
  $('vectorMyClasses').open=true;
  openWorkout(copy.id);
 }
@@ -3098,7 +3106,34 @@ function renderHFBoardBlock(block){
  blockCard.append(summary,list);
  return blockCard;
 }
+let savedWorkoutFeedback=null,syncFeedbackUnavailable=false;
+const syncLabels={synced:'Sincronizado',pending:'Pendiente de sincronizar',review:'Requiere revisión'};
+function renderWorkoutSyncFeedback(){
+ if(isHF)return;
+ const home=$('homeSyncState'),feedback=$('workoutSaveFeedback');
+ const controller=secureSyncController;
+ const status=controller?.syncStatus()??'pending';
+ const online=navigator.onLine!==false&&!syncFeedbackUnavailable;
+ const homeState=!online&&status==='synced'?'pending':status;
+ home.classList.toggle('hidden',!controller);
+ if(home.textContent!==syncLabels[homeState])home.textContent=syncLabels[homeState];
+ home.dataset.state=homeState;
+ const current=savedWorkoutFeedback?.id===active&&savedWorkoutFeedback?.profileId===localProfile.id;
+ feedback.classList.toggle('hidden',!current);
+ if(!current)return;
+ const destination=$('workoutSaveDestination'),sync=$('workoutSaveSync');
+ const recordState=controller?.syncStatus(active)??'pending';
+ const where='Guardado en '+localProfile.name+' → '+savedWorkoutFeedback.section;
+ if(destination.textContent!==where)destination.textContent=where;
+ if(sync.textContent!==syncLabels[recordState])sync.textContent=syncLabels[recordState];
+ feedback.dataset.state=recordState;
+}
+function confirmWorkoutSave(workout){
+ if(!isHF)savedWorkoutFeedback={id:workout.id,profileId:localProfile.id,
+  section:workout.classPrepared?'Mis clases → Preparadas':'Mis entrenamientos'};
+}
 function renderBoard(){
+ renderWorkoutSyncFeedback();
  const classUnavailable=isHF||session;
  $('coachClassToggle').classList.toggle('hidden',classUnavailable);
  if(classUnavailable)setCoachClassChoice(false);
@@ -3401,7 +3436,7 @@ function workoutHeartLimit(id){
 function edit(w,asClass=false){editingClass=!isHF&&(asClass||Boolean(w?.classPrepared));$('editorTitle').textContent=editingClass?(w?'Editar clase':'Crear clase'):(w?'Editar entrenamiento':'Crear entrenamiento');$('editorHeartOptions').open=Boolean(w?.hrLimit);$(isHF?'hfEditorLibrary':'vectorEditorLibrary').open=false;visualEditing=null;$('addExercise').textContent='＋ Añadir ejercicio';$('cancelVisualEdit').classList.add('hidden');editing=w?.id||null;$('workoutName').value=w?.name||'';$('workoutHrLimit').value=validHeartLimit(w?.hrLimit)??'';$('workoutBlocks').value=w?serialize(w):'';$('editorMessage').textContent='';show('editor');renderVisual();closeV2Wizard()}
 function parse(text){let blocks=[],current=null;for(const raw of text.split(/\r?\n/)){const line=raw.trim();if(!line)continue;if(line.endsWith(':')){current={name:line.slice(0,-1).trim(),items:[]};if(!current.name)throw Error('Hay un bloque sin nombre');blocks.push(current)}else{if(!current)throw Error('Escribe primero el nombre de un bloque terminado en :');current.items.push(line)}}if(!blocks.length||blocks.some(b=>!b.items.length))throw Error('Cada bloque debe tener al menos un ejercicio');if(blocks.reduce((n,b)=>n+b.items.length,0)>200)throw Error('Máximo 200 ejercicios');for(const b of blocks)for(const item of b.items){const m=item.match(/@(\d+)$/);if(m&&(Number(m[1])<1||Number(m[1])>7200))throw Error('Duración permitida: entre 1 y 7200 segundos');}return blocks}
 $('new').onclick=()=>edit(null);$('cancel').onclick=()=>show(editing?'board':'library');
-$('save').onclick=()=>{try{const name=$('workoutName').value.trim();if(!name)throw Error('Escribe el nombre del entrenamiento');const blocks=parse($('workoutBlocks').value);const id=editing||(editingClass?'class-'+crypto.randomUUID():'w'+Date.now());if(editing&&isActiveRoutine(id))throw Error('Finaliza la sesión activa antes de modificar esta rutina');const field=$('workoutHrLimit'),rawLimit=field.value;const hrLimit=validHeartLimit(Number(rawLimit));if(field.validity.badInput||(rawLimit!==''&&hrLimit===null)){$('editorHeartOptions').open=true;field.focus();throw Error('Introduce un límite entero entre 25 y 240 ppm o deja el campo vacío');}const w={id,name,blocks};if(hrLimit!==null)w.hrLimit=hrLimit;const before=workouts;const previous=before.find(x=>x.id===id);if(editingClass){w.classPrepared=true;if(previous?.classSourceId)w.classSourceId=previous.classSourceId;}const marked=markGGWorkout(w,previous);workouts=editing?before.map(x=>x.id===id?marked:x):[...before,marked];if(!persist()){workouts=before;return}if(!isHF)$(editingClass?'vectorMyClasses':'vectorMyWorkouts').open=true;active=id;show('board')}catch(e){$('editorMessage').textContent=e.message}};
+$('save').onclick=()=>{try{const name=$('workoutName').value.trim();if(!name)throw Error('Escribe el nombre del entrenamiento');const blocks=parse($('workoutBlocks').value);const id=editing||(editingClass?'class-'+crypto.randomUUID():'w'+Date.now());if(editing&&isActiveRoutine(id))throw Error('Finaliza la sesión activa antes de modificar esta rutina');const field=$('workoutHrLimit'),rawLimit=field.value;const hrLimit=validHeartLimit(Number(rawLimit));if(field.validity.badInput||(rawLimit!==''&&hrLimit===null)){$('editorHeartOptions').open=true;field.focus();throw Error('Introduce un límite entero entre 25 y 240 ppm o deja el campo vacío');}const w={id,name,blocks};if(hrLimit!==null)w.hrLimit=hrLimit;const before=workouts;const previous=before.find(x=>x.id===id);if(editingClass){w.classPrepared=true;if(previous?.classSourceId)w.classSourceId=previous.classSourceId;}const marked=markGGWorkout(w,previous);workouts=editing?before.map(x=>x.id===id?marked:x):[...before,marked];if(!persist()){workouts=before;return}confirmWorkoutSave(marked);if(!isHF)$(editingClass?'vectorMyClasses':'vectorMyWorkouts').open=true;active=id;show('board')}catch(e){$('editorMessage').textContent=e.message}};
 $('edit').onclick=()=>edit(workouts.find(w=>w.id===active));$('back').onclick=()=>show('library');
 
 let prestartRemaining=0,prestartRunning=false;
@@ -4237,7 +4272,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.25', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.54';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.25', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.55';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
@@ -4819,6 +4854,7 @@ window.__secureAppV2={
   if(profileId!==localProfile.id){
    throw Error('No se ha podido seleccionar el perfil autorizado. Vuelve al inicio.');
   }
+  savedWorkoutFeedback=null;
   secureNamespace=(isHF?'hf-v2:':'gg-v2:')+ownerId+':'+profileId+':';
   load();restoreActiveSessionFromStorage();
   return true;
@@ -4876,7 +4912,16 @@ window.__secureAppV2={
   if(view==='board'&&active)renderBoard();
  },
  busy(){return session||view==='editor'||view==='guided'||view==='coachStations'},
- setController(c){secureSyncController=c},
+ setController(c){
+  secureSyncController=c;
+  syncFeedbackUnavailable=false;
+  if(!c)savedWorkoutFeedback=null;
+  renderWorkoutSyncFeedback();
+ },
+ onSyncState(unavailable){
+  syncFeedbackUnavailable=unavailable;
+  renderWorkoutSyncFeedback();
+ },
 };
 setupHF();
 setupLocalProfiles();
@@ -4930,7 +4975,7 @@ function openCoachLaunch(workoutId){
  $('coachLaunchStations').disabled=empty;
  $('coachLaunchMessage').textContent=empty?'Crea una clase o guarda un entrenamiento para poder dirigirlo.':'';
  $('coachLaunch').showModal();
- if(!empty)select.focus();
+ $('coachLaunchTitle').focus();
 }
 function selectCoachWorkout(workout){
  if(active!==workout.id)vectorTargets={};
@@ -5052,5 +5097,5 @@ if(usesWorkoutCloud&&!SECURE_AUTH_V2){
   document.getElementById('ggCloudPanel')?.remove();
 }
 </script>
-<script type="module" src="src/account-entry-v2.mjs?v=3.0.9" onerror="document.getElementById('accountWall').dataset.phase='load-error';document.getElementById('accountLaunchMessage').textContent='No se pudo abrir la aplicación.'"></script>
+<script type="module" src="src/account-entry-v2.mjs?v=3.0.10" onerror="document.getElementById('accountWall').dataset.phase='load-error';document.getElementById('accountLaunchMessage').textContent='No se pudo abrir la aplicación.'"></script>
 </body></html>

@@ -3,7 +3,7 @@
  * This is an integration candidate. NEVER enable in production until both
  * dedicated project schemas, RLS, login and two-device sync are verified.
  */
-import {createEditionCloud,createProfileSync,profileLocalId,profileUUID} from './authenticated-sync-v2.mjs?v=3.0.5';
+import {createEditionCloud,createProfileSync,profileLocalId,profileUUID} from './authenticated-sync-v2.mjs?v=3.0.6';
 const edition=new URLSearchParams(location.search).get('app')==='hf'?'hf':'gg';
 const config=edition==='hf'
  ?(await import('../config/hf-supabase.js')).HF_SUPABASE_CONFIG
@@ -64,9 +64,10 @@ async function syncGarmin(manual=false){
 }
 garminButton.onclick=()=>void syncGarmin(true);
 
-function syncStatus(text){
+function syncStatus(text,unavailable=false){
  const conflict='Hay cambios en conflicto. Se conservan localmente; revisa antes de continuar.';
  by('accountSyncState').textContent=edition==='gg'&&text===conflict?'':text;
+ bridge.onSyncState?.(unavailable);
 }
 function profileStatus(text){
  const status=by('profileActionStatus');
@@ -134,7 +135,7 @@ async function refreshProfiles(){
   profiles=latest;
   void controller.synchronize();
  }catch(error){
-  if(currentUser===user&&!profileRemoving)syncStatus('Pendiente de sincronizar: '+error.message);
+  if(currentUser===user&&!profileRemoving)syncStatus('Pendiente de sincronizar: '+error.message,true);
  }
 }
 async function ready(){
@@ -175,7 +176,7 @@ async function ready(){
   // under the authenticated namespace; local edits queue automatically.
   controller.seedLocal(existing);
   by('accountUser').textContent=user.email||'Cuenta personal';
-  by('accountSyncState').textContent='Sin conexión · los cambios quedarán pendientes de sincronizar.';
+  syncStatus('Sin conexión · los cambios quedarán pendientes de sincronizar.',true);
   window.__secureAccount={logout:signOut,schedule,createProfile:addProfile,edition};
   unlock();
   return true;
@@ -183,7 +184,7 @@ async function ready(){
  await controller.initial();
  window.__secureAccount={logout:signOut,schedule,createProfile:addProfile,edition};
  by('accountUser').textContent=user.email||'Cuenta personal';
- by('accountSyncState').textContent='Cuenta verificada. Sincronización activa.';
+ bridge.onSyncState?.();
  unlock();
  return true;
 }
@@ -287,6 +288,7 @@ async function run(action){
  }
 }
 window.addEventListener('online',schedule);
+window.addEventListener('offline',()=>bridge.onSyncState?.(true));
 window.addEventListener('focus',schedule);
 document.addEventListener('visibilitychange',()=>{
  if(document.visibilityState==='visible'&&canSyncGarmin(currentUser,selectedProfile)&&Date.now()-lastGarminAttempt>=60000)garminPending=true;

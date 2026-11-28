@@ -225,12 +225,27 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
  let shadow=safeJSON(storage.getItem(stateKey),{}),pending=safeJSON(storage.getItem(pendingKey),{});
  if(!shadow||Array.isArray(shadow)||typeof shadow!=='object')shadow={};
  if(!pending||Array.isArray(pending)||typeof pending!=='object')pending={};
+ let checked=false,conflicts=new Set();
  let running=false,queued=false,lastLocal={workout:{},history:{},active:{}};
  const loadArray=(raw)=>{const rows=safeJSON(raw,[]);return Array.isArray(rows)?rows:[]};
  const toMap=(rows,kind)=>Object.fromEntries(rows.filter(x=>{
    const id=kind==='collective'?x?.runId:x?.id;
    return x&&typeof id==='string'&&id.length<=128;
   }).map(x=>[kind==='collective'?x.runId:x.id,clone(x)]));
+ function syncStatus(workoutId){
+  if(workoutId!==undefined){
+   const key=recordKey('workout',workoutId);
+   if(pending[key])return conflicts.has(key)?'review':'pending';
+   return shadow[key]?'synced':'pending';
+  }
+  if(Object.keys(pending).some(key=>conflicts.has(key)))return 'review';
+  return checked&&!Object.keys(pending).length?'synced':'pending';
+ }
+ function publishState(){
+  const status=syncStatus();
+  onState(status==='review'?'Hay cambios en conflicto. Se conservan localmente; revisa antes de continuar.'
+   :status==='pending'?'Pendiente de sincronizar.':'Sincronizado con tus dispositivos.');
+ }
  function persist(){storage.setItem(stateKey,JSON.stringify(shadow));storage.setItem(pendingKey,JSON.stringify(pending));}
  function seedLocal({workouts=[],history=[],active=null,collective=[],class_state=null}={}){
   lastLocal={workout:toMap(workouts,'workout'),history:toMap(history,'history'),
@@ -255,6 +270,7 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
     pending[key]={kind,client_id:id,payload:{id},deleted_at:new Date(now()).toISOString(),at:now()}}
   }
   lastLocal[kind]=after;persist();queued=true;
+  if(kind==='workout')publishState();
  }
  async function synchronize(){
   if(running){queued=true;return}
@@ -266,7 +282,7 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
    // comparing it to the last revision read from the server.
    const remote=await cloud.getRecords(profileId);
    const byKey=new Map(remote.map(x=>[recordKey(x.kind,x.client_id),x]));
-   const unresolved={};
+   const unresolved=new Set();
    for(const [key,item] of Object.entries(pending)){
     const server=byKey.get(key),revision=shadow[key]?.revision??null;
     // An import is insert-only. An existing Garmin ID, even a deleted one,
@@ -278,7 +294,7 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
     }
     const conflict=Boolean(server)&&(revision===null||Number(server.revision)!==Number(revision));
     if(conflict||(!server&&revision!==null)){
-     unresolved[key]=item;continue;
+     unresolved.add(key);continue;
     }
     try{
      const newRevision=await cloud.upsertRevision(profileId,item,revision);
@@ -290,8 +306,7 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
      else queued=true;
     }catch(error){
      if(item.insert_only&&error.code==='23505'){queued=true;continue}
-     unresolved[key]=item;
-     if(!(error instanceof SecureSyncConflict))onState('Cambio pendiente: '+error.message);
+     if(error instanceof SecureSyncConflict)unresolved.add(key);
     }
    }
    persist();
@@ -314,12 +329,12 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
    const view={workouts:Object.values(mapped.workout),history:Object.values(mapped.history),active:mapped.active.current||null,
     collective:Object.values(mapped.collective),class_state:mapped.class_state.current||null,
     buhardillaRoutineIds:buhardillaRoutineIds(remote)};
-   if(!blocked())await onApply(view,{initial:false,conflicts:Object.keys(unresolved).length});
+   if(!blocked())await onApply(view,{initial:false,conflicts:unresolved.size});
    seedLocal(view);persist();
-   onState(Object.keys(unresolved).length
-     ?'Hay cambios en conflicto. Se conservan localmente; revisa antes de continuar.'
-     :'Sincronizado con tus dispositivos.');
-  }catch(error){onState('Pendiente de sincronizar: '+error.message)}
+   conflicts=unresolved;
+   checked=true;
+   publishState();
+  }catch(error){checked=false;onState('Pendiente de sincronizar: '+error.message)}
   finally{running=false;if(queued&&!blocked())queueMicrotask(()=>synchronize())}
  }
  async function initial(){
@@ -335,8 +350,9 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
     collective:Object.values(map.collective),class_state:map.class_state.current||null,
     buhardillaRoutineIds:buhardillaRoutineIds(rows)};
   await onApply(result,{initial:true});seedLocal(result);persist();
+  checked=true;publishState();
   if(Object.keys(pending).length)void synchronize();
   return result;
  }
- return {initial,changed,synchronize,seedLocal,pendingCount:()=>Object.keys(pending).length};
+ return {initial,changed,synchronize,seedLocal,syncStatus,pendingCount:()=>Object.keys(pending).length};
 }

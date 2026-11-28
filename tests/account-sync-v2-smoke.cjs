@@ -240,3 +240,39 @@ test('profile deletion is scoped, reflected on two devices and updates its verif
  assert.deepEqual(transport.rows,[{profile_id:userId}]);
  assert.equal(phone.getItem('existing-local-history'),'kept');
 });
+
+
+test('reports a workout as synced only after acknowledgement and distinguishes conflicts from outages',async()=>{
+ const {createProfileSync}=await mod;
+ const storage=memory(),profileId=userId;
+ const workout={id:'workout-status',name:'Intervalos',blocks:[]};
+ let offline=false,remote=[];
+ const cloud={
+  verified:true,
+  async getRecords(){if(offline)throw Error('Red interrumpida');return remote;},
+  async upsertRevision(id,item,revision){
+   assert.equal(id,profileId);
+   remote=[{...item,revision:(revision??0)+1}];
+   return remote[0].revision;
+  }
+ };
+ const controller=createProfileSync({cloud,profileId,storage,prefix:'status:',onApply:()=>{}});
+ assert.equal(controller.syncStatus(),'pending');
+ await controller.initial();
+ assert.equal(controller.syncStatus(),'synced');
+ controller.changed('workout',JSON.stringify([workout]));
+ assert.equal(controller.syncStatus(workout.id),'pending');
+ offline=true;
+ await controller.synchronize();
+ assert.equal(controller.syncStatus(workout.id),'pending');
+ offline=false;
+ await controller.synchronize();
+ assert.equal(controller.syncStatus(workout.id),'synced');
+ assert.equal(controller.syncStatus(),'synced');
+ remote[0].revision++;
+ controller.changed('workout',JSON.stringify([{...workout,name:'Intervalos actualizados'}]));
+ await controller.synchronize();
+ assert.equal(controller.syncStatus(workout.id),'review');
+ assert.equal(controller.syncStatus(),'review');
+ assert.equal(controller.pendingCount(),1);
+});
