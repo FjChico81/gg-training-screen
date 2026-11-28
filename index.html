@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.55</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.56</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -534,7 +534,7 @@ html:not([data-edition="hf"]) :is(button,select,input,summary):focus-visible{
 .vector-home .home-actions:empty{display:none}
 .athlete-home-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0 14px}
 .athlete-home-actions button{margin:0;min-width:0;min-height:46px;font-size:14px}
-#athleteHomeResume{grid-column:1/-1}
+#athleteHomeResume,#coachHomeResume{grid-column:1/-1}
 #homeSyncState{margin:6px 0 0;font-size:12px}
 #workoutSaveFeedback{margin:8px 0 12px;padding:8px 10px}
 #workoutSaveFeedback span{display:block;margin-top:2px}
@@ -1443,6 +1443,8 @@ html[data-edition="hf"] #accountWall .hf-login-symbol{
 }
 #coachLaunch::backdrop{background:#0008}
 #coachLaunch h2{margin:0}
+/* The heading receives initial focus so iOS leaves the native picker closed. */
+#coachLaunchTitle:focus{outline:none;box-shadow:none}
 #coachLaunch .coach-launch-modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 </style></head><body>
 <div id="hrConnectedNotice" role="status" aria-atomic="true"></div>
@@ -1909,6 +1911,7 @@ function assignedBuhardillaIds(){
  }catch{ return new Set() }
 }
 function findWorkout(id){
+ if(coachGuided&&coachRun?.workout.id===id)return coachRun.workout;
  const assigned=assignedBuhardillaIds().has(id)||session&&sessionWorkout===id;
  return vectorDays.get(id)??(assigned?buhardillaRoutines.get(id):undefined)??workouts.find(workout=>workout.id===id);
 }
@@ -2065,7 +2068,11 @@ function setupVectorHome(){
  directCoach.type='button';
  directCoach.setAttribute('aria-haspopup','dialog');
  directCoach.onclick=()=>openCoachLaunch();
- actions.append(continueWorkout,directCoach,$('historyButton'));
+ const resumeClass=node('button','Reanudar clase','alt hidden');
+ resumeClass.id='coachHomeResume';
+ resumeClass.type='button';
+ resumeClass.onclick=()=>void resumeCoachClass();
+ actions.append(continueWorkout,resumeClass,directCoach,$('historyButton'));
  const syncState=node('p','','muted small hidden');
  syncState.id='homeSyncState';syncState.setAttribute('role','status');
  profileRow.after(syncState,actions);
@@ -2342,7 +2349,9 @@ const ggLibrary = {
     return true;
   }
 };
+const COACH_CHECKPOINT_KEY='gg-coach-checkpoint-v1';
 let coachGuided=false, coachStations=null, coachPreviousTv=false, editingClass=false;
+let coachRun=null, lastCoachSave=0;
 function show(v){if(v!=='history'&&$('historyDayDialog').open)$('historyDayDialog').close();if(v!=='library')$('hrShortcut').open=false;if(view==='guided'&&v!=='guided'){clearTvExerciseGif();if(prestartRemaining>0)prestartRunning=false}if(typeof closeSettings==='function')closeSettings();view=v;updateHFTheme();document.body.classList.toggle('guided-active',v==='guided');if(v==='guided'){$('sessionExtras').classList.add('hidden');$('moreSession').textContent='⚙ Más opciones';$('moreSession').setAttribute('aria-expanded','false')}if(typeof syncWakeLock==='function')void syncWakeLock();['library','editor','board','guided','history','sessionSummary','completedSummary','coachStations'].forEach(id=>$(id).classList.toggle('hidden',id!==v));if(v==='library'){
   if(usesWorkoutCloud&&!session&&appStorage.getItem(KEY)!==ggLibraryRaw)load();
   renderLibrary();
@@ -2948,6 +2957,7 @@ function renderLibrary(){
    const resumable=session&&!coachGuided&&findWorkout(sessionWorkout);
    $('athleteHomeResume').classList.toggle('hidden',!resumable);
    if(resumable)$('athleteHomeResume').setAttribute('aria-label','Continuar entrenamiento '+resumable.name);
+   renderCoachRecovery();
    renderMyClasses();
    const personalCount=personalWorkouts.length;
    const labels=[];
@@ -3507,7 +3517,14 @@ function renderRoundClock(exercises,amrap,delta=0){
  const display=formatSeconds(Math.floor(roundClock.seconds));
  if($('roundClock').textContent!==display)$('roundClock').textContent=display;
 }
-function saveSession(){if(coachGuided)return;try{appStorage.setItem('gg-active-session-v1',JSON.stringify({active:sessionWorkout,step,paused,elapsed,stepElapsed,session,seriesLog,restRemaining,restRunning,transitionTo,draftSets,prestartRemaining,vectorTargets,amrapElapsed,amrapRounds,amrapResults,amrapLastBlock,amrapCurrent,ftElapsed,ftResults,actualResults,...(isHF?{}:{roundClock,sessionHeart,trainingStartedAt})}))}catch(e){}}
+function saveSession(){
+ if(coachGuided&&!session)return;
+ const state={active:sessionWorkout,step,paused,elapsed,stepElapsed,session,seriesLog,restRemaining,restRunning,transitionTo,draftSets,prestartRemaining,vectorTargets,amrapElapsed,amrapRounds,amrapResults,ftElapsed,ftResults,actualResults,...(isHF?{}:{roundClock,sessionHeart,trainingStartedAt})};
+ try{
+  if(coachGuided)saveCoachCheckpoint({...state,prestartRunning,amrapLastBlock,amrapCurrent,coachPreviousTv});
+  else appStorage.setItem('gg-active-session-v1',JSON.stringify(state));
+ }catch(e){}
+}
 function numeric(id,min,max){const raw=$(id).value;if(raw==='')throw Error('Falta '+id);const v=Number(raw);if(!Number.isFinite(v)||v<min||v>max)throw Error('Valor inválido en '+id);return v}
 function currentStrength(){return steps()[step]?.strength||null}
 function getDraft(){return{reps:vectorDays.has(active)&&$('reps').value===''?null:numeric('reps',0,500),weight:numeric('weight',0,1000),rir:numeric('rir',0,15),rest:numeric('rest',0,1800)}}
@@ -4037,12 +4054,14 @@ function tick(){
   }
  }
  $('clock').textContent=formatSeconds(Math.floor(elapsed));
+ if(coachGuided&&session&&!paused&&now-lastCoachSave>=1000)saveSession();
 }
 setInterval(tick,200);
 function syncTrainingClock(){
  tick();
  refreshHeart();
  if(session)saveSession();
+ if(view==='coachStations')coachStations?.checkpoint();
 }
 document.addEventListener('visibilitychange',()=>{
  syncTrainingClock();
@@ -4272,7 +4291,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.25', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.55';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.25', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.56';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
@@ -4819,10 +4838,19 @@ $('tvExerciseGif').onerror=unavailableTvTechnique;
 $('tvExerciseVideo').onloadeddata=event=>displayTvTechniqueMedia(event.currentTarget);
 $('tvExerciseVideo').onerror=unavailableTvTechnique;
 
-function restoreActiveSessionFromStorage(){
-  roundClock={key:null,seconds:0};trainingStartedAt=null;resetSessionHeart();
-  session=false;sessionWorkout=null;paused=true;step=0;elapsed=0;stepElapsed=0;seriesLog={};actualResults={};
-  try{const saved=JSON.parse(appStorage.getItem('gg-active-session-v1'));if(saved&&saved.session&&(findWorkout(saved.active)||buhardillaRoutines.has(saved.active))){active=saved.active;sessionWorkout=saved.active;prestartRemaining=Number.isFinite(Number(saved.prestartRemaining))?Math.max(0,Math.min(10,Number(saved.prestartRemaining))):0;prestartRunning=false;step=Math.max(0,Math.min(saved.step,findWorkout(active).blocks.reduce((n,b)=>n+b.items.length,0)-1));paused=true;elapsed=saved.elapsed||0;stepElapsed=saved.stepElapsed||0;seriesLog=saved.seriesLog||{};restRemaining=saved.restRemaining||0;restRunning=!!saved.restRunning;transitionTo=Number.isInteger(saved.transitionTo)&&saved.transitionTo===step+1? saved.transitionTo:null;draftSets=saved.draftSets||{};vectorTargets=saved.vectorTargets||{};amrapElapsed=saved.amrapElapsed||0;amrapRounds=saved.amrapRounds||0;amrapResults=saved.amrapResults||[];ftElapsed=saved.ftElapsed||0;ftResults=saved.ftResults||[];actualResults=saved.actualResults||{};
+function restoreSessionState(saved){
+  active=sessionWorkout=saved.active;
+  prestartRemaining=Number.isFinite(Number(saved.prestartRemaining))?Math.max(0,Math.min(10,Number(saved.prestartRemaining))):0;
+  prestartRunning=coachGuided&&prestartRemaining>0&&!!saved.prestartRunning;
+  step=Math.max(0,Math.min(saved.step,findWorkout(active).blocks.reduce((n,b)=>n+b.items.length,0)-1));
+  paused=coachGuided?!!saved.paused:true;
+  elapsed=saved.elapsed||0;stepElapsed=saved.stepElapsed||0;seriesLog=saved.seriesLog||{};
+  restRemaining=saved.restRemaining||0;restRunning=!!saved.restRunning;
+  transitionTo=Number.isInteger(saved.transitionTo)&&saved.transitionTo===step+1?saved.transitionTo:null;
+  draftSets=saved.draftSets||{};editingSet=-1;vectorTargets=saved.vectorTargets||{};
+  amrapElapsed=saved.amrapElapsed||0;amrapRounds=saved.amrapRounds||0;amrapResults=saved.amrapResults||[];
+  amrapLastBlock=saved.amrapLastBlock??null;amrapCurrent=saved.amrapCurrent??null;
+  ftElapsed=saved.ftElapsed||0;ftResults=saved.ftResults||[];actualResults=saved.actualResults||{};
   if(!isHF){
    const savedRound=saved.roundClock;
    if(typeof savedRound?.key==='string'&&Number.isFinite(savedRound.seconds)&&savedRound.seconds>=0)
@@ -4830,7 +4858,16 @@ function restoreActiveSessionFromStorage(){
    resetSessionHeart(saved.sessionHeart);
    if(Number.isFinite(Date.parse(saved.trainingStartedAt)))trainingStartedAt=saved.trainingStartedAt;
   }
-  session=true}}catch(e){}
+  session=true;
+}
+function restoreActiveSessionFromStorage(){
+  roundClock={key:null,seconds:0};trainingStartedAt=null;resetSessionHeart();
+  session=false;sessionWorkout=null;paused=true;step=0;elapsed=0;stepElapsed=0;seriesLog={};actualResults={};
+  try{
+   const saved=JSON.parse(appStorage.getItem('gg-active-session-v1'));
+   if(saved?.session&&(findWorkout(saved.active)||buhardillaRoutines.has(saved.active)))restoreSessionState(saved);
+  }catch(e){}
+  if(!isHF)renderCoachRecovery();
 }
 window.__secureAppV2={
  setProfiles(ownerId,rows){
@@ -4935,16 +4972,55 @@ function setCoachGuided(active){
  $('coachDockToggle').textContent='Ocultar mandos';
  $('coachDockToggle').setAttribute('aria-expanded','true');
 }
+function readCoachCheckpoint(){
+ try{
+  const saved=JSON.parse(appStorage.getItem(COACH_CHECKPOINT_KEY));
+  if(!saved?.id||!saved.workout?.id||!saved.state)return null;
+  if(saved.mode==='stations')return saved;
+  if(saved.mode==='guided'&&saved.state.active===saved.workout.id&&saved.state.session
+    &&saved.workout.blocks?.some(block=>block.items?.length))return saved;
+ }catch{}
+ return null;
+}
+window.addEventListener('storage',event=>{
+ if(!isHF&&view==='library'&&event.key===(SECURE_AUTH_V2?secureNamespace:storagePrefix)+COACH_CHECKPOINT_KEY)
+  renderCoachRecovery();
+});
+function renderCoachRecovery(){
+ const saved=readCoachCheckpoint(), button=$('coachHomeResume');
+ button.classList.toggle('hidden',!saved||session);
+ if(saved)button.setAttribute('aria-label','Reanudar clase: '+saved.workout.name);
+}
+function beginCoachRun(mode,workout){
+ if(readCoachCheckpoint()&&!confirm('Ya hay una clase pendiente. ¿Sustituirla por esta clase?'))return false;
+ coachRun={id:crypto.randomUUID(),mode,workout:structuredClone(workout)};
+ lastCoachSave=0;
+ return true;
+}
+function saveCoachCheckpoint(state){
+ if(!coachRun)return;
+ // Ignore later writes from a tab whose run another tab has replaced.
+ if(lastCoachSave&&readCoachCheckpoint()?.id!==coachRun.id)return;
+ appStorage.setItem(COACH_CHECKPOINT_KEY,JSON.stringify({...coachRun,state}));
+ lastCoachSave=Date.now();
+}
+function clearCoachCheckpoint(){
+ if(coachRun&&readCoachCheckpoint()?.id===coachRun.id)appStorage.removeItem(COACH_CHECKPOINT_KEY);
+ coachRun=null;
+ lastCoachSave=0;
+}
 function exitCoachGuided(message){
+ clearCoachCheckpoint();
  prestartRemaining=0;prestartRunning=false;
  session=false;paused=true;sessionWorkout=null;
- show('board');
  setCoachGuided(false);
  if(coachPreviousTv!==document.body.classList.contains('tv-mode'))document.querySelector('#board [data-tv-toggle]').click();
+ const hasBoard=Boolean(findWorkout(active));
+ show(hasBoard?'board':'library');
  $('coachClassNotice').textContent=message;
  $('coachClassNotice').classList.remove('hidden');
  window.__secureAccount?.schedule();
- $('coachClassToggle').focus();
+ $(hasBoard?'coachClassToggle':'coachHomeLaunch').focus();
 }
 function setCoachClassChoice(open){
  $('coachClassChoice').classList.toggle('hidden',!open);
@@ -4983,7 +5059,7 @@ function selectCoachWorkout(workout){
  setCoachClassChoice(false);
 }
 function startCoachGuided(workout){
- if(session||!workout)return;
+ if(session||!workout||!beginCoachRun('guided',workout))return;
  selectCoachWorkout(workout);
  $('coachClassNotice').classList.add('hidden');
  if($('coachLaunch').open)$('coachLaunch').close();
@@ -5022,6 +5098,62 @@ function setupBuhardillaCoach(){
  $('coachSetupStations').onclick=()=>void startCoachStations(findWorkout(active),false);
  $('stationStart').addEventListener('click',()=>void initAudio());
 }
+async function resumeCoachClass(){
+ const saved=readCoachCheckpoint();
+ if(session||!saved)return;
+ const button=$('coachHomeResume');
+ button.disabled=true;
+ try{
+  if(saved.mode==='stations'){
+   const stations=await loadCoachStations();
+   if(view!=='library'||session||readCoachCheckpoint()?.id!==saved.id)return;
+   stations.restore(saved.workout,saved.state);
+   selectCoachWorkout(saved.workout);
+   coachRun=saved;
+   lastCoachSave=Date.now();
+   show('coachStations');
+   $('stationPause').focus();
+  }else{
+   coachRun=saved;
+   lastCoachSave=Date.now();
+   selectCoachWorkout(saved.workout);
+   coachPreviousTv=Boolean(saved.state.coachPreviousTv);
+   setCoachGuided(true);
+   if(!document.body.classList.contains('tv-mode'))document.querySelector('#board [data-tv-toggle]').click();
+   restoreSessionState(saved.state);
+   clockAnchor=Date.now();
+   show('guided');
+  }
+  void initAudio();
+  void syncWakeLock();
+ }catch{
+  alert('No se ha podido recuperar la clase.');
+ }finally{
+  button.disabled=false;
+ }
+}
+async function loadCoachStations(){
+ const {mountBuhardillaStations}=await import('./src/buhardilla-stations.mjs?v=4');
+ return coachStations??=mountBuhardillaStations({
+  root:$('coachStations'),
+  onExit:()=>{
+   const hasBoard=Boolean(findWorkout(active));
+   show(hasBoard?'board':'library');
+   window.__secureAccount?.schedule();
+   $(hasBoard?'coachClassToggle':'coachHomeLaunch').focus();
+  },
+  onStart:workout=>beginCoachRun('stations',workout),
+  onCheckpoint:state=>{try{saveCoachCheckpoint(state)}catch{}},
+  onComplete:(workout,duration)=>{
+   if(!saveClassRun(workout,'stations',duration))return false;
+   clearCoachCheckpoint();
+   return true;
+  },
+  onSound:final=>beep(final,true),
+  onActivity:()=>void syncWakeLock(),
+  formatTime:formatSeconds
+ });
+}
 async function startCoachStations(workout,fromHome){
  if(session||!workout)return;
  const trigger=$(fromHome?'coachLaunchStations':'coachSetupStations');
@@ -5032,19 +5164,11 @@ async function startCoachStations(workout,fromHome){
  notice.textContent='';
  if(!fromHome)notice.classList.add('hidden');
  try{
-   const {mountBuhardillaStations}=await import('./src/buhardilla-stations.mjs?v=3');
+   const stations=await loadCoachStations();
    const stillOpen=fromHome?view==='library'&&$('coachLaunch').open&&$('coachLaunchWorkout').value===workout.id
     :view==='board'&&active===workout.id;
    if(!stillOpen||session||profileId!==localProfile.id||findWorkout(workout.id)!==workout)return;
    selectCoachWorkout(workout);
-   coachStations??=mountBuhardillaStations({
-    root:$('coachStations'),
-    onExit:()=>{show('board');window.__secureAccount?.schedule();$('coachClassToggle').focus()},
-    onComplete:(workout,duration)=>saveClassRun(workout,'stations',duration),
-    onSound:final=>beep(final,true),
-    onActivity:()=>void syncWakeLock(),
-    formatTime:formatSeconds
-   });
    const exercises=steps().filter(exercise=>!isProgrammedRest(exercise)).map(exercise=>{
     const dose=exercise.strength;
     return {...exercise,
@@ -5052,7 +5176,7 @@ async function startCoachStations(workout,fromHome){
      gif:techniqueCatalogPath(exercise.techniqueId)||sharedTechniquePath(techniqueKey(exercise.label))
     };
    });
-   coachStations.open(workout.name,exercises,workout);
+   stations.open(workout.name,exercises,workout);
    if(fromHome)$('coachLaunch').close();
    show('coachStations');
    $('stationTitle').focus();
