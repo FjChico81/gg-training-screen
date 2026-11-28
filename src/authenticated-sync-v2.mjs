@@ -220,8 +220,11 @@ function buhardillaRoutineIds(rows){
  return Array.isArray(ids)?ids.filter(id=>typeof id==='string'):[];
 }
 
-export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocked=()=>false,onState=()=>{},now=Date.now}){
+const isTrainingPreference=id=>typeof id==='string'&&id.length<=128&&/^hf-(?:favorite|plan):.+$/.test(id);
+
+export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocked=()=>false,onState=()=>{},now=Date.now,trainingPreferences=false}){
  const stateKey=prefix+'sync-v2-state',pendingKey=prefix+'sync-v2-pending';
+ const preferencesSeedKey=prefix+'training-preferences-seeded-v1';
  let shadow=safeJSON(storage.getItem(stateKey),{}),pending=safeJSON(storage.getItem(pendingKey),{});
  if(!shadow||Array.isArray(shadow)||typeof shadow!=='object')shadow={};
  if(!pending||Array.isArray(pending)||typeof pending!=='object')pending={};
@@ -247,18 +250,36 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
    :status==='pending'?'Pendiente de sincronizar.':'Sincronizado con tus dispositivos.');
  }
  function persist(){storage.setItem(stateKey,JSON.stringify(shadow));storage.setItem(pendingKey,JSON.stringify(pending));}
- function seedLocal({workouts=[],history=[],active=null,collective=[],class_state=null}={}){
+ function seedLocal({workouts=[],history=[],active=null,collective=[],class_state=null,preferences=[]}={}){
   lastLocal={workout:toMap(workouts,'workout'),history:toMap(history,'history'),
     active:active?{current:clone(active)}:{},
     collective:toMap(collective,'collective'),
-    class_state:class_state?{current:clone(class_state)}:{}};
+    class_state:class_state?{current:clone(class_state)}:{},
+    preferences:trainingPreferences?toMap(preferences.filter(item=>isTrainingPreference(item?.id)),'preferences'):{}};
  }
- function changed(kind,content,{insertOnly=false}={}){
+ function importTrainingPreferences(items){
+  if(!trainingPreferences||storage.getItem(preferencesSeedKey)!==null||!Array.isArray(items))return;
+  for(const item of items){
+   if(!isTrainingPreference(item?.id))continue;
+   const key=recordKey('preferences',item.id);
+   if(!shadow[key]&&!pending[key])pending[key]={kind:'preferences',client_id:item.id,payload:clone(item),deleted_at:null,at:now(),insert_only:true};
+  }
+  persist();
+  storage.setItem(preferencesSeedKey,'true');
+ }
+ function acceptsRecord(kind,id){
+  return kind!=='preferences'||(trainingPreferences&&isTrainingPreference(id));
+ }
+ function changed(kind,content,{insertOnly=false,preferencePrefix=null}={}){
   assertKind(kind);
-  if(!['workout','history','active','collective','class_state'].includes(kind))return;
+  if(!['workout','history','active','collective','class_state','preferences'].includes(kind)
+      ||(kind==='preferences'&&!trainingPreferences))return;
   const single=kind==='active'||kind==='class_state';
-  const after=single?(content&&typeof content==='object'?{current:content}:{}):toMap(loadArray(content),kind);
-  const before=lastLocal[kind]||{};
+  const after=single?(content&&typeof content==='object'?{current:content}:{}):toMap(loadArray(content).filter(item=>acceptsRecord(kind,item?.id)),kind);
+  const previous=lastLocal[kind]||{};
+  const scoped=kind==='preferences'&&preferencePrefix;
+  const before=scoped?Object.fromEntries(Object.entries(previous).filter(([id])=>id.startsWith(preferencePrefix))):previous;
+  for(const id of Object.keys(after))if(scoped&&!id.startsWith(preferencePrefix))delete after[id];
   for(const [id,item] of Object.entries(after)){
    if(JSON.stringify(before[id])!==JSON.stringify(item)){
     const key=recordKey(kind,id);
@@ -269,8 +290,9 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
    if(!(id in after)){const key=recordKey(kind,id);
     pending[key]={kind,client_id:id,payload:{id},deleted_at:new Date(now()).toISOString(),at:now()}}
   }
-  lastLocal[kind]=after;persist();queued=true;
-  if(kind==='workout')publishState();
+  lastLocal[kind]=scoped?{...Object.fromEntries(Object.entries(previous).filter(([id])=>!id.startsWith(preferencePrefix))),...after}:after;
+  persist();queued=true;
+  if(kind==='workout'||kind==='preferences')publishState();
  }
  async function synchronize(){
   if(running){queued=true;return}
@@ -311,26 +333,31 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
    }
    persist();
    // Pending local changes never get overwritten by remote data.
-   const mapped={workout:{},history:{},active:{},collective:{},class_state:{}};
+   const mapped={workout:{},history:{},active:{},collective:{},class_state:{},preferences:{}};
    for(const [key,server] of byKey){
-    if(!mapped[server.kind])continue;
-    if(server.deleted_at||pending[key])continue;
-    if(!server.payload||typeof server.payload!=='object')continue;
+    if(!mapped[server.kind]||!acceptsRecord(server.kind,server.client_id)||pending[key])continue;
+    if(server.kind==='preferences')shadow[key]={revision:Number(server.revision)};
+    if(server.deleted_at)continue;
+    if(!server.payload||typeof server.payload!=='object'||(server.kind==='preferences'&&server.payload.id!==server.client_id))continue;
     mapped[server.kind][server.client_id]=clone(server.payload);
     shadow[key]={revision:Number(server.revision)};
    }
    // Merge any unsent, new local changes into the visible result.
    for(const [key,item] of Object.entries(pending)){
-    if(!mapped[item.kind])continue;
+    if(!mapped[item.kind]||!acceptsRecord(item.kind,item.client_id))continue;
     if(item.deleted_at)delete mapped[item.kind][item.client_id];
     else mapped[item.kind][item.client_id]=clone(item.payload);
    }
    // If pending conflicted with remote, keep the local draft and alert.
    const view={workouts:Object.values(mapped.workout),history:Object.values(mapped.history),active:mapped.active.current||null,
     collective:Object.values(mapped.collective),class_state:mapped.class_state.current||null,
-    buhardillaRoutineIds:buhardillaRoutineIds(remote)};
-   if(!blocked())await onApply(view,{initial:false,conflicts:unresolved.size});
-   seedLocal(view);persist();
+    buhardillaRoutineIds:buhardillaRoutineIds(remote),
+    ...(trainingPreferences?{preferences:Object.values(mapped.preferences)}:{})};
+   if(!blocked()){
+    await onApply(view,{initial:false,conflicts:unresolved.size});
+    seedLocal(view);
+   }
+   persist();
    conflicts=unresolved;
    checked=true;
    publishState();
@@ -340,19 +367,25 @@ export function createProfileSync({cloud,profileId,storage,prefix,onApply,blocke
  async function initial(){
   if(!cloud.verified)throw Error('Debes iniciar sesión antes de cargar los entrenamientos.');
   const rows=await cloud.getRecords(profileId);
-  const map={workout:{},history:{},active:{},collective:{},class_state:{}};
-  for(const r of rows){const k=recordKey(r.kind,r.client_id);if(!pending[k])shadow[k]={revision:Number(r.revision)};
-   if(!r.deleted_at&&map[r.kind]&&r.payload&&typeof r.payload==='object')map[r.kind][r.client_id]=clone(r.payload)
+  const map={workout:{},history:{},active:{},collective:{},class_state:{},preferences:{}};
+  for(const r of rows){
+   const k=recordKey(r.kind,r.client_id);
+   if(r.kind==='preferences'&&pending[k]?.insert_only&&acceptsRecord(r.kind,r.client_id))delete pending[k];
+   if(!pending[k])shadow[k]={revision:Number(r.revision)};
+   if(!r.deleted_at&&map[r.kind]&&acceptsRecord(r.kind,r.client_id)&&r.payload&&typeof r.payload==='object'
+      &&(r.kind!=='preferences'||r.payload.id===r.client_id))
+    map[r.kind][r.client_id]=clone(r.payload);
   }
-  for(const [k,item] of Object.entries(pending)){if(!map[item.kind])continue;
+  for(const item of Object.values(pending)){if(!map[item.kind]||!acceptsRecord(item.kind,item.client_id))continue;
    if(item.deleted_at)delete map[item.kind][item.client_id];else map[item.kind][item.client_id]=clone(item.payload)}
   const result={workouts:Object.values(map.workout),history:Object.values(map.history),active:map.active.current||null,
     collective:Object.values(map.collective),class_state:map.class_state.current||null,
-    buhardillaRoutineIds:buhardillaRoutineIds(rows)};
+    buhardillaRoutineIds:buhardillaRoutineIds(rows),
+    ...(trainingPreferences?{preferences:Object.values(map.preferences)}:{})};
   await onApply(result,{initial:true});seedLocal(result);persist();
   checked=true;publishState();
   if(Object.keys(pending).length)void synchronize();
   return result;
  }
- return {initial,changed,synchronize,seedLocal,syncStatus,pendingCount:()=>Object.keys(pending).length};
+ return {initial,changed,synchronize,seedLocal,importTrainingPreferences,syncStatus,pendingCount:()=>Object.keys(pending).length};
 }

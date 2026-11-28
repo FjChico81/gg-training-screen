@@ -3,7 +3,7 @@
  * This is an integration candidate. NEVER enable in production until both
  * dedicated project schemas, RLS, login and two-device sync are verified.
  */
-import {createEditionCloud,createProfileSync,profileLocalId,profileUUID} from './authenticated-sync-v2.mjs?v=3.0.6';
+import {createEditionCloud,createProfileSync,profileLocalId,profileUUID} from './authenticated-sync-v2.mjs?v=3.0.7';
 const edition=new URLSearchParams(location.search).get('app')==='hf'?'hf':'gg';
 const config=edition==='hf'
  ?(await import('../config/hf-supabase.js')).HF_SUPABASE_CONFIG
@@ -167,10 +167,12 @@ async function ready(){
  }
  controller=createProfileSync({
   cloud,profileId:profileUUID(user.id,localId),storage:localStorage,prefix,
+  trainingPreferences:Array.isArray(existing.preferences),
   blocked:()=>bridge.busy()||profileRemoving||profileMissing,onApply:(view,options)=>bridge.apply(view,options),
   onState:text=>{if(!profileMissing)syncStatus(text)}
  });
  bridge.setController(controller);
+ controller.importTrainingPreferences(existing.preferences);
  if(user.offline){
   // Only already-verified accounts/profile caches can enter offline. Work remains
   // under the authenticated namespace; local edits queue automatically.

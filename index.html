@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.62</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.63</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -2110,6 +2110,12 @@ const appStorage={
   if(SECURE_AUTH_V2&&!secureNamespace)throw Error('Inicia sesión para guardar datos.');
   localStorage.setItem((SECURE_AUTH_V2?secureNamespace:storagePrefix)+key,value);
   if(SECURE_AUTH_V2&&!secureApply&&secureSyncController){
+   if(!isHF&&(key===TRAINING_PLAN_KEY||key===TRAINING_FAVORITES_KEY)){
+    secureSyncController.changed('preferences',JSON.stringify(trainingPreferencesSnapshot()),{
+     preferencePrefix:key===TRAINING_PLAN_KEY?'hf-plan:':'hf-favorite:'
+    });
+    window.__secureAccount?.schedule();
+   }
    const kind=key===KEY?'workout':key==='gg-strength-history-v1'?'history':key==='gg-active-session-v1'?'active':key===CLASS_RUNS_KEY?'collective':null;
    if(kind){
     secureSyncController.changed(kind,kind==='active'?JSON.parse(value):value,options);
@@ -2906,6 +2912,51 @@ function moveHistoryMonth(step){
 $('historyPrevMonth').onclick=()=>moveHistoryMonth(-1);
 $('historyNextMonth').onclick=()=>moveHistoryMonth(1);
 const TRAINING_PLAN_KEY='gg-training-plan-v1';
+const TRAINING_FAVORITES_KEY='hf-collective-favorites-v1';
+function favoriteRecordId(workoutId){return 'hf-favorite:'+workoutId}
+function planRecordId(plan){
+ return plan.syncId??('hf-plan:'+plan.date+':'+plan.workoutId);
+}
+function cloudPreferenceId(id){return typeof id==='string'&&id.length<=128&&/^hf-(?:favorite|plan):.+$/.test(id)}
+function readTrainingFavorites(){
+ const raw=appStorage.getItem(TRAINING_FAVORITES_KEY);
+ if(raw===null)return [];
+ const value=JSON.parse(raw);
+ if(value?.version!==1||!Array.isArray(value.ids)||value.ids.some(id=>typeof id!=='string'||!/^[a-z0-9_-]{1,130}$/i.test(id)))
+  throw Error('No se pudieron leer los favoritos guardados.');
+ return value.ids;
+}
+function trainingPreferencesSnapshot(){
+ const preferences=[];
+ try{
+  for(const workoutId of readTrainingFavorites()){
+   const id=favoriteRecordId(workoutId);
+   if(cloudPreferenceId(id))preferences.push({id,workoutId});
+  }
+ }catch{}
+ try{
+  for(const plan of readTrainingPlans()){
+   const id=planRecordId(plan);
+   if(cloudPreferenceId(id))preferences.push({id,plan:{...plan,syncId:id}});
+  }
+ }catch{}
+ return preferences;
+}
+function applyTrainingPreferences(records){
+ try{
+  const local=readTrainingFavorites();
+  const remote=records.filter(record=>typeof record?.workoutId==='string'&&/^[a-z0-9_-]{1,130}$/i.test(record.workoutId)
+   &&record.id===favoriteRecordId(record.workoutId)).map(record=>record.workoutId);
+  const ids=[...new Set([...local.filter(id=>!cloudPreferenceId(favoriteRecordId(id))),...remote])];
+  appStorage.setItem(TRAINING_FAVORITES_KEY,JSON.stringify({version:1,ids}));
+ }catch{}
+ try{
+  const local=readTrainingPlans();
+  const remote=records.filter(record=>record?.id?.startsWith('hf-plan:')&&cloudPreferenceId(record.id)
+   &&record.plan?.syncId===record.id&&validTrainingPlan(record.plan)).map(record=>record.plan);
+  appStorage.setItem(TRAINING_PLAN_KEY,JSON.stringify([...local.filter(plan=>!cloudPreferenceId(planRecordId(plan))),...remote]));
+ }catch{}
+}
 const scheduledWorkoutDialog=$('planWorkoutDialog');
 let trainingPlanner=null;
 function calendarDateKey(offset=0){
@@ -2916,12 +2967,15 @@ function calendarDateKey(offset=0){
 function validPlanDate(date){
  return typeof date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(date)&&historyDateKey(historyDate(date))===date;
 }
+function validTrainingPlan(entry){
+ return entry&&typeof entry.id==='string'&&typeof entry.workoutId==='string'&&validPlanDate(entry.date)
+  &&Number.isFinite(entry.updatedAt);
+}
 function readTrainingPlans(){
  const raw=appStorage.getItem(TRAINING_PLAN_KEY);
  if(raw===null)return [];
  const entries=JSON.parse(raw);
- if(!Array.isArray(entries)||entries.some(entry=>!entry||typeof entry.id!=='string'
-   ||typeof entry.workoutId!=='string'||!validPlanDate(entry.date)||!Number.isFinite(entry.updatedAt)))
+ if(!Array.isArray(entries)||entries.some(entry=>!validTrainingPlan(entry)))
   throw Error('No se pudo leer la programación guardada.');
  return entries;
 }
@@ -2988,6 +3042,8 @@ function saveTrainingPlan(date){
   if(duplicate)throw Error('Esta rutina ya está programada para ese día.');
   if(!plan||date!==plan.date){
    const updated={id:plan?.id??crypto.randomUUID(),workoutId,date,updatedAt:Date.now()};
+   updated.syncId=plan?planRecordId(plan):planRecordId(updated);
+   if(!plan&&plans.some(entry=>planRecordId(entry)===updated.syncId))updated.syncId='hf-plan:'+updated.id;
    appStorage.setItem(TRAINING_PLAN_KEY,JSON.stringify(plan?plans.map(entry=>entry.id===plan.id?updated:entry):[...plans,updated]));
   }
   scheduledWorkoutDialog.close();
@@ -4878,7 +4934,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.25', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.62';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.25', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.63';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
@@ -5518,7 +5574,7 @@ window.__secureAppV2={
   return {
    workouts:Array.isArray(JSON.parse(appStorage.getItem(KEY)||'[]'))?JSON.parse(appStorage.getItem(KEY)||'[]'):[],
    history:Array.isArray(JSON.parse(appStorage.getItem('gg-strength-history-v1')||'[]'))?JSON.parse(appStorage.getItem('gg-strength-history-v1')||'[]'):[],
-   ...(!isHF?{collective:classRuns()}:{}),
+   ...(!isHF?{collective:classRuns(),preferences:trainingPreferencesSnapshot()}:{}),
    active:JSON.parse(appStorage.getItem('gg-active-session-v1')||'null')
   };
  },
@@ -5531,6 +5587,7 @@ window.__secureAppV2={
    if(!isHF){
     appStorage.setItem(CLASS_RUNS_KEY,JSON.stringify(payload.collective||[]));
     appStorage.setItem(BUHARDILLA_ASSIGNMENT_KEY,JSON.stringify(payload.buhardillaRoutineIds||[]));
+    if(Array.isArray(payload.preferences))applyTrainingPreferences(payload.preferences);
    }
    if(payload.active)appStorage.setItem('gg-active-session-v1',JSON.stringify(payload.active));
    else appStorage.removeItem('gg-active-session-v1');
@@ -5841,5 +5898,5 @@ if(usesWorkoutCloud&&!SECURE_AUTH_V2){
   document.getElementById('ggCloudPanel')?.remove();
 }
 </script>
-<script type="module" src="src/account-entry-v2.mjs?v=3.0.10" onerror="document.getElementById('accountWall').dataset.phase='load-error';document.getElementById('accountLaunchMessage').textContent='No se pudo abrir la aplicación.'"></script>
+<script type="module" src="src/account-entry-v2.mjs?v=3.0.11" onerror="document.getElementById('accountWall').dataset.phase='load-error';document.getElementById('accountLaunchMessage').textContent='No se pudo abrir la aplicación.'"></script>
 </body></html>
