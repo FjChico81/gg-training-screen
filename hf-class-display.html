@@ -7,7 +7,7 @@
 <title>HF · Abrir la app principal</title>
 <meta http-equiv="Content-Security-Policy" content="script-src 'none'">
 <meta http-equiv="refresh" content="0; url=./">
-<script src="src/countdown-audio.js?v=1"></script>
+<script src="src/countdown-audio.js?v=2"></script>
 <script id="hfAccountBoot">window.__HF_V2_ENTRY_GATE=true;</script>
 <style>
 :root{--bg:#fff;--panel:#f6f6f6;--panel2:#fff;--ink:#111;--muted:#525252;--hot:#ff4d20;--hot2:#9b3d00;--line:#d4d4d4;--work:#ff4d20;--rest:#ffb000}
@@ -561,7 +561,6 @@ function bootHFClass(authorizedOwnerId=null,authorizedProfileId='personal'){
       gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.18);
       osc.connect(gain);gain.connect(ctx.destination);
       osc.start();osc.stop(ctx.currentTime+.19);
-      globalThis.countdownAudio?.prioritize(osc);
     }catch(e){}
   }
   function saveCollectiveOutcome(){
