@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.59</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.60</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -1249,6 +1249,15 @@ body.tv-mode #guided:not(.tv-rest) .tv-current{background:#fff;border-color:#f34
 #v2IntervalFinal{width:20px;height:20px;min-height:0;margin:0;flex:none;accent-color:var(--accent)}
 #v2IntervalPreview ol{margin:8px 0 0;padding-inline-start:1.8em;max-height:14em;overflow:auto}
 #v2IntervalPreview li+li{margin-top:4px}
+.interval-block-options>summary{cursor:pointer;font-size:13px;font-weight:700;padding:10px}
+.interval-block-options .v2-block-actions{margin-top:5px}
+.interval-block-overview{margin-top:8px}
+.interval-block-overview p{margin:4px 0;font-size:14px}
+.interval-block-overview .interval-block-dose{font-size:16px;font-weight:750}
+.interval-block-overview details{margin-top:8px}
+.interval-block-overview summary{cursor:pointer;color:var(--accent-soft);font-size:14px;font-weight:700;padding-block:6px}
+.interval-block-overview ol{padding-inline-start:1.8em;margin:4px 0 0;font-size:14px}
+.interval-block-overview li+li{margin-top:4px}
 #editor :is(#editorMessage,#tabataError):empty{display:none}
 #editor #tabataError{color:#a52821}
 #editor fieldset{border:0;margin:0;padding:0;min-width:0}
@@ -3131,9 +3140,8 @@ function renderLibrary(){
   title.append(marker);
  }
  const blockCount=w.blocks.length;
- const exerciseCount=w.blocks.reduce((n,b)=>n+b.items.length,0);
  info.append(title,node('div',workoutCategory(w)+' · '+blockCount+(blockCount===1?' bloque':' bloques')
-  +' · '+exerciseCount+(exerciseCount===1?' ejercicio':' ejercicios'),'muted small'));const actions=node('div','','routine-actions');const open=node('button','Abrir');open.onclick=()=>{if(vectorDays.has(sessionWorkout)&&session){openWorkout(w.id);return}active=w.id;show('board')};if(isHF){
+  +' · '+workoutStepCountLabel(w.blocks),'muted small'));const actions=node('div','','routine-actions');const open=node('button','Abrir');open.onclick=()=>{if(vectorDays.has(sessionWorkout)&&session){openWorkout(w.id);return}active=w.id;show('board')};if(isHF){
  const present=node('button','Presentar','alt');
  present.type='button';
  present.setAttribute('aria-label','Presentar '+w.name+' en clase guiada');
@@ -3307,8 +3315,8 @@ function renderBoard(){
  start.textContent=session?'↻ Reiniciar entrenamiento':(isHF?'▶ Entrenar en este dispositivo':'Empezar');
  start.classList.toggle('hidden',!isHF&&(Boolean(w.classPrepared)||(session&&!resumable)));
  if(!isHF)start.classList.toggle('alt',resumable);
- $('coachCopyClass').classList.toggle('hidden',Boolean(w.classPrepared));$('edit').classList.toggle('hidden',vectorDays.has(active)||buhardillaRoutines.has(active));$('boardName').textContent=w.name;const exerciseCount=w.blocks.reduce((total,block)=>total+block.items.length,0);
-$('count').textContent=buhardillaRoutines.has(active)?'Duración programada · '+formatSeconds(buhardillaWorkoutDuration(w)):w.blocks.length+' '+(w.blocks.length===1?'bloque':'bloques')+' · '+exerciseCount+' '+(isHF?(exerciseCount===1?'paso':'pasos'):(exerciseCount===1?'ejercicio':'ejercicios'));$('blocks').replaceChildren();if(w.exercises){
+ $('coachCopyClass').classList.toggle('hidden',Boolean(w.classPrepared));$('edit').classList.toggle('hidden',vectorDays.has(active)||buhardillaRoutines.has(active));$('boardName').textContent=w.name;
+$('count').textContent=buhardillaRoutines.has(active)?'Duración programada · '+formatSeconds(buhardillaWorkoutDuration(w)):w.blocks.length+' '+(w.blocks.length===1?'bloque':'bloques')+' · '+workoutStepCountLabel(w.blocks,isHF);$('blocks').replaceChildren();if(w.exercises){
  w.exercises.forEach((exercise,index)=>{
    const tile=node('div','','tile');
    const drawing=node('div','','vector-illustration hidden');
@@ -3344,9 +3352,14 @@ $('count').textContent=buhardillaRoutines.has(active)?'Duración programada · '
 if(!isHF){
  for(const block of w.blocks){
   const tile=node('div','','tile gg-board-block');
-  const exercises=node('ol','','gg-board-exercises');
-  for(const item of block.items)exercises.append(renderBoardExercise(readTechniqueLink(item).text,decode(FOR_TIME_BLOCK.test(block.name)?forTimeLine(item):item)));
-  tile.append(node('h3',block.name,'gg-board-block-title'),exercises);
+  tile.append(node('h3',block.name,'gg-board-block-title'));
+  const interval=readIntervalBlock(block);
+  if(interval)tile.append(renderIntervalBlockOverview(interval));
+  else{
+   const exercises=node('ol','','gg-board-exercises');
+   for(const item of block.items)exercises.append(renderBoardExercise(readTechniqueLink(item).text,decode(FOR_TIME_BLOCK.test(block.name)?forTimeLine(item):item)));
+   tile.append(exercises);
+  }
   $('blocks').append(tile);
  }
  return;
@@ -3428,13 +3441,37 @@ $('guidedInstructions').classList.toggle('hidden',!guidance);
 renderStepCountdown(a[step]);$('next').textContent='Siguiente: '+(info?(step===info.end?a[info.start].label+' · siguiente ronda':a[step+1].label):(a[step+1]?.label||'Fin del entrenamiento'));$('prev').disabled=step===0;$('pause').textContent=paused?'Reanudar':'Pausar';$('advance').textContent=info?'✓ Ejercicio completado':step===a.length-1?'Terminar sesión':!isHF&&!coachGuided&&isProgrammedRest(a[step])?'Omitir descanso':'Siguiente ▶';$('status').textContent=paused?'Sesión pausada':'Sesión en curso';renderSeries();renderActual();$('quickAdvance').textContent=$('advance').textContent;$('quickAdvance').disabled=$('advance').disabled;$('quickPause').textContent=$('pause').textContent;renderTvExercises(a,info,ft)}
 let visualEditing=null;function visualParse(){const text=$('workoutBlocks').value;const blocks=[];let current=null;for(const raw of text.split(/\r?\n/)){const line=raw.trim();if(!line)continue;if(line.endsWith(':')){current={name:line.slice(0,-1).trim(),items:[]};blocks.push(current)}else if(current)current.items.push(line)}return blocks}
 function visualSync(blocks){$('workoutBlocks').value=blocks.map(b=>b.name+':\n'+b.items.join('\n')).join('\n\n');renderVisual()}
-function renderVisual(){const blocks=visualParse(),list=$('visualList'),select=$('visualBlock'),v2select=$('v2Block');const prev=Number(select.value)||0,prevV2=Number(v2select.value)||0;select.replaceChildren();v2select.replaceChildren();list.replaceChildren();let count=0;blocks.forEach((block,bi)=>{for(const target of [select,v2select]){const option=document.createElement('option');option.value=bi;option.textContent=block.name;target.append(option)}const card=node('div','','v2-block');const head=node('div','','row');head.append(node('h3',block.name));const blockTools=node('div','','v2-block-actions');const rename=node('button','Renombrar','alt');rename.type='button';rename.onclick=()=>{const value=prompt('Nombre del bloque',block.name);if(value===null)return;const name=value.trim().replace(/:/g,'');if(!name)return;const arr=visualParse();arr[bi].name=name;visualSync(arr)};const remove=node('button','Eliminar bloque','danger');remove.type='button';remove.onclick=()=>{if(!confirm('¿Eliminar este bloque y todos sus ejercicios?'))return;const arr=visualParse();arr.splice(bi,1);visualSync(arr)};const blockMoveUp=node('button','↑ Bloque','alt');blockMoveUp.type='button';blockMoveUp.disabled=bi===0;
+function renderVisual(){const blocks=visualParse(),list=$('visualList'),select=$('visualBlock'),v2select=$('v2Block');const prev=Number(select.value)||0,prevV2=Number(v2select.value)||0;select.replaceChildren();v2select.replaceChildren();list.replaceChildren();let count=0,intervalCount=0,hasRest=false;blocks.forEach((block,bi)=>{for(const target of [select,v2select]){const option=document.createElement('option');option.value=bi;option.textContent=block.name;target.append(option)}const card=node('div','','v2-block');const head=node('div','','row');head.append(node('h3',block.name));const blockTools=node('div','','v2-block-actions');const rename=node('button','Renombrar','alt');rename.type='button';rename.onclick=()=>{const value=prompt('Nombre del bloque',block.name);if(value===null)return;const name=value.trim().replace(/:/g,'');if(!name)return;const arr=visualParse();arr[bi].name=name;visualSync(arr)};const remove=node('button','Eliminar bloque','danger');remove.type='button';remove.onclick=()=>{if(!confirm('¿Eliminar este bloque y todos sus ejercicios?'))return;const arr=visualParse();arr.splice(bi,1);visualSync(arr)};const blockMoveUp=node('button','↑ Bloque','alt');blockMoveUp.type='button';blockMoveUp.disabled=bi===0;
 blockMoveUp.setAttribute('aria-label','Mover bloque '+block.name+' hacia arriba');
 blockMoveUp.onclick=()=>{const arr=visualParse();[arr[bi-1],arr[bi]]=[arr[bi],arr[bi-1]];visualSync(arr);$('v2Block').value=String(bi-1)};
 const blockMoveDown=node('button','↓ Bloque','alt');blockMoveDown.type='button';blockMoveDown.disabled=bi===blocks.length-1;
 blockMoveDown.setAttribute('aria-label','Mover bloque '+block.name+' hacia abajo');
 blockMoveDown.onclick=()=>{const arr=visualParse();[arr[bi],arr[bi+1]]=[arr[bi+1],arr[bi]];visualSync(arr);$('v2Block').value=String(bi+1)};
-blockTools.append(blockMoveUp,blockMoveDown,rename,remove);head.append(blockTools);card.append(head);block.items.forEach((line,ei)=>{if(line==='Ejercicio pendiente')return;count++;const d=decode(FOR_TIME_BLOCK.test(block.name)?forTimeLine(line):line),row=node('div','','v2-exercise'),body=node('div','','v2-exercise-body');body.append(node('strong',d.label),node('div',d.strength?d.strength.sets+' × '+d.strength.reps+' · '+(d.strength.weight??0)+' kg · RIR '+(d.strength.rir??2):d.duration?d.duration+' segundos':'Avance manual','muted small'));if(d.instructions)body.append(node('p','Indicaciones: '+d.instructions,'muted small exercise-instruction-preview'));const actions=node('div','','v2-exercise-actions');const editBtn=node('button','Editar','alt');editBtn.type='button';editBtn.onclick=()=>openV2Editor(bi,ei,line);actions.append(editBtn);
+const interval=isHF?null:readIntervalBlock(block);
+if(interval){
+ const editBlock=node('button','Editar bloque');
+ editBlock.type='button';
+ editBlock.setAttribute('aria-label','Editar bloque '+block.name);
+ editBlock.onclick=()=>openIntervalBlockEditor(bi,block,interval);
+ const options=node('details','','interval-block-options');
+ const otherActions=node('div','','v2-block-actions');
+ otherActions.append(blockMoveUp,blockMoveDown,rename,remove);
+ options.append(node('summary','Opciones'),otherActions);
+ blockTools.append(editBlock,options);
+}else blockTools.append(blockMoveUp,blockMoveDown,rename,remove);
+head.append(blockTools);card.append(head);
+if(interval){
+ intervalCount++;
+ card.append(renderIntervalBlockOverview(interval));
+ list.append(card);
+ return;
+}
+block.items.forEach((line,ei)=>{
+ if(line==='Ejercicio pendiente')return;
+ count++;
+ const d=decode(FOR_TIME_BLOCK.test(block.name)?forTimeLine(line):line);
+ hasRest||=!isHF&&isProgrammedRest(d);
+ const row=node('div','','v2-exercise'),body=node('div','','v2-exercise-body');body.append(node('strong',d.label),node('div',d.strength?d.strength.sets+' × '+d.strength.reps+' · '+(d.strength.weight??0)+' kg · RIR '+(d.strength.rir??2):d.duration?d.duration+' segundos':'Avance manual','muted small'));if(d.instructions)body.append(node('p','Indicaciones: '+d.instructions,'muted small exercise-instruction-preview'));const actions=node('div','','v2-exercise-actions');const editBtn=node('button','Editar','alt');editBtn.type='button';editBtn.onclick=()=>openV2Editor(bi,ei,line);actions.append(editBtn);
 if(!isHF&&bi<blocks.length-1){
  const moveEnd=node('button','↪ Al final','alt');moveEnd.type='button';
  moveEnd.title='Mover este ejercicio a un bloque situado al final del entrenamiento';
@@ -3452,7 +3489,10 @@ if(!isHF&&bi<blocks.length-1){
  };
  actions.append(moveEnd);
 }
-const match=block.name.match(/^(.*) · Ronda (\d+)\/(\d+)$/);if(match){const all=node('button','Todas','alt');all.type='button';all.title='Modificar este ejercicio en todas las rondas';all.onclick=()=>{const replacement=prompt('Editar este ejercicio en todas las rondas del circuito',line);if(replacement===null)return;const clean=replacement.trim();if(!clean||clean.endsWith(':')||/\n/.test(clean)){alert('Introduce un ejercicio válido');return}const duration=clean.match(/@(\d+)$/);if(duration&&(Number(duration[1])<1||Number(duration[1])>7200)){alert('Duración fuera de rango');return}const arr=visualParse();let changed=0;for(const b of arr){const m=b.name.match(/^(.*) · Ronda (\d+)\/(\d+)$/);if(m&&m[1]===match[1]&&m[3]===match[3]&&b.items[ei]!==undefined){b.items[ei]=clean;changed++}}if(changed!==Number(match[3])){alert('No se han encontrado todas las rondas. No se ha modificado nada.');return}visualSync(arr);$('editorMessage').textContent='Ejercicio actualizado en '+changed+' rondas'};actions.append(all)}for(const [label,delta] of [['↑',-1],['↓',1]]){const button=node('button',label,'alt');button.type='button';button.disabled=ei+delta<0||ei+delta>=block.items.length;button.onclick=()=>{const arr=visualParse();[arr[bi].items[ei],arr[bi].items[ei+delta]]=[arr[bi].items[ei+delta],arr[bi].items[ei]];visualSync(arr)};actions.append(button)}const del=node('button','×','danger');del.type='button';del.onclick=()=>{if(!confirm('¿Eliminar este ejercicio?'))return;const arr=visualParse();arr[bi].items.splice(ei,1);visualSync(arr)};actions.append(del);row.append(body,actions);card.append(row)});list.append(card)});select.value=String(Math.min(prev,blocks.length-1));v2select.value=String(Math.min(prevV2,blocks.length-1));$('v2Count').textContent=count+' ejercicios';if(!blocks.length)list.append(node('p','Empieza añadiendo tu primer ejercicio. No necesitas crear un bloque.','muted'))}
+const match=block.name.match(/^(.*) · Ronda (\d+)\/(\d+)$/);if(match){const all=node('button','Todas','alt');all.type='button';all.title='Modificar este ejercicio en todas las rondas';all.onclick=()=>{const replacement=prompt('Editar este ejercicio en todas las rondas del circuito',line);if(replacement===null)return;const clean=replacement.trim();if(!clean||clean.endsWith(':')||/\n/.test(clean)){alert('Introduce un ejercicio válido');return}const duration=clean.match(/@(\d+)$/);if(duration&&(Number(duration[1])<1||Number(duration[1])>7200)){alert('Duración fuera de rango');return}const arr=visualParse();let changed=0;for(const b of arr){const m=b.name.match(/^(.*) · Ronda (\d+)\/(\d+)$/);if(m&&m[1]===match[1]&&m[3]===match[3]&&b.items[ei]!==undefined){b.items[ei]=clean;changed++}}if(changed!==Number(match[3])){alert('No se han encontrado todas las rondas. No se ha modificado nada.');return}visualSync(arr);$('editorMessage').textContent='Ejercicio actualizado en '+changed+' rondas'};actions.append(all)}for(const [label,delta] of [['↑',-1],['↓',1]]){const button=node('button',label,'alt');button.type='button';button.disabled=ei+delta<0||ei+delta>=block.items.length;button.onclick=()=>{const arr=visualParse();[arr[bi].items[ei],arr[bi].items[ei+delta]]=[arr[bi].items[ei+delta],arr[bi].items[ei]];visualSync(arr)};actions.append(button)}const del=node('button','×','danger');del.type='button';del.onclick=()=>{if(!confirm('¿Eliminar este ejercicio?'))return;const arr=visualParse();arr[bi].items.splice(ei,1);visualSync(arr)};actions.append(del);row.append(body,actions);card.append(row)});list.append(card)});select.value=String(Math.min(prev,blocks.length-1));v2select.value=String(Math.min(prevV2,blocks.length-1));const counts=[];
+if(count||!intervalCount)counts.push(stepCountLabel(count,hasRest));
+if(intervalCount)counts.push(intervalCount+(intervalCount===1?' bloque de intervalos':' bloques de intervalos'));
+$('v2Count').textContent=counts.join(' · ');if(!blocks.length)list.append(node('p','Empieza añadiendo tu primer ejercicio. No necesitas crear un bloque.','muted'))}
 $('cancelVisualEdit').onclick=()=>{visualEditing=null;$('addExercise').textContent='＋ Añadir ejercicio';$('cancelVisualEdit').classList.add('hidden');$('visualName').value='';$('editorMessage').textContent='Edición cancelada'};function visualNumber(id,min,max){const raw=$(id).value;if(raw.trim()==='')throw Error('Falta completar '+id);const n=Number(raw);if(!Number.isFinite(n)||n<min||n>max)throw Error('Valor incorrecto en '+id);return n}
 $('visualType').onchange=()=>{$('strengthFields').classList.toggle('hidden',$('visualType').value!=='strength');$('timedFields').classList.toggle('hidden',$('visualType').value!=='timed')};
 $('addBlock').onclick=()=>{const name=prompt('Nombre del nuevo bloque (ej.: Calentamiento, Fuerza, Cardio)');if(!name)return;const clean=name.trim().replace(/:/g,'');if(!clean)return;const blocks=visualParse();blocks.push({name:clean,items:['Ejercicio pendiente']});visualSync(blocks);$('visualBlock').value=String(blocks.length-1);$('v2Block').value=String(blocks.length-1)};
@@ -3468,20 +3508,70 @@ function buildTimerPlan(mode,rounds,work,recovery,includeFinal=false){
   work, rest:mode==='emom'||includeFinal||index<rounds-1?rest:0
  }));
 }
-function appendTimerBlock(mode,name,plan,instructions){
+function timerBlock(mode,name,plan,instructions,techniqueId=''){
  if(!name||/[|@:\n]/.test(name))throw Error('Escribe un nombre de ejercicio válido');
- const blocks=visualParse(),block={name:(mode==='emom'?'EMOM':'Intervalos')+' · '+name,items:[]};
+ const block={name:(mode==='emom'?'EMOM':'Intervalos')+' · '+name,items:[]};
  plan.forEach(({work,rest},index)=>{
   const round=' · Ronda '+(index+1)+'/'+plan.length;
-  block.items.push(addExerciseInstructions(name+round+' @'+work,instructions));
+  const workStep=addTechniqueLink(name+round+' @'+work,techniqueId);
+  block.items.push(addExerciseInstructions(workStep,instructions));
   if(rest>0)block.items.push('Recuperación'+round+' @'+rest);
  });
- if(blocks.reduce((n,b)=>n+b.items.length,0)+block.items.length>200)throw Error('El entrenamiento supera los 200 pasos');
- blocks.push(block);
+ return block;
+}
+function appendTimerBlock(mode,name,plan,instructions,edit=null){
+ const blocks=visualParse(),index=edit?.bi??blocks.length;
+ if(edit&&JSON.stringify(blocks[index])!==JSON.stringify(edit.block)){
+  throw Error('El bloque ha cambiado. Ciérralo y vuelve a abrirlo para editarlo.');
+ }
+ const updated=timerBlock(mode,name,plan,instructions,edit?.techniqueId);
+ if(edit?.customTitle)updated.name=edit.customTitle;
+ blocks.splice(index,edit?1:0,updated);
+ if(blocks.reduce((n,b)=>n+b.items.length,0)>200)throw Error('El entrenamiento supera los 200 pasos');
  visualSync(blocks);
- $('visualBlock').value=String(blocks.length-1);
- $('v2Block').value=String(blocks.length-1);
- $('editorMessage').textContent='Bloque temporizado añadido. Guarda el entrenamiento para conservarlo.';
+ $('visualBlock').value=String(index);
+ $('v2Block').value=String(index);
+ $('editorMessage').textContent=(edit?'Bloque de intervalos actualizado.':'Bloque temporizado añadido.')+' Guarda el entrenamiento para conservarlo.';
+}
+function stepCountLabel(count,steps){
+ return count+' '+(steps?(count===1?'paso':'pasos'):(count===1?'ejercicio':'ejercicios'));
+}
+function workoutStepCountLabel(blocks,steps=false){
+ const items=blocks.flatMap(block=>block.items);
+ return stepCountLabel(items.length,steps||(!isHF&&items.some(item=>isProgrammedRest(decode(item)))));
+}
+function readIntervalBlock(block){
+ if(!block.items.length||(isSequenceExerciseBlock(block.name)&&!/^Intervalos(?:\s*·|$)/i.test(block.name)))return null;
+ const {text,instructions,techniqueId}=readTechniqueLink(block.items[0]);
+ const workMatch=text.match(/^(.+) · Ronda 1\/(\d+) @(\d+)$/);
+ if(!workMatch)return null;
+ const name=workMatch[1];
+ const rounds=Number(workMatch[2]),work=Number(workMatch[3]);
+ const recovery=Number(block.items[1]?.match(/^Recuperación · Ronda 1\/\d+ @(\d+)$/)?.[1]??0);
+ const includeFinal=block.items.at(-1).startsWith('Recuperación · Ronda ');
+ try{
+  const plan=buildTimerPlan('intervals',rounds,work,recovery,includeFinal);
+  const expected=timerBlock('intervals',name,plan,instructions,techniqueId);
+  // Only group blocks we can recreate without losing custom steps or metadata.
+  if(expected.items.length===block.items.length&&expected.items.every((item,index)=>item===block.items[index])){
+   return {name,rounds,work,recovery,includeFinal,instructions,techniqueId,plan};
+  }
+ }catch{}
+ return null;
+}
+function openIntervalBlockEditor(bi,block,interval){
+ openV2('intervals',bi);
+ v2Editing={bi,block,techniqueId:interval.techniqueId,
+  customTitle:block.name==='Intervalos · '+interval.name?'':block.name};
+ $('v2WizardTitle').textContent='Editar bloque de intervalos';
+ $('v2Confirm').textContent='Aplicar cambios';
+ $('v2Name').value=interval.name;
+ $('v2Instructions').value=interval.instructions;
+ $('v2Rounds').value=interval.rounds;
+ setTimeFields('v2Work','v2WorkUnit',interval.work);
+ setTimeFields('v2Recovery','v2RecoveryUnit',interval.recovery);
+ $('v2IntervalFinal').checked=interval.includeFinal;
+ renderIntervalPreview();
 }
 $('addTimerBlock').onclick=()=>{
  try{
@@ -3504,16 +3594,33 @@ function intervalDurationLabel(seconds){
  const hours=Math.floor(seconds/3600),minutes=Math.floor(seconds%3600/60),rest=seconds%60;
  return [hours?hours+' h':'',minutes?minutes+' min':'',rest?rest+' s':''].filter(Boolean).join(' ')||'0 s';
 }
+function intervalRoundLabel({work,rest}){
+ return intervalDurationLabel(work)+' de trabajo'+(rest?' · '+intervalDurationLabel(rest)+' de recuperación':'');
+}
+function intervalTotalLabel(plan){
+ return 'Tiempo total · '+intervalDurationLabel(plan.reduce((sum,step)=>sum+step.work+step.rest,0));
+}
+function renderIntervalBlockOverview({rounds,work,recovery,includeFinal,instructions,plan}){
+ const overview=node('div','','interval-block-overview');
+ const dose=rounds+' × '+(recovery?'('+intervalRoundLabel({work,rest:recovery})+')':intervalRoundLabel({work,rest:0}));
+ overview.append(node('p',dose,'interval-block-dose'),node('p',intervalTotalLabel(plan),'muted'));
+ if(recovery&&!includeFinal)overview.append(node('p','Sin recuperación final','muted'));
+ if(instructions)overview.append(node('p',instructions,'muted'));
+ const details=node('details');
+ const list=node('ol');
+ for(const round of plan)list.append(node('li',intervalRoundLabel(round)));
+ details.append(node('summary','Ver pasos'),list);
+ overview.append(details);
+ return overview;
+}
 function renderIntervalPreview(){
  const sequence=$('v2IntervalSequence'),total=$('v2IntervalTotal');
  sequence.replaceChildren();
  $('v2IntervalFinal').disabled=$('v2Recovery').valueAsNumber<=0;
  try{
   const plan=readV2TimerPlan();
-  total.textContent='Tiempo total · '+intervalDurationLabel(plan.reduce((sum,step)=>sum+step.work+step.rest,0));
-  for(const {work,rest} of plan){
-   sequence.append(node('li',intervalDurationLabel(work)+' de trabajo'+(rest?' · '+intervalDurationLabel(rest)+' de recuperación':'')));
-  }
+  total.textContent=intervalTotalLabel(plan);
+  for(const round of plan)sequence.append(node('li',intervalRoundLabel(round)));
  }catch(error){total.textContent=error.message}
 }
 $('v2Intervals').addEventListener('input',renderIntervalPreview);
@@ -3527,7 +3634,13 @@ $('v2TimerNote').classList.toggle('hidden',mode!=='emom');
 $('v2TimerNote').textContent='Cada ronda dura 60 segundos. El trabajo debe durar entre 1 y 59 segundos.';
 $('v2BlockLabel').classList.toggle('hidden',timerMode);
 $('v2Block').classList.toggle('hidden',timerMode);
-if(timerMode){$('v2IntervalFinal').checked=false;renderIntervalPreview();}$('v2WizardTitle').textContent='Añadir '+({strength:'fuerza',manual:'ejercicio manual',cardio:'cardio',timed:'ejercicio por tiempo',intervals:'intervalos',emom:'EMOM'}[mode]||'ejercicio');$('v2Confirm').textContent='Añadir al entrenamiento';$('v2Name').value='';$('v2Instructions').value='';if(mode==='timed')setTimeFields('v2Duration','v2DurationUnit',60);resetTechniquePicker(['strength','manual','timed'].includes(mode));renderVisual();if(mode==='cardio')cardioTargetChange();if(blockIndex!==null)$('v2Block').value=String(blockIndex);else if(!isHF){const count=visualParse().length;if(count)$('v2Block').value=String(count-1)}explainV2Destination();$('v2Wizard').scrollIntoView({behavior:'smooth',block:'start'})}
+if(timerMode){
+ $('v2Rounds').value=5;
+ $('v2Work').value=40;$('v2WorkUnit').value='s';
+ $('v2Recovery').value=20;$('v2RecoveryUnit').value='s';
+ $('v2IntervalFinal').checked=false;
+ renderIntervalPreview();
+}$('v2WizardTitle').textContent='Añadir '+({strength:'fuerza',manual:'ejercicio manual',cardio:'cardio',timed:'ejercicio por tiempo',intervals:'intervalos',emom:'EMOM'}[mode]||'ejercicio');$('v2Confirm').textContent='Añadir al entrenamiento';$('v2Name').value='';$('v2Instructions').value='';if(mode==='timed')setTimeFields('v2Duration','v2DurationUnit',60);resetTechniquePicker(['strength','manual','timed'].includes(mode));renderVisual();if(mode==='cardio')cardioTargetChange();if(blockIndex!==null)$('v2Block').value=String(blockIndex);else if(!isHF){const count=visualParse().length;if(count)$('v2Block').value=String(count-1)}explainV2Destination();$('v2Wizard').scrollIntoView({behavior:'smooth',block:'start'})}
 function durationSeconds(amount,unit){
   const seconds=Number(amount)*(unit==='min'?60:1);
   const whole=Math.round(seconds);
@@ -3657,8 +3770,7 @@ $('amrapAdd').onclick=()=>{try{const name=$('amrapName').value.trim().replace(/[
 $('circuitCancel').onclick=closeV2Wizard;
 $('circuitAdd').onclick=()=>{try{const title=$('circuitTitle').value.trim().replace(/:/g,''),rounds=visualNumber('circuitRounds',1,20),rest=visualNumber('circuitRest',0,1800);if(!title||!Number.isInteger(rounds)||!Number.isInteger(rest))throw Error('Revisa nombre, rondas y descanso');const lines=$('circuitLines').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(!lines.length)throw Error('Añade al menos un ejercicio');if(lines.some(x=>x.endsWith(':')))throw Error('Los ejercicios no pueden terminar en dos puntos');if(lines.some(x=>{const m=x.match(/@(\d+)$/);return m&&(Number(m[1])<1||Number(m[1])>7200)}))throw Error('Duración fuera de rango');const arr=visualParse(),count=arr.reduce((n,b)=>n+b.items.length,0)+rounds*lines.length+(rounds-1)*(rest>0?1:0);if(count>200)throw Error('El circuito supera el límite de 200 pasos');for(let i=1;i<=rounds;i++){arr.push({name:title+' · Ronda '+i+'/'+rounds,items:lines.slice()});if(i<rounds&&rest>0)arr.push({name:'Descanso entre rondas',items:['Recuperación · antes de ronda '+(i+1)+' @'+rest]})}visualSync(arr);closeV2Wizard();$('editorMessage').textContent='Circuito añadido: '+rounds+' rondas. Guarda la rutina.'}catch(e){$('editorMessage').textContent=e.message}};
 $('v2Confirm').onclick=()=>{try{const mode=v2Mode,name=$('v2Name').value.trim();if(mode==='cardio'){saveCardioExercise();return}if(!name||/[|@:\n]/.test(name))throw Error('Introduce un nombre válido');if(['intervals','emom'].includes(mode)){
- if(v2Editing)throw Error('Este bloque no puede editarse como un ejercicio');
- appendTimerBlock(mode,name,readV2TimerPlan(),$('v2Instructions').value);
+ appendTimerBlock(mode,name,readV2TimerPlan(),$('v2Instructions').value,v2Editing);
  closeV2Wizard();
  return;
 }
@@ -4521,7 +4633,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.25', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.59';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.25', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.60';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
