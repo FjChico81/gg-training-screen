@@ -1,21 +1,10 @@
-// Let the platform mix other media between cues and prioritize each countdown tone.
-globalThis.countdownAudio = (() => {
- let activeTones = 0;
- function setType(type) {
+// Countdown cues use the ambient audio session so other apps can keep playing.
+globalThis.countdownAudio = {
+ prepare() {
   try {
-   if (navigator.audioSession) navigator.audioSession.type = type;
-  } catch { /* Browsers can decline optional audio session types. */ }
+   if (navigator.audioSession && navigator.audioSession.type !== 'ambient') {
+    navigator.audioSession.type = 'ambient';
+   }
+  } catch { /* Some browsers do not expose an audio session. */ }
  }
- return {
-  prepare() {
-   if (!activeTones) setType('ambient');
-  },
-  prioritize(oscillator) {
-   activeTones++;
-   setType('transient');
-   oscillator.addEventListener('ended', () => {
-    if (--activeTones === 0) setType('ambient');
-   }, {once: true});
-  }
- };
-})();
+};
