@@ -276,3 +276,66 @@ test('reports a workout as synced only after acknowledgement and distinguishes c
  assert.equal(controller.syncStatus(),'review');
  assert.equal(controller.pendingCount(),1);
 });
+
+test('training preferences sync by profile, import local data and keep offline edits and deletions',async()=>{
+ const api=await mod;
+ const records=new Map();
+ const assignment={kind:'preferences',client_id:'buhardilla-routines',payload:{routineIds:['roster-1']},revision:1};
+ records.set(profileId,[assignment]);
+ const cloud={
+  verified:true,
+  async getRecords(id){return structuredClone(records.get(id)||[])},
+  async upsertRevision(id,item,revision){
+   const rows=records.get(id)||[];
+   const index=rows.findIndex(row=>row.kind===item.kind&&row.client_id===item.client_id);
+   assert.equal(index<0?null:rows[index].revision,revision);
+   const next={...structuredClone(item),revision:(revision||0)+1};
+   if(index<0)rows.push(next);else rows[index]=next;
+   records.set(id,rows);
+   return next.revision;
+  }
+ };
+ function device(id=profileId,storage=memory(),enabled=true){
+  let latest;
+  const sync=api.createProfileSync({cloud,profileId:id,storage,prefix:id+':',
+   trainingPreferences:enabled,onApply:value=>{latest=value}});
+  return {sync,storage,get latest(){return latest}};
+ }
+ const favorite={id:'hf-favorite:routine-a',workoutId:'routine-a'};
+ const plan={id:'hf-plan:2026-11-28:routine-a',plan:{id:'local-a',workoutId:'routine-a',date:'2026-11-28',updatedAt:1}};
+ const a=device();
+ a.sync.importTrainingPreferences([favorite,plan,assignment.payload]);
+ await a.sync.initial();
+ for(let i=0;i<4&&a.sync.pendingCount();i++)await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(a.sync.pendingCount(),0);
+ assert.deepEqual(a.latest.buhardillaRoutineIds,['roster-1']);
+ const b=device();
+ await b.sync.initial();
+ assert.deepEqual(b.latest.preferences,[favorite,plan]);
+
+ // Moving a planned session edits the same record and preserves other kinds.
+ const moved={...plan,plan:{...plan.plan,date:'2026-11-29'}};
+ b.sync.changed('preferences',JSON.stringify([moved]),{preferencePrefix:'hf-plan:'});
+ await b.sync.synchronize();
+ await a.sync.synchronize();
+ assert.deepEqual(a.latest.preferences,[favorite,moved]);
+ b.sync.changed('preferences','[]',{preferencePrefix:'hf-favorite:'});
+ // Simulate reopening a device after losing connectivity before upload.
+ const reopened=device(profileId,b.storage);
+ reopened.sync.importTrainingPreferences([favorite,moved]);
+ await reopened.sync.initial();
+ for(let i=0;i<4&&reopened.sync.pendingCount();i++)await new Promise(resolve=>setImmediate(resolve));
+ await a.sync.synchronize();
+ assert.deepEqual(a.latest.preferences,[moved]);
+
+ const oldDevice=device();
+ oldDevice.sync.importTrainingPreferences([favorite,plan]);
+ await oldDevice.sync.initial();
+ assert.deepEqual(oldDevice.latest.preferences,[moved]);
+ const isolated=device('33333333-3333-4333-8444-555555555555');
+ await isolated.sync.initial();
+ assert.deepEqual(isolated.latest.preferences,[]);
+ const disabled=device(profileId,memory(),false);
+ await disabled.sync.initial();
+ assert.equal(disabled.latest.preferences,undefined);
+});
