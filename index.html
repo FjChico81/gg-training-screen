@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.57</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>GG Mobile v3.0.58</title>
 <meta name="apple-mobile-web-app-title" content="HF">
 <link id="homeScreenIcon" rel="apple-touch-icon" sizes="180x180" href="assets/icons/hf-emblem-180.png">
 <script>
@@ -534,13 +534,24 @@ html:not([data-edition="hf"]) :is(button,select,input,summary):focus-visible{
 .vector-home .home-actions:empty{display:none}
 .athlete-home-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0 14px}
 .athlete-home-actions button{margin:0;min-width:0;min-height:46px;font-size:14px}
-#athleteHomeResume,#coachHomeResume{grid-column:1/-1}
+#athleteHomeCard{
+ display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+ gap:8px 16px;margin-top:10px;padding:12px 14px;
+ background:#fff;border:1px solid var(--line);border-radius:15px;
+}
+#athleteHomeCard h2{font-size:17px;line-height:1.25;margin:0;overflow-wrap:anywhere}
+#athleteHomeCard button{margin:0;min-height:46px}
+#athleteHomeStatus{margin:3px 0 0;color:var(--muted);font-size:13px}
+#coachHomeResume{grid-column:1/-1;background:#fff3cd;border:1px solid var(--yellow);color:var(--ink)}
+@media(max-width:520px){
+ #athleteHomeCard button{width:100%}
+}
 #homeSyncState{margin:6px 0 0;font-size:12px}
 #workoutSaveFeedback{margin:8px 0 12px;padding:8px 10px}
 #workoutSaveFeedback span{display:block;margin-top:2px}
 :is(#homeSyncState,#workoutSaveFeedback)[data-state="review"]{color:#a3281e}
 
-.athlete-home-actions #historyButton,#saved .saved-workout-board{
+.athlete-home-actions :is(#coachHomeLaunch,#historyButton),#saved .saved-workout-board{
  background:#fff;color:var(--ink);border:1px solid #d4d4d4;
 }
 body:not(.coach-guided) #guided[data-athlete-action="resume"] #quickPause,
@@ -2083,12 +2094,32 @@ function setupVectorHome(){
    profileRow.append(login);
  }
 
- const actions=node('div','','athlete-home-actions');
- const continueWorkout=node('button','Continuar entrenamiento','hidden');
+ const athleteCard=node('section');
+ athleteCard.id='athleteHomeCard';
+ athleteCard.setAttribute('aria-labelledby','athleteHomeTitle');
+ const athleteInfo=node('div');
+ const athleteTitle=node('h2','Entrenamiento individual');
+ athleteTitle.id='athleteHomeTitle';
+ const athleteStatus=node('p','','hidden');
+ athleteStatus.id='athleteHomeStatus';
+ athleteInfo.append(athleteTitle,athleteStatus);
+ const chooseWorkout=node('button','Elegir entrenamiento');
+ chooseWorkout.id='athleteHomeChoose';
+ chooseWorkout.type='button';
+ chooseWorkout.onclick=()=>{
+   const library=$(chooseWorkout.getAttribute('aria-controls'));
+   library.open=true;
+   library.querySelector('summary').focus({preventScroll:true});
+   library.scrollIntoView({block:'start'});
+ };
+ const continueWorkout=node('button','Continuar','hidden');
  continueWorkout.id='athleteHomeResume';
  continueWorkout.type='button';
  continueWorkout.onclick=()=>resumeAthleteWorkout(sessionWorkout);
- const directCoach=node('button','Dirigir clase');
+ athleteCard.append(athleteInfo,chooseWorkout,continueWorkout);
+
+ const actions=node('div','','athlete-home-actions');
+ const directCoach=node('button','Dirigir clase','alt');
  directCoach.id='coachHomeLaunch';
  directCoach.type='button';
  directCoach.setAttribute('aria-haspopup','dialog');
@@ -2097,10 +2128,10 @@ function setupVectorHome(){
  resumeClass.id='coachHomeResume';
  resumeClass.type='button';
  resumeClass.onclick=()=>void resumeCoachClass();
- actions.append(continueWorkout,resumeClass,directCoach,$('historyButton'));
+ actions.append(resumeClass,directCoach,$('historyButton'));
  const syncState=node('p','','muted small hidden');
  syncState.id='homeSyncState';syncState.setAttribute('role','status');
- profileRow.after(syncState,actions);
+ profileRow.after(syncState,athleteCard,actions);
 
  const saved=node('details','','tools-details vector-home-section');
  saved.id='vectorMyWorkouts';
@@ -2974,14 +3005,29 @@ function copyToMyClasses(workout){
  $('vectorMyClasses').open=true;
  openWorkout(copy.id);
 }
+function renderAthleteHome(){
+ const resumable=session&&!coachGuided&&findWorkout(sessionWorkout);
+ const title=$('athleteHomeTitle'),status=$('athleteHomeStatus');
+ const choose=$('athleteHomeChoose'),resume=$('athleteHomeResume');
+ title.textContent=resumable?resumable.name:'Entrenamiento individual';
+ status.textContent=resumable?(prestartRemaining>0?'Preparación':paused?'Sesión pausada':'Sesión en curso'):'';
+ status.classList.toggle('hidden',!resumable);
+ choose.classList.toggle('hidden',Boolean(resumable));
+ resume.classList.toggle('hidden',!resumable);
+ if(resumable){
+   resume.setAttribute('aria-label','Continuar entrenamiento '+resumable.name);
+ }else{
+   const hasRoutines=workouts.some(workout=>!workout.classPrepared)||assignedBuhardillaIds().size>0;
+   choose.setAttribute('aria-controls',hasRoutines?'vectorMyWorkouts':'vectorRoutineSection');
+   choose.textContent=hasRoutines?'Elegir entrenamiento':'Explorar rutinas';
+ }
+}
 function renderLibrary(){
  renderVectorRoutines();
  const personalWorkouts=isHF?workouts:workouts.filter(workout=>!workout.classPrepared);
  const assignedCount=isHF?0:renderBuhardillaAssignments();
  if(!isHF){
-   const resumable=session&&!coachGuided&&findWorkout(sessionWorkout);
-   $('athleteHomeResume').classList.toggle('hidden',!resumable);
-   if(resumable)$('athleteHomeResume').setAttribute('aria-label','Continuar entrenamiento '+resumable.name);
+   renderAthleteHome();
    renderCoachRecovery();
    renderMyClasses();
    const personalCount=personalWorkouts.length;
@@ -4385,7 +4431,7 @@ if(!isHF){
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-access']});
 }
 setInterval(refreshHeart,3000);
-const HF_APP_VERSION='3.0.25', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.57';let lastUpdateCheck=0,remoteVersion=null;
+const HF_APP_VERSION='3.0.25', GG_APP_VERSION=isHF?HF_APP_VERSION:'3.0.58';let lastUpdateCheck=0,remoteVersion=null;
 function updateBusy(){return session||view==='coachStations'||view==='editor'||view==='sessionSummary'}
 async function checkForUpdates(force=false){
  if(!navigator.onLine)return;
@@ -4961,7 +5007,7 @@ function restoreActiveSessionFromStorage(){
    const saved=JSON.parse(appStorage.getItem('gg-active-session-v1'));
    if(saved?.session&&(findWorkout(saved.active)||buhardillaRoutines.has(saved.active)))restoreSessionState(saved);
   }catch(e){}
-  if(!isHF)renderCoachRecovery();
+  if(!isHF){renderAthleteHome();renderCoachRecovery()}
 }
 window.__secureAppV2={
  setProfiles(ownerId,rows){
